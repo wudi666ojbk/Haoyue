@@ -1,0 +1,35 @@
+[submodule "Haoyue/vendor/GLFW"]
+	path = Haoyue/vendor/GLFW
+	url = https://github.com/TheCherno/glfw
+[submodule "Haoyue/vendor/imgui"]
+	path = Haoyue/vendor/imgui
+	url = https://github.com/TheCherno/imgui
+    branch = docking
+[submodule "Haoyue/vendor/glm"]
+	path = Haoyue/vendor/glm
+	url = https://github.com/g-truc/glm
+[submodule "Haoyue/vendor/Box2D"]
+	path = Haoyue/vendor/Box2D
+	url = https://github.com/TheCherno/Box2D
+	ignore = dirty
+[submodule "Haoyue/vendor/yaml-cpp"]
+	path = Haoyue/vendor/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "Haoyue/vendor/spdlog"]
+	path = Haoyue/vendor/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "Haoyue/vendor/PhysX"]
+	path = Haoyue/vendor/PhysX
+	url = https://github.com/wudi666ojbk/PhysX.git
+[submodule "Haoyue/vendor/mono"]
+	path = Haoyue/vendor/mono
+	url = https://github.com/wudi666ojbk/mono_for_Engine.git
+[submodule "Haoyue/vendor/msdf-atlas-gen"]
+	path = Haoyue/vendor/msdf-atlas-gen
+	url = https://github.com/TheCherno/msdf-atlas-gen
+[submodule "Haoyue/vendor/NvidiaAftermath"]
+	path = Haoyue/vendor/NvidiaAftermath
+	url = https://github.com/wudi666ojbk/NvidiaAftermath.git
+[submodule "Haoyue/vendor/ozz-animation"]
+	path = Haoyue/vendor/ozz-animation
+	url = https://github.com/wudi666ojbk/ozz-animation.git

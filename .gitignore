@@ -1,0 +1,26 @@
+# Binaries
+**/bin/
+!vendor/bin/premake/
+!HaoYue/vendor/mono/bin
+bin-int/
+obj/
+cache/
+HaoYue/vendor/VulkanSDK
+HaoYue-Editor/Log/
+
+# Visual Studio files and folder
+.vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+**.csproj
+**.nsight-gfxproj
+
+# Meta Files
+**.meta
+Build/__pycache__/*
+
+# Python cache
+__pycache__/
+Build/__pycache__/
