@@ -943,7 +943,7 @@ namespace Haoyue {
 							overrideMesh = false;
 					}
 
-					if (component.CollisionMesh)
+					if (component.CollisionMesh && component.CollisionMesh->Type == AssetType::Mesh)
 					{
 						component.OverrideMesh = overrideMesh;
 

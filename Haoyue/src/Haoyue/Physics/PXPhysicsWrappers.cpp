@@ -136,7 +136,7 @@ namespace Haoyue {
 		PX_UNUSED(count);
 	}
 
-	static physx::PxBroadPhaseType::Enum HazelToPhysXBroadphaseType(BroadphaseType type)
+	static physx::PxBroadPhaseType::Enum HaoyueToPhysXBroadphaseType(BroadphaseType type)
 	{
 		switch (type)
 		{
@@ -148,7 +148,7 @@ namespace Haoyue {
 		return physx::PxBroadPhaseType::eABP;
 	}
 
-	static physx::PxFrictionType::Enum HazelToPhysXFrictionType(FrictionType type)
+	static physx::PxFrictionType::Enum HaoyueToPhysXFrictionType(FrictionType type)
 	{
 		switch (type)
 		{
@@ -170,11 +170,11 @@ namespace Haoyue {
 		const PhysicsSettings& settings = Physics::GetSettings();
 
 		sceneDesc.gravity = ToPhysXVector(settings.Gravity);
-		sceneDesc.broadPhaseType = HazelToPhysXBroadphaseType(settings.BroadphaseAlgorithm);
+		sceneDesc.broadPhaseType = HaoyueToPhysXBroadphaseType(settings.BroadphaseAlgorithm);
 		sceneDesc.cpuDispatcher = s_CPUDispatcher;
-		sceneDesc.filterShader = HazelFilterShader;
+		sceneDesc.filterShader = HaoyueFilterShader;
 		sceneDesc.simulationEventCallback = &s_ContactListener;
-		sceneDesc.frictionType = HazelToPhysXFrictionType(settings.FrictionModel);
+		sceneDesc.frictionType = HaoyueToPhysXFrictionType(settings.FrictionModel);
 
 		HY_CORE_ASSERT(sceneDesc.isValid());
 		return s_Physics->createScene(sceneDesc);

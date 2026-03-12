@@ -23,6 +23,7 @@
 
 #include "imgui_internal.h"
 #include "Haoyue/ImGui/ImGui.h"
+#include <Haoyue/Editor/TranslationManager.h>
 
 namespace Haoyue {
 
@@ -603,7 +604,7 @@ namespace Haoyue {
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("New Scene", "Ctrl+N"))
+				if (ImGui::MenuItem(TR("New Scene"), "Ctrl+N"))
 					NewScene();
 				if (ImGui::MenuItem("Open Scene...", "Ctrl+O"))
 					OpenScene();

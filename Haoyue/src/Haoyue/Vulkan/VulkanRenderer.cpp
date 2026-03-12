@@ -106,7 +106,7 @@ namespace Haoyue {
 
 		Renderer::Submit([]() mutable
 		{
-			auto shader = Renderer::GetShaderLibrary()->Get("HazelPBR_Static");
+			auto shader = Renderer::GetShaderLibrary()->Get("PBR_Static");
 			Ref<VulkanShader> pbrShader = shader.As<VulkanShader>();
 			s_Data->RendererDescriptorSet = pbrShader->CreateDescriptorSets(1);
 		});
@@ -284,7 +284,7 @@ namespace Haoyue {
 
 		Renderer::Submit([environment, shadow]() mutable
 		{
-			auto shader = Renderer::GetShaderLibrary()->Get("HazelPBR_Static");
+			auto shader = Renderer::GetShaderLibrary()->Get("PBR_Static");
 			Ref<VulkanShader> pbrShader = shader.As<VulkanShader>();
 
 			std::array<VkWriteDescriptorSet, 4> writeDescriptors;

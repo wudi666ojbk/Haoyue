@@ -13,15 +13,16 @@ namespace Haoyue {
 
 	void Log::Init()
 	{
+		SetConsoleOutputCP(CP_UTF8);
 		// Create "logs" directory if doesn't exist
 		std::string logsDirectory = "logs";
 		if (!std::filesystem::exists(logsDirectory))
 			std::filesystem::create_directories(logsDirectory);
 
-		std::vector<spdlog::sink_ptr> hazelSinks =
+		std::vector<spdlog::sink_ptr> haoyueSinks =
 		{
 			std::make_shared<spdlog::sinks::stdout_color_sink_mt>(),
-			std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/HAZEL.log", true)
+			std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/HAOYUE.log", true)
 		};
 
 		std::vector<spdlog::sink_ptr> appSinks =
@@ -30,12 +31,12 @@ namespace Haoyue {
 			std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/APP.log", true)
 		};
 
-		hazelSinks[0]->set_pattern("%^[%T] %n: %v%$");
-		hazelSinks[1]->set_pattern("[%T] [%l] %n: %v");
+		haoyueSinks[0]->set_pattern("%^[%T] %n: %v%$");
+		haoyueSinks[1]->set_pattern("[%T] [%l] %n: %v");
 		appSinks[0]->set_pattern("%^[%T] %n: %v%$");
 		appSinks[1]->set_pattern("[%T] [%l] %n: %v");
 
-		s_CoreLogger = std::make_shared<spdlog::logger>("HAZEL", hazelSinks.begin(), hazelSinks.end());
+		s_CoreLogger = std::make_shared<spdlog::logger>("HAZEL", haoyueSinks.begin(), haoyueSinks.end());
 		s_CoreLogger->set_level(spdlog::level::trace);
 
 		s_ClientLogger = std::make_shared<spdlog::logger>("APP", appSinks.begin(), appSinks.end());

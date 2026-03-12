@@ -45,9 +45,8 @@ namespace Haoyue {
 		//io.ConfigViewportsNoAutoMerge = true;
 		//io.ConfigViewportsNoTaskBarIcon = true;
 
-		io.Fonts->AddFontFromFileTTF("Resources/fonts/opensans/OpenSans-Bold.ttf", 18.0f);
-		io.Fonts->AddFontFromFileTTF("Resources/fonts/opensans/OpenSans-Regular.ttf", 24.0f);
-		io.FontDefault = io.Fonts->AddFontFromFileTTF("Resources/fonts/opensans/OpenSans-Regular.ttf", 18.0f);
+		io.Fonts->AddFontFromFileTTF("Resources/fonts/SmileySans-Oblique.ttf", 22.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
+		io.FontDefault = io.Fonts->AddFontFromFileTTF("Resources/fonts/SmileySans-Oblique.ttf", 22.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
 
 		// Setup Dear ImGui style
 		ImGui::StyleColorsDark();

@@ -25,6 +25,7 @@
 
 #include "Haoyue/ImGui/ImGui.h"
 #include "Haoyue/Renderer/Renderer.h"
+#include "Haoyue/Editor/TranslationManager.h"
 
 // TODO:
 // - Eventually change imgui node IDs to be entity/asset GUID
@@ -105,85 +106,85 @@ namespace Haoyue {
 
 			if (ImGui::BeginPopupContextWindow(0, 1, false))
 			{
-				if (ImGui::BeginMenu("Create"))
+				if (ImGui::BeginMenu(TR("Create")))
 				{
-					if (ImGui::MenuItem("Empty Entity"))
+					if (ImGui::MenuItem(TR("Empty Entity")))
 					{
-						auto newEntity = m_Context->CreateEntity("Empty Entity");
+						auto newEntity = m_Context->CreateEntity(TR("Empty Entity"));
 						SetSelected(newEntity);
 					}
-					if (ImGui::MenuItem("Camera"))
+					if (ImGui::MenuItem(TR("Camera")))
 					{
-						auto newEntity = m_Context->CreateEntity("Camera");
+						auto newEntity = m_Context->CreateEntity(TR("Camera"));
 						newEntity.AddComponent<CameraComponent>();
 						SetSelected(newEntity);
 					}
-					if (ImGui::BeginMenu("Mesh"))
+					if (ImGui::BeginMenu(TR("Mesh")))
 					{
-						if (ImGui::MenuItem("Empty Mesh"))
+						if (ImGui::MenuItem(TR("Empty Mesh")))
 						{
-							auto newEntity = m_Context->CreateEntity("Empty Mesh");
+							auto newEntity = m_Context->CreateEntity(TR("Empty Mesh"));
 							newEntity.AddComponent<MeshComponent>();
 							SetSelected(newEntity);
 						}
-						if (ImGui::MenuItem("Cube"))
+						if (ImGui::MenuItem(TR("Cube")))
 						{
-							auto newEntity = m_Context->CreateEntity("Cube");
-							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("/meshes/Default/Cube.fbx"));
+							auto newEntity = m_Context->CreateEntity(TR("Cube"));
+							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("Resources/meshes/Default/Cube.fbx"));
 							SetSelected(newEntity);
 						}
-						if (ImGui::MenuItem("Sphere"))
+						if (ImGui::MenuItem(TR("Sphere")))
 						{
-							auto newEntity = m_Context->CreateEntity("Sphere");
-							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("/meshes/Default/Sphere.fbx"));
+							auto newEntity = m_Context->CreateEntity(TR("Sphere"));
+							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("Resources/meshes/Default/Sphere.fbx"));
 							SetSelected(newEntity);
 						}
-						if (ImGui::MenuItem("Capsule"))
+						if (ImGui::MenuItem(TR("Capsule")))
 						{
-							auto newEntity = m_Context->CreateEntity("Capsule");
+							auto newEntity = m_Context->CreateEntity(TR("Capsule"));
 							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("/meshes/Default/Capsule.fbx"));
 							SetSelected(newEntity);
 						}
-						if (ImGui::MenuItem("Plane"))
+						if (ImGui::MenuItem(TR("Plane")))
 						{
-							auto newEntity = m_Context->CreateEntity("Plane");
+							auto newEntity = m_Context->CreateEntity(TR("Plane"));
 							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("/meshes/Default/Plane.fbx"));
 							SetSelected(newEntity);
 						}
 						ImGui::EndMenu();
 					}
-					if (ImGui::BeginMenu("Physics"))
+					if (ImGui::BeginMenu(TR("Physics")))
 					{
-						if (ImGui::MenuItem("Rigidbody"))
+						if (ImGui::MenuItem(TR("Rigidbody")))
 						{
-							auto newEntity = m_Context->CreateEntity("Rigidbody");
+							auto newEntity = m_Context->CreateEntity(TR("Rigidbody"));
 							newEntity.AddComponent<RigidBodyComponent>();
 							SetSelected(newEntity);
 						}
-						if (ImGui::MenuItem("Box"))
+						if (ImGui::MenuItem(TR("Box")))
 						{
-							auto newEntity = m_Context->CreateEntity("Cube");
-							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("/meshes/Default/Cube.fbx"));
+							auto newEntity = m_Context->CreateEntity(TR("Cube"));
+							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("Resources/meshes/Default/Cube.fbx"));
 							newEntity.AddComponent<BoxColliderComponent>();
 							SetSelected(newEntity);
 						}
-						if (ImGui::MenuItem("Sphere"))
+						if (ImGui::MenuItem(TR("Sphere")))
 						{
-							auto newEntity = m_Context->CreateEntity("Sphere");
-							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("/meshes/Default/Sphere.fbx"));
+							auto newEntity = m_Context->CreateEntity(TR("Sphere"));
+							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("Resources/meshes/Default/Sphere.fbx"));
 							newEntity.AddComponent<SphereColliderComponent>();
 							SetSelected(newEntity);
 						}
-						if (ImGui::MenuItem("Capsule"))
+						if (ImGui::MenuItem(TR("Capsule")))
 						{
-							auto newEntity = m_Context->CreateEntity("Capsule");
-							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("/meshes/Default/Capsule.fbx"));
+							auto newEntity = m_Context->CreateEntity(TR("Capsule"));
+							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("Resources/meshes/Default/Capsule.fbx"));
 							newEntity.AddComponent<CapsuleColliderComponent>();
 							SetSelected(newEntity);
 						}
-						if (ImGui::MenuItem("Mesh"))
+						if (ImGui::MenuItem(TR("Mesh")))
 						{
-							auto newEntity = m_Context->CreateEntity("Capsule");
+							auto newEntity = m_Context->CreateEntity(TR("Capsule"));
 							newEntity.AddComponent<MeshComponent>();
 							newEntity.AddComponent<MeshColliderComponent>();
 							SetSelected(newEntity);
@@ -191,16 +192,16 @@ namespace Haoyue {
 						ImGui::EndMenu();
 					}
 					ImGui::Separator();
-					if (ImGui::MenuItem("Directional Light"))
+					if (ImGui::MenuItem(TR("Directional Light")))
 					{
-						auto newEntity = m_Context->CreateEntity("Directional Light");
+						auto newEntity = m_Context->CreateEntity(TR("Directional Light"));
 						newEntity.AddComponent<DirectionalLightComponent>();
 						newEntity.GetComponent<TransformComponent>().Rotation = glm::radians(glm::vec3{ 80.0f, 10.0f, 0.0f });
 						SetSelected(newEntity);
 					}
-					if (ImGui::MenuItem("Sky Light"))
+					if (ImGui::MenuItem(TR("Sky Light")))
 					{
-						auto newEntity = m_Context->CreateEntity("Sky Light");
+						auto newEntity = m_Context->CreateEntity(TR("Sky Light"));
 						newEntity.AddComponent<SkyLightComponent>();
 						SetSelected(newEntity);
 					}
@@ -226,7 +227,7 @@ namespace Haoyue {
 			{
 				if (ImGui::CollapsingHeader("Animation"))
 				{
-					if (ImGui::Button(mesh->m_AnimationPlaying ? "Pause" : "Play"))
+					if (ImGui::Button(mesh->m_AnimationPlaying ? TR("Pause") : TR("Play")))
 						mesh->m_AnimationPlaying = !mesh->m_AnimationPlaying;
 
 					ImGui::SliderFloat("##AnimationTime", &mesh->m_AnimationTime, 0.0f, (float)mesh->m_Scene->mAnimations[0]->mDuration);
@@ -240,7 +241,7 @@ namespace Haoyue {
 
 	void SceneHierarchyPanel::DrawEntityNode(Entity entity)
 	{
-		const char* name = "Unnamed Entity";
+		const char* name = TR("Unnamed Entity");
 		if (entity.HasComponent<TagComponent>())
 			name = entity.GetComponent<TagComponent>().Tag.c_str();
 
@@ -269,7 +270,7 @@ namespace Haoyue {
 		bool entityDeleted = false;
 		if (ImGui::BeginPopupContextItem())
 		{
-			if (ImGui::MenuItem("Delete"))
+			if (ImGui::MenuItem(TR("Delete")))
 				entityDeleted = true;
 
 			ImGui::EndPopup();
@@ -559,16 +560,16 @@ namespace Haoyue {
 		ImGui::SameLine();
 		ImGui::TextDisabled("%llx", id);
 		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-		ImVec2 textSize = ImGui::CalcTextSize("Add Component");
+		ImVec2 textSize = ImGui::CalcTextSize(TR("Add Component"));
 		ImGui::SameLine(contentRegionAvailable.x - (textSize.x + GImGui->Style.FramePadding.y));
-		if (ImGui::Button("Add Component"))
+		if (ImGui::Button(TR("Add Component")))
 			ImGui::OpenPopup("AddComponentPanel");
 
 		if (ImGui::BeginPopup("AddComponentPanel"))
 		{
 			if (!m_SelectionContext.HasComponent<CameraComponent>())
 			{
-				if (ImGui::Button("Camera"))
+				if (ImGui::Button(TR("Camera")))
 				{
 					m_SelectionContext.AddComponent<CameraComponent>();
 					ImGui::CloseCurrentPopup();
@@ -576,7 +577,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<MeshComponent>())
 			{
-				if (ImGui::Button("Mesh"))
+				if (ImGui::Button(TR("Mesh")))
 				{
 					MeshComponent& component = m_SelectionContext.AddComponent<MeshComponent>();
 					ImGui::CloseCurrentPopup();
@@ -584,7 +585,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<DirectionalLightComponent>())
 			{
-				if (ImGui::Button("Directional Light"))
+				if (ImGui::Button(TR("Directional Light")))
 				{
 					m_SelectionContext.AddComponent<DirectionalLightComponent>();
 					ImGui::CloseCurrentPopup();
@@ -592,7 +593,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<SkyLightComponent>())
 			{
-				if (ImGui::Button("Sky Light"))
+				if (ImGui::Button(TR("Sky Light")))
 				{
 					m_SelectionContext.AddComponent<SkyLightComponent>();
 					ImGui::CloseCurrentPopup();
@@ -600,7 +601,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<ScriptComponent>())
 			{
-				if (ImGui::Button("Script"))
+				if (ImGui::Button(TR("Script")))
 				{
 					m_SelectionContext.AddComponent<ScriptComponent>();
 					ImGui::CloseCurrentPopup();
@@ -608,7 +609,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<SpriteRendererComponent>())
 			{
-				if (ImGui::Button("Sprite Renderer"))
+				if (ImGui::Button(TR("Sprite Renderer")))
 				{
 					m_SelectionContext.AddComponent<SpriteRendererComponent>();
 					ImGui::CloseCurrentPopup();
@@ -616,7 +617,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<RigidBody2DComponent>())
 			{
-				if (ImGui::Button("Rigidbody 2D"))
+				if (ImGui::Button(TR("Rigidbody 2D")))
 				{
 					m_SelectionContext.AddComponent<RigidBody2DComponent>();
 					ImGui::CloseCurrentPopup();
@@ -624,7 +625,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<BoxCollider2DComponent>())
 			{
-				if (ImGui::Button("Box Collider 2D"))
+				if (ImGui::Button(TR("Box Collider 2D")))
 				{
 					m_SelectionContext.AddComponent<BoxCollider2DComponent>();
 					ImGui::CloseCurrentPopup();
@@ -632,7 +633,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<CircleCollider2DComponent>())
 			{
-				if (ImGui::Button("Circle Collider 2D"))
+				if (ImGui::Button(TR("Circle Collider 2D")))
 				{
 					m_SelectionContext.AddComponent<CircleCollider2DComponent>();
 					ImGui::CloseCurrentPopup();
@@ -640,7 +641,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<RigidBodyComponent>())
 			{
-				if (ImGui::Button("Rigidbody"))
+				if (ImGui::Button(TR("Rigidbody")))
 				{
 					m_SelectionContext.AddComponent<RigidBodyComponent>();
 					ImGui::CloseCurrentPopup();
@@ -648,7 +649,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<BoxColliderComponent>())
 			{
-				if (ImGui::Button("Box Collider"))
+				if (ImGui::Button(TR("Box Collider")))
 				{
 					m_SelectionContext.AddComponent<BoxColliderComponent>();
 					ImGui::CloseCurrentPopup();
@@ -656,7 +657,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<SphereColliderComponent>())
 			{
-				if (ImGui::Button("Sphere Collider"))
+				if (ImGui::Button(TR("Sphere Collider")))
 				{
 					m_SelectionContext.AddComponent<SphereColliderComponent>();
 					ImGui::CloseCurrentPopup();
@@ -664,7 +665,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<CapsuleColliderComponent>())
 			{
-				if (ImGui::Button("Capsule Collider"))
+				if (ImGui::Button(TR("Capsule Collider")))
 				{
 					m_SelectionContext.AddComponent<CapsuleColliderComponent>();
 					ImGui::CloseCurrentPopup();
@@ -672,7 +673,7 @@ namespace Haoyue {
 			}
 			if (!m_SelectionContext.HasComponent<MeshColliderComponent>())
 			{
-				if (ImGui::Button("Mesh Collider"))
+				if (ImGui::Button(TR("Mesh Collider")))
 				{
 					MeshColliderComponent& component = m_SelectionContext.AddComponent<MeshColliderComponent>();
 					if (m_SelectionContext.HasComponent<MeshComponent>())
@@ -687,19 +688,19 @@ namespace Haoyue {
 			ImGui::EndPopup();
 		}
 
-		DrawComponent<TransformComponent>("Transform", entity, [](TransformComponent& component)
+		DrawComponent<TransformComponent>(TR("Transform"), entity, [](TransformComponent& component)
 		{
-			DrawVec3Control("Translation", component.Translation);
+			DrawVec3Control(TR("Translation"), component.Translation);
 			glm::vec3 rotation = glm::degrees(component.Rotation);
-			DrawVec3Control("Rotation", rotation);
+			DrawVec3Control(TR("Rotation"), rotation);
 			component.Rotation = glm::radians(rotation);
-			DrawVec3Control("Scale", component.Scale, 1.0f);
+			DrawVec3Control(TR("Scale"), component.Scale, 1.0f);
 		}, false);
 
-		DrawComponent<MeshComponent>("Mesh", entity, [&](MeshComponent& mc)
+		DrawComponent<MeshComponent>(TR("Mesh"), entity, [&](MeshComponent& mc)
 		{
 			UI::BeginPropertyGrid();
-			if (UI::PropertyAssetReference("Mesh", mc.Mesh, AssetType::Mesh))
+			if (UI::PropertyAssetReference(TR("Mesh"), mc.Mesh, AssetType::Mesh))
 			{
 				if (entity.HasComponent<MeshColliderComponent>())
 				{
@@ -714,14 +715,14 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<CameraComponent>("Camera", entity, [](CameraComponent& cc)
+		DrawComponent<CameraComponent>(TR("Camera"), entity, [](CameraComponent& cc)
 		{
 			UI::BeginPropertyGrid();
 
 			// Projection Type
-			const char* projTypeStrings[] = { "Perspective", "Orthographic" };
+			const char* projTypeStrings[] = { TR("Perspective"), TR("Orthographic") };
 			int currentProj = (int)cc.Camera.GetProjectionType();
-			if (UI::PropertyDropdown("Projection", projTypeStrings, 2, &currentProj))
+			if (UI::PropertyDropdown(TR("Projection"), projTypeStrings, 2, &currentProj))
 			{
 				cc.Camera.SetProjectionType((SceneCamera::ProjectionType)currentProj);
 			}
@@ -730,15 +731,15 @@ namespace Haoyue {
 			if (cc.Camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
 			{
 				float verticalFOV = cc.Camera.GetPerspectiveVerticalFOV();
-				if (UI::Property("Vertical FOV", verticalFOV))
+				if (UI::Property(TR("Vertical FOV"), verticalFOV))
 					cc.Camera.SetPerspectiveVerticalFOV(verticalFOV);
 
 				float nearClip = cc.Camera.GetPerspectiveNearClip();
-				if (UI::Property("Near Clip", nearClip))
+				if (UI::Property(TR("Near Clip"), nearClip))
 					cc.Camera.SetPerspectiveNearClip(nearClip);
 				ImGui::SameLine();
 				float farClip = cc.Camera.GetPerspectiveFarClip();
-				if (UI::Property("Far Clip", farClip))
+				if (UI::Property(TR("Far Clip"), farClip))
 					cc.Camera.SetPerspectiveFarClip(farClip);
 			}
 
@@ -746,48 +747,48 @@ namespace Haoyue {
 			else if (cc.Camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
 			{
 				float orthoSize = cc.Camera.GetOrthographicSize();
-				if (UI::Property("Size", orthoSize))
+				if (UI::Property(TR("Size"), orthoSize))
 					cc.Camera.SetOrthographicSize(orthoSize);
 
 				float nearClip = cc.Camera.GetOrthographicNearClip();
-				if (UI::Property("Near Clip", nearClip))
+				if (UI::Property(TR("Near Clip"), nearClip))
 					cc.Camera.SetOrthographicNearClip(nearClip);
 				ImGui::SameLine();
 				float farClip = cc.Camera.GetOrthographicFarClip();
-				if (UI::Property("Far Clip", farClip))
+				if (UI::Property(TR("Far Clip"), farClip))
 					cc.Camera.SetOrthographicFarClip(farClip);
 			}
 
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](SpriteRendererComponent& mc)
+		DrawComponent<SpriteRendererComponent>(TR("Sprite Renderer"), entity, [](SpriteRendererComponent& mc)
 		{
 		});
 
-		DrawComponent<DirectionalLightComponent>("Directional Light", entity, [](DirectionalLightComponent& dlc)
+		DrawComponent<DirectionalLightComponent>(TR("Directional Light"), entity, [](DirectionalLightComponent& dlc)
 		{
 			UI::BeginPropertyGrid();
-			UI::PropertyColor("Radiance", dlc.Radiance);
-			UI::Property("Intensity", dlc.Intensity);
-			UI::Property("Cast Shadows", dlc.CastShadows);
-			UI::Property("Soft Shadows", dlc.SoftShadows);
-			UI::Property("Source Size", dlc.LightSize);
+			UI::PropertyColor(TR("Radiance"), dlc.Radiance);
+			UI::Property(TR("Intensity"), dlc.Intensity);
+			UI::Property(TR("Cast Shadows"), dlc.CastShadows);
+			UI::Property(TR("Soft Shadows"), dlc.SoftShadows);
+			UI::Property(TR("Source Size"), dlc.LightSize);
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<SkyLightComponent>("Sky Light", entity, [](SkyLightComponent& slc)
+		DrawComponent<SkyLightComponent>(TR("Sky Light"), entity, [](SkyLightComponent& slc)
 		{
 			UI::BeginPropertyGrid();
-			UI::PropertyAssetReference("Environment Map", slc.SceneEnvironment, AssetType::EnvMap);
-			UI::Property("Intensity", slc.Intensity, 0.01f, 0.0f, 5.0f);
+			UI::PropertyAssetReference(TR("Environment Map"), slc.SceneEnvironment, AssetType::EnvMap);
+			UI::Property(TR("Intensity"), slc.Intensity, 0.01f, 0.0f, 5.0f);
 			ImGui::Separator();
-			UI::Property("Dynamic Sky", slc.DynamicSky);
+			UI::Property(TR("Dynamic Sky"), slc.DynamicSky);
 			if (slc.DynamicSky)
 			{
-				bool changed = UI::Property("Turbidity", slc.TurbidityAzimuthInclination.x, 0.01f);
-				changed |= UI::Property("Azimuth", slc.TurbidityAzimuthInclination.y, 0.01f);
-				changed |= UI::Property("Inclination", slc.TurbidityAzimuthInclination.z, 0.01f);
+				bool changed = UI::Property(TR("Turbidity"), slc.TurbidityAzimuthInclination.x, 0.01f);
+				changed |= UI::Property(TR("Azimuth"), slc.TurbidityAzimuthInclination.y, 0.01f);
+				changed |= UI::Property(TR("Inclination"), slc.TurbidityAzimuthInclination.z, 0.01f);
 				if (changed)
 				{
 					Ref<TextureCube> preethamEnv = Renderer::CreatePreethamSky(slc.TurbidityAzimuthInclination.x, slc.TurbidityAzimuthInclination.y, slc.TurbidityAzimuthInclination.z);
@@ -797,11 +798,11 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<ScriptComponent>("Script", entity, [=](ScriptComponent& sc) mutable
+		DrawComponent<ScriptComponent>(TR("Script"), entity, [=](ScriptComponent& sc) mutable
 		{
 			UI::BeginPropertyGrid();
 			std::string oldName = sc.ModuleName;
-			if (UI::Property("Module Name", sc.ModuleName, !ScriptEngine::ModuleExists(sc.ModuleName))) // TODO: no live edit
+			if (UI::Property(TR("Module Name"), sc.ModuleName, !ScriptEngine::ModuleExists(sc.ModuleName))) // TODO: no live edit
 			{
 				// Shutdown old script
 				if (ScriptEngine::ModuleExists(oldName))

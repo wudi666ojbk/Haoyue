@@ -15,6 +15,8 @@
 
 #include "Haoyue/ImGui/ImGui.h"
 
+#include "Haoyue/Editor/TranslationManager.h"
+
 namespace Haoyue {
 
 	struct SceneRendererData
@@ -161,7 +163,7 @@ namespace Haoyue {
 				{ ShaderDataType::Float3, "a_Binormal" },
 				{ ShaderDataType::Float2, "a_TexCoord" },
 			};
-			pipelineSpecification.Shader = Renderer::GetShaderLibrary()->Get("HazelPBR_Static");
+			pipelineSpecification.Shader = Renderer::GetShaderLibrary()->Get("PBR_Static");
 
 			RenderPassSpecification renderPassSpec;
 			renderPassSpec.TargetFramebuffer = framebuffer;
@@ -640,7 +642,7 @@ namespace Haoyue {
 
 	void SceneRenderer::OnImGuiRender()
 	{
-		ImGui::Begin("Scene Renderer");
+		ImGui::Begin(TR("Scene Renderer"));
 
 		if (ImGui::TreeNode("Shaders"))
 		{

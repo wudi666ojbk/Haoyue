@@ -95,8 +95,8 @@ namespace Haoyue {
 
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/Grid.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/SceneComposite.glsl");
-		Renderer::GetShaderLibrary()->Load("Resources/shaders/HazelPBR_Static.glsl");
-		//Renderer::GetShaderLibrary()->Load("Resources/shaders/HazelPBR_Anim.glsl");
+		Renderer::GetShaderLibrary()->Load("Resources/shaders/PBR_Static.glsl");
+		//Renderer::GetShaderLibrary()->Load("Resources/shaders/PBR_Anim.glsl");
 		//Renderer::GetShaderLibrary()->Load("Resources/shaders/Outline.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/Skybox.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/ShadowMap.glsl");

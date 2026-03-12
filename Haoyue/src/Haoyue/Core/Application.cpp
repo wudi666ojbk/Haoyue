@@ -20,6 +20,8 @@
 #include "Haoyue/Vulkan/VulkanRenderer.h"
 #include "Haoyue/Vulkan/VulkanAllocator.h"
 
+#include "Haoyue/Editor/TranslationManager.h"
+
 extern bool g_ApplicationRunning;
 
 namespace Haoyue {
@@ -48,6 +50,7 @@ namespace Haoyue {
 		Physics::Init();
 
 		AssetManager::Init();
+		TranslationManager::Init();
 	}
 
 	Application::~Application()
@@ -62,6 +65,7 @@ namespace Haoyue {
 		
 		Physics::Shutdown();
 		ScriptEngine::Shutdown();
+		TranslationManager::Shutdown();
 		AssetManager::Shutdown();
 
 		Renderer::WaitAndRender();

@@ -1,0 +1,72 @@
+New Scene=新场景
+
+Create=创建
+
+Empty Entity=空实体
+
+Camera=摄像机
+
+Mesh=网格
+
+Physics=物理
+
+Directional Light=平行光
+
+Sky Light=天空光
+
+Empty Mesh=空网格
+
+Cube=立方体
+
+Sphere=球体
+
+Capsule=胶囊体
+
+Plane=平面
+
+Add Component=添加组件
+
+Transform=变换
+
+Translation=位置
+
+Rotation=旋转
+
+Scale=缩放
+
+Sprite Renderer=精灵渲染器
+
+Script=脚本
+
+Unnamed Entity=未命名实体
+
+Rigidbody 2D=2D 刚体
+
+Box Collider 2D=2D 盒子碰撞体
+
+Circle Collider 2D=2D 圆形碰撞体
+
+Rigidbody=刚体
+
+Box Collider=盒子碰撞体
+
+Sphere Collider=球体碰撞体
+
+Capsule Collider=胶囊碰撞体
+
+Mesh Collider=网格碰撞体
+
+Environment Map=环境贴图
+
+Intensity=强度
+
+Dynamic Sky=动态天空
+Box=
+
+Scene Renderer=
+
+Turbidity=
+
+Azimuth=
+
+Inclination=
