@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Haoyue/Renderer/Image.h"
+#include "Haoyue/Vulkan/VulkanContext.h"
 
 #include "vulkan/vulkan.h"
 #include "VulkanMemoryAllocator/vk_mem_alloc.h"
@@ -18,16 +19,27 @@ namespace Haoyue {
 	class VulkanImage2D : public Image2D
 	{
 	public:
-		VulkanImage2D(ImageFormat format, uint32_t width, uint32_t height);
+		VulkanImage2D(ImageSpecification spec);
 		virtual ~VulkanImage2D();
 
 		virtual void Invalidate() override;
 		virtual void Release() override;
 
-		virtual uint32_t GetWidth() const override { return m_Width; }
-		virtual uint32_t GetHeight() const override { return m_Height; }
+		virtual uint32_t GetWidth() const override { return m_Specification.Width; }
+		virtual uint32_t GetHeight() const override { return m_Specification.Height; }
 
-		virtual ImageFormat GetFormat() const override { return m_Format; }
+		virtual ImageSpecification& GetSpecification() override { return m_Specification; }
+		virtual const ImageSpecification& GetSpecification() const override { return m_Specification; }
+
+		void RT_Invalidate();
+
+		virtual void CreatePerLayerImageViews() override;
+		void RT_CreatePerLayerImageViews();
+		VkImageView GetLayerImageView(uint32_t layer)
+		{
+			HY_CORE_ASSERT(layer < m_PerLayerImageViews.size());
+			return m_PerLayerImageViews[layer];
+		}
 
 		VulkanImageInfo& GetImageInfo() { return m_Info; }
 		const VulkanImageInfo& GetImageInfo() const { return m_Info; }
@@ -41,13 +53,14 @@ namespace Haoyue {
 
 		void UpdateDescriptor();
 	private:
-		ImageFormat m_Format;
-		uint32_t m_Width = 0, m_Height = 0;
-
+		ImageSpecification m_Specification;
+		
 		Buffer m_ImageData;
 
 		VulkanImageInfo m_Info;
 		VkDescriptorImageInfo m_DescriptorImageInfo = {};
+
+		std::vector<VkImageView> m_PerLayerImageViews;
 	};
 
 	namespace Utils {
@@ -56,8 +69,10 @@ namespace Haoyue {
 		{
 			switch (format)
 			{
-				case ImageFormat::RGBA:  return VK_FORMAT_R8G8B8A8_UNORM;
-				case ImageFormat::RGBA32F: return VK_FORMAT_R32G32B32A32_SFLOAT;
+				case ImageFormat::RGBA:            return VK_FORMAT_R8G8B8A8_UNORM;
+				case ImageFormat::RGBA32F:         return VK_FORMAT_R32G32B32A32_SFLOAT;
+				case ImageFormat::DEPTH32F:        return VK_FORMAT_D32_SFLOAT;
+				case ImageFormat::DEPTH24STENCIL8: return VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetDepthFormat();
 			}
 			HY_CORE_ASSERT(false);
 			return VK_FORMAT_UNDEFINED;

@@ -61,12 +61,19 @@ Environment Map=环境贴图
 Intensity=强度
 
 Dynamic Sky=动态天空
-Box=
 
-Scene Renderer=
+Box=盒子
 
-Turbidity=
+Scene Renderer=场景渲染器
 
-Azimuth=
+Turbidity=浊度
 
-Inclination=
+Azimuth=方位角
+
+Inclination=倾斜角
+
+Welcome to Haoyue!=欢迎使用 Haoyue!
+
+Environment maps are currently disabled because they're a little unstable on certain GPU drivers.=环境贴图目前在某些 GPU 驱动程序上不太稳定，因此已被禁用。
+
+Enable environment maps?=启用环境贴图？

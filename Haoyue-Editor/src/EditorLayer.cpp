@@ -982,12 +982,12 @@ namespace Haoyue {
 		ImGui::SetNextWindowSize(ImVec2{ 400,0 });
 		if (ImGui::BeginPopupModal("Welcome", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 		{
-			ImGui::Text("Welcome to Haoyue!");
+			ImGui::Text(TR("Welcome to Haoyue!"));
 			ImGui::Separator();
-			ImGui::TextWrapped("Environment maps are currently disabled because they're a little unstable on certain GPU drivers.");
+			ImGui::TextWrapped(TR("Environment maps are currently disabled because they're a little unstable on certain GPU drivers."));
 
 			UI::BeginPropertyGrid();
-			UI::Property("Enable environment maps?", Renderer::GetConfig().ComputeEnvironmentMaps);
+			UI::Property(TR("Enable environment maps?"), Renderer::GetConfig().ComputeEnvironmentMaps);
 			UI::EndPropertyGrid();
 
 			if (ImGui::Button("OK"))
@@ -1010,17 +1010,17 @@ namespace Haoyue {
 			ImGui::PopFont();
 
 			ImGui::Separator();
-			ImGui::TextWrapped("Haoyue is an early-stage interactive application and rendering engine for Windows.");
+			ImGui::TextWrapped(TR("Haoyue is an early-stage interactive application and rendering engine for Windows."));
 			ImGui::Separator();
 			ImGui::PushFont(boldFont);
-			ImGui::Text("Haoyue Core Team");
+			ImGui::Text(TR("Haoyue Core Team"));
 			ImGui::PopFont();
-			ImGui::Text("Yan Chernikov");
-			ImGui::Text("Peter Nilsson");
-			ImGui::Text("Karim Sayed");
-			ImGui::Text("Vineet Nair");
+			ImGui::Text(TR("Yan Chernikov"));
+			ImGui::Text(TR("Peter Nilsson"));
+			ImGui::Text(TR("Karim Sayed"));
+			ImGui::Text(TR("Vineet Nair"));
 			ImGui::Separator();
-			ImGui::TextColored(ImVec4{ 0.7f, 0.7f, 0.7f, 1.0f }, "This software contains source code provided by NVIDIA Corporation.");
+			ImGui::TextColored(ImVec4{ 0.7f, 0.7f, 0.7f, 1.0f }, TR("This software contains source code provided by NVIDIA Corporation."));
 
 			if (ImGui::Button("OK"))
 				ImGui::CloseCurrentPopup();

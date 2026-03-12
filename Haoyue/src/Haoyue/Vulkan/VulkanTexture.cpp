@@ -138,14 +138,20 @@ namespace Haoyue {
 		if (m_Image)
 			m_Image->Release();
 
-		m_Image = Image2D::Create(ImageFormat::RGBA, m_Width, m_Height);
+		uint32_t mipCount = GetMipLevelCount();
+
+		ImageSpecification imageSpec;
+		imageSpec.Format = m_Format;
+		imageSpec.Width = m_Width;
+		imageSpec.Height = m_Height;
+		imageSpec.Mips = mipCount;
+		m_Image = Image2D::Create(imageSpec);
 		Ref<VulkanImage2D> image = m_Image.As<VulkanImage2D>();
 		auto& info = image->GetImageInfo();
 
 		VkDeviceSize size = m_ImageData.Size;
 
 		VkFormat format = Utils::VulkanImageFormat(m_Format);
-		uint32_t mipCount = GetMipLevelCount();
 
 		VkMemoryAllocateInfo memAllocInfo{};
 		memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
