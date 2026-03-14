@@ -129,7 +129,7 @@ namespace Haoyue {
 		m_SwapChain.InitSurface(m_WindowHandle);
 
 		uint32_t width = 1280, height = 720;
-		m_SwapChain.Create(&width, &height);
+		m_SwapChain.Create(&width, &height, true);
 
 		// Pipeline Cache
 		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};

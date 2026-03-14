@@ -70,7 +70,7 @@ namespace Haoyue {
 		m_SceneState = SceneState::Play;
 
 		if (m_ReloadScriptOnPlay)
-			ScriptEngine::ReloadAssembly("/scripts/ExampleApp.dll");
+			ScriptEngine::ReloadAssembly("Resources/scripts/ExampleApp.dll");
 
 		m_RuntimeScene = Ref<Scene>::Create();
 		m_EditorScene->CopyTo(m_RuntimeScene);
@@ -167,7 +167,7 @@ namespace Haoyue {
 						Renderer::EndRenderPass();
 					}
 
-					if (selection.Entity.HasComponent<CircleCollider2DComponent>())
+					if (selection.Entity.HasComponent<CircleCollider2DComponent>() && false)
 					{
 						const auto& size = selection.Entity.GetComponent<CircleCollider2DComponent>().Radius;
 						const TransformComponent& transform = selection.Entity.GetComponent<TransformComponent>();

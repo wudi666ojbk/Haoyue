@@ -5,6 +5,7 @@
 #include "Haoyue/Renderer/VertexBuffer.h"
 #include "Haoyue/Renderer/Shader.h"
 #include "Haoyue/Renderer/RenderPass.h"
+#include "Haoyue/Renderer/UniformBuffer.h"
 
 namespace Haoyue {
 
@@ -27,7 +28,7 @@ namespace Haoyue {
 
 		virtual void Invalidate() = 0;
 
-		virtual void Bind() = 0;
+		virtual void SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t binding, uint32_t set = 0) = 0;
 
 		static Ref<Pipeline> Create(const PipelineSpecification& spec);
 	};

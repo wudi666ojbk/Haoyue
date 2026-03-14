@@ -11,9 +11,6 @@ const float PI = 3.141592;
 const float TwoPI = 2 * PI;
 const float Epsilon = 0.00001;
 
-uint NumSamples;
-float InvNumSamples;
-
 layout(push_constant) uniform Uniforms
 {
 	uint Samples;
@@ -21,7 +18,7 @@ layout(push_constant) uniform Uniforms
 
 // Compute Van der Corput radical inverse
 // See: http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
-float radicalInverse_VdC(uint bits)
+float RadicalInverse_VdC(uint bits)
 {
 	bits = (bits << 16u) | (bits >> 16u);
 	bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
@@ -32,9 +29,10 @@ float radicalInverse_VdC(uint bits)
 }
 
 // Sample i-th point from Hammersley point set of NumSamples points total.
-vec2 sampleHammersley(uint i)
+vec2 SampleHammersley(uint i, uint samples)
 {
-	return vec2(i * InvNumSamples, radicalInverse_VdC(i));
+	float invSamples = 1.0 / float(samples);
+	return vec2(i * invSamples, RadicalInverse_VdC(i));
 }
 
 // Uniformly sample point on a hemisphere.
@@ -82,28 +80,28 @@ vec3 tangentToWorld(const vec3 v, const vec3 N, const vec3 S, const vec3 T)
 layout(local_size_x=32, local_size_y=32, local_size_z=1) in;
 void main(void)
 {
-	NumSamples = 64 * u_Uniforms.Samples;
-	InvNumSamples = 1.0 / float(NumSamples);
-
 	vec3 N = GetCubeMapTexCoord();
 	
 	vec3 S, T;
 	computeBasisVectors(N, S, T);
 
+	uint samples = 64 * u_Uniforms.Samples;
+	samples = 64 * 1024;
+
 	// Monte Carlo integration of hemispherical irradiance.
 	// As a small optimization this also includes Lambertian BRDF assuming perfectly white surface (albedo of 1.0)
 	// so we don't need to normalize in PBR fragment shader (so technically it encodes exitant radiance rather than irradiance).
 	vec3 irradiance = vec3(0);
-	for(uint i = 0; i < NumSamples; i++)
+	for(uint i = 0; i < samples; i++)
 	{
-		vec2 u  = sampleHammersley(i);
+		vec2 u  = SampleHammersley(i, samples);
 		vec3 Li = tangentToWorld(sampleHemisphere(u.x, u.y), N, S, T);
 		float cosTheta = max(0.0, dot(Li, N));
 
 		// PIs here cancel out because of division by pdf.
 		irradiance += 2.0 * textureLod(u_RadianceMap, Li, 0).rgb * cosTheta;
 	}
-	irradiance /= vec3(NumSamples);
+	irradiance /= vec3(samples);
 
 	imageStore(o_IrradianceMap, ivec3(gl_GlobalInvocationID), vec4(irradiance, 1.0));
 }

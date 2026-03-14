@@ -77,7 +77,7 @@ namespace Haoyue {
 		static Ref<TextureCube> CreatePreethamSky(float turbidity, float azimuth, float inclination);
 
 		static void RenderMesh(Ref<Pipeline> pipeline, Ref<Mesh> mesh, const glm::mat4& transform);
-		static void RenderMeshWithoutMaterial(Ref<Pipeline> pipeline, Ref<Mesh> mesh, const glm::mat4& transform);
+		static void RenderMeshWithMaterial(Ref<Pipeline> pipeline, Ref<Mesh> mesh, Ref<Material> material, const glm::mat4& transform, Buffer additionalUniforms = Buffer());
 		static void RenderQuad(Ref<Pipeline> pipeline, Ref<Material> material, const glm::mat4& transform);
 		static void SubmitFullscreenQuad(Ref<Pipeline> pipeline, Ref<Material> material);
 
@@ -90,6 +90,9 @@ namespace Haoyue {
 		static Ref<Texture2D> GetWhiteTexture();
 		static Ref<TextureCube> GetBlackCubeTexture();
 		static Ref<Environment> GetEmptyEnvironment();
+
+		static void SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t set);
+		static Ref<UniformBuffer> GetUniformBuffer(uint32_t binding, uint32_t set = 0);
 
 		static void RegisterShaderDependency(Ref<Shader> shader, Ref<Pipeline> pipeline);
 		static void RegisterShaderDependency(Ref<Shader> shader, Ref<Material> material);

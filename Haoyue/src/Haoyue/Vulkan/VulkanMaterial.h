@@ -109,8 +109,9 @@ namespace Haoyue {
 		Buffer GetUniformStorageBuffer() { return m_UniformStorageBuffer; }
 
 		void UpdateForRendering();
+		void RT_UpdateForRendering();
 
-		const VulkanShader::ShaderMaterialDescriptorSet& GetDescriptorSet() { return m_DescriptorSet; }
+		VkDescriptorSet GetDescriptorSet() const { return !m_DescriptorSet.DescriptorSets.empty() ? m_DescriptorSet.DescriptorSets[0] : nullptr; }
 	private:
 		void Init();
 		void AllocateStorage();
@@ -149,9 +150,10 @@ namespace Haoyue {
 		std::vector<Ref<Texture>> m_Textures; // TODO: Texture should only be stored as images
 		std::vector<Ref<Image>> m_Images;
 
+		VulkanShader::ShaderMaterialDescriptorSet m_DescriptorSet;
+
 		std::unordered_map<uint32_t, uint64_t> m_ImageHashes;
 
-		VulkanShader::ShaderMaterialDescriptorSet m_DescriptorSet;
 		std::vector<VkWriteDescriptorSet> m_WriteDescriptors;
 
 		std::unordered_map<std::string, VkDescriptorImageInfo> m_ImageInfos;

@@ -4,6 +4,7 @@
 
 #include "Vulkan.h"
 #include "VulkanShader.h"
+#include "VulkanUniformBuffer.h"
 
 namespace Haoyue {
 
@@ -18,17 +19,25 @@ namespace Haoyue {
 
 		virtual void Invalidate() override;
 
-		virtual void Bind() override;
+		virtual void SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t binding, uint32_t set = 0) override;
 
 		VkPipeline GetVulkanPipeline() { return m_VulkanPipeline; }
 		VkPipelineLayout GetVulkanPipelineLayout() { return m_PipelineLayout; }
-		VkDescriptorSet GetDescriptorSet() { return m_DescriptorSet.DescriptorSets[0]; }
+		VkDescriptorSet GetDescriptorSet(uint32_t set = 0)
+		{
+			HY_CORE_ASSERT(m_DescriptorSets.DescriptorSets.size() > set);
+			return m_DescriptorSets.DescriptorSets[set];
+		}
+
+		const std::vector<VkDescriptorSet>& GetDescriptorSets() const { return m_DescriptorSets.DescriptorSets; }
+
+		void RT_SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t binding, uint32_t set = 0);
 	private:
 		PipelineSpecification m_Specification;
 
 		VkPipelineLayout m_PipelineLayout;
 		VkPipeline m_VulkanPipeline;
-		VulkanShader::ShaderMaterialDescriptorSet m_DescriptorSet;
+		VulkanShader::ShaderMaterialDescriptorSet m_DescriptorSets;
 	};
 
 }

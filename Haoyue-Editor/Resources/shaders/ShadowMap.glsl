@@ -11,17 +11,18 @@ layout(location = 4) in vec2 a_TexCoord;
 
 layout (std140, binding = 1) uniform ShadowData
 {
-	mat4 u_ViewProjectionMatrix;
+	mat4 u_ViewProjectionMatrix[4];
 };
 
 layout (push_constant) uniform Transform
 {
 	mat4 Transform;
+	uint Cascade;
 } u_Renderer;
 
 void main()
 {
-	gl_Position = u_ViewProjectionMatrix * u_Renderer.Transform * vec4(a_Position, 1.0);
+	gl_Position = u_ViewProjectionMatrix[u_Renderer.Cascade] * u_Renderer.Transform * vec4(a_Position, 1.0);
 }
 
 #type fragment
@@ -30,4 +31,4 @@ void main()
 void main()
 {
 	// TODO: Check for alpha in texture
-}
+}0

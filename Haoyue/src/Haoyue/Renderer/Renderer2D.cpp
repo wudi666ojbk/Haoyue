@@ -189,9 +189,6 @@ namespace Haoyue {
 		s_Data.CameraViewProj = viewProj;
 		s_Data.DepthTest = depthTest;
 
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
-
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 

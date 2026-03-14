@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Renderer.h"
 
+#include <map>
+
 #include "Shader.h"
 
 #include "RendererAPI.h"
@@ -64,6 +66,7 @@ namespace Haoyue {
 		Ref<Texture2D> WhiteTexture;
 		Ref<TextureCube> BlackCubeTexture;
 		Ref<Environment> EmptyEnvironment;
+		std::map<uint32_t, std::map<uint32_t, Ref<UniformBuffer>>> UniformBuffers;
 	};
 
 	static RendererData* s_Data = nullptr;
@@ -95,7 +98,7 @@ namespace Haoyue {
 
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/Grid.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/SceneComposite.glsl");
-		Renderer::GetShaderLibrary()->Load("Resources/shaders/PBR_Static.glsl");
+		Renderer::GetShaderLibrary()->Load("Resources/shaders/PBR_Static.glsl", true);
 		//Renderer::GetShaderLibrary()->Load("Resources/shaders/PBR_Anim.glsl");
 		//Renderer::GetShaderLibrary()->Load("Resources/shaders/Outline.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/Skybox.glsl");
@@ -183,9 +186,9 @@ namespace Haoyue {
 		s_RendererAPI->RenderMesh(pipeline, mesh, transform);
 	}
 
-	void Renderer::RenderMeshWithoutMaterial(Ref<Pipeline> pipeline, Ref<Mesh> mesh, const glm::mat4& transform)
+	void Renderer::RenderMeshWithMaterial(Ref<Pipeline> pipeline, Ref<Mesh> mesh, Ref<Material> material, const glm::mat4& transform, Buffer additionalUniforms)
 	{
-		s_RendererAPI->RenderMeshWithoutMaterial(pipeline, mesh, transform);
+		s_RendererAPI->RenderMeshWithMaterial(pipeline, mesh, material, transform, additionalUniforms);
 	}
 
 	void Renderer::RenderQuad(Ref<Pipeline> pipeline, Ref<Material> material, const glm::mat4& transform)
@@ -269,6 +272,19 @@ namespace Haoyue {
 	Ref<Environment> Renderer::GetEmptyEnvironment()
 	{
 		return s_Data->EmptyEnvironment;
+	}
+
+	void Renderer::SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t set)
+	{
+		s_Data->UniformBuffers[set][uniformBuffer->GetBinding()] = uniformBuffer;
+	}
+
+	Ref<UniformBuffer> Renderer::GetUniformBuffer(uint32_t binding, uint32_t set)
+	{
+		HY_CORE_ASSERT(s_Data->UniformBuffers.find(set) != s_Data->UniformBuffers.end());
+		HY_CORE_ASSERT(s_Data->UniformBuffers.at(set).find(binding) != s_Data->UniformBuffers.at(set).end());
+
+		return s_Data->UniformBuffers.at(set).at(binding);
 	}
 
 	RenderCommandQueue& Renderer::GetRenderCommandQueue()

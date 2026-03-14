@@ -223,42 +223,35 @@ namespace Haoyue {
 
 			// Create rendering pipeline using the specified states
 			VK_CHECK_RESULT(vkCreateGraphicsPipelines(device, pipelineCache, 1, &pipelineCreateInfo, nullptr, &instance->m_VulkanPipeline));
-
-			// Shader modules are no longer needed once the graphics pipeline has been created
-			// vkDestroyShaderModule(device, shaderStages[0].module, nullptr);
-			// vkDestroyShaderModule(device, shaderStages[1].module, nullptr);
-
-			const auto& shaderDescriptorSets = vulkanShader->GetShaderDescriptorSets();
-			if (!shaderDescriptorSets.empty())
-			{
-				// Write default descriptor set... this overlaps materials somewhat, definitely requires more thought
-				instance->m_DescriptorSet = vulkanShader->CreateDescriptorSets();
-				std::vector<VkWriteDescriptorSet> writeDescriptors;
-
-				for (auto&& [set, shaderDescriptorSet] : shaderDescriptorSets)
-				{
-					for (auto&& [binding, uniformBuffer] : shaderDescriptorSet.UniformBuffers)
-					{
-						VkWriteDescriptorSet writeDescriptorSet = {};
-						writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-						writeDescriptorSet.descriptorCount = 1;
-						writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-						writeDescriptorSet.pBufferInfo = &uniformBuffer->Descriptor;
-						writeDescriptorSet.dstBinding = binding;
-						writeDescriptorSet.dstSet = instance->m_DescriptorSet.DescriptorSets[0];
-						writeDescriptors.push_back(writeDescriptorSet);
-					}
-				}
-
-				HY_CORE_WARN("VulkanPipeline - Updating {0} descriptor sets", writeDescriptors.size());
-				vkUpdateDescriptorSets(device, writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
-			}
 		});
 	}
 
-	void VulkanPipeline::Bind()
+	void VulkanPipeline::SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t binding, uint32_t set)
 	{
-
+		Ref<VulkanPipeline> instance = this;
+		Renderer::Submit([instance, uniformBuffer, binding, set]() mutable
+			{
+				instance->RT_SetUniformBuffer(uniformBuffer, binding, set);
+			});
 	}
 
+	void VulkanPipeline::RT_SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t binding, uint32_t set)
+	{
+		Ref<VulkanShader> vulkanShader = Ref<VulkanShader>(m_Specification.Shader);
+		Ref<VulkanUniformBuffer> vulkanUniformBuffer = uniformBuffer.As<VulkanUniformBuffer>();
+
+		HY_CORE_ASSERT(m_DescriptorSets.DescriptorSets.size() > set);
+
+		VkWriteDescriptorSet writeDescriptorSet = {};
+		writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		writeDescriptorSet.descriptorCount = 1;
+		writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		writeDescriptorSet.pBufferInfo = &vulkanUniformBuffer->GetDescriptorBufferInfo();
+		writeDescriptorSet.dstBinding = binding;
+		writeDescriptorSet.dstSet = m_DescriptorSets.DescriptorSets[set];
+
+		HY_CORE_WARN("VulkanPipeline - Updating descriptor set (VulkanPipeline::SetUniformBuffer)");
+		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+		vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
+	}
 }
