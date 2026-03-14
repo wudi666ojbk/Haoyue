@@ -6,7 +6,8 @@ bin-int/
 obj/
 cache/
 HaoYue/vendor/VulkanSDK
-HaoYue-Editor/Log/
+Haoyue-Editor/logs/APP.log
+Haoyue-Editor/logs/HAOYUE.log
 
 # Visual Studio files and folder
 .vs/
