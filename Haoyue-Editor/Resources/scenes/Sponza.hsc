@@ -1,6 +1,6 @@
 Scene: Scene Name
 Environment:
-  AssetPath: assets\env\pink_sunrise_4k.hdr
+  AssetPath: Resources\env\pink_sunrise_4k.hdr
   Light:
     Direction: [0.0529999994, 0.795000017, 0]
     Radiance: [1, 0.999989986, 0.999989986]
@@ -14,7 +14,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SkyLightComponent:
-      EnvironmentAssetPath: assets\env\pink_sunrise_4k.hdr
+      EnvironmentAssetPath: Resources\env\pink_sunrise_4k.hdr
       Intensity: 0.460000008
       Angle: 0
   - Entity: 15213035846546605980
@@ -25,7 +25,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [0.100000001, 0.100000001, 0.100000001]
     MeshComponent:
-      AssetPath: assets\meshes\sponza\sponza.obj
+      AssetPath: Resources\meshes\sponza\sponza.obj
   - Entity: 17359415144565549859
     TagComponent:
       Tag: Directional Light

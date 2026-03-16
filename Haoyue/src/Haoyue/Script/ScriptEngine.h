@@ -114,7 +114,7 @@ namespace Haoyue {
 
 		static void OnSceneDestruct(UUID sceneID);
 
-		static void LoadHazelRuntimeAssembly(const std::string& path);
+		static void LoadHaoyueRuntimeAssembly(const std::string& path);
 		static void ReloadAssembly(const std::string& path);
 
 		static void SetSceneContext(const Ref<Scene>& scene);

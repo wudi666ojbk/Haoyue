@@ -77,3 +77,39 @@ Welcome to Haoyue!=欢迎使用 Haoyue!
 Environment maps are currently disabled because they're a little unstable on certain GPU drivers.=环境贴图目前在某些 GPU 驱动程序上不太稳定，因此已被禁用。
 
 Enable environment maps?=启用环境贴图？
+
+Renderer=渲染信息
+
+Vendor: %s=供应商: %s
+
+Renderer: %s=着色器: %s
+
+Version: %s=版本: %s
+
+Used VRAM: %s=已用显存：%s
+
+Free VRAM: %s=可用显存：%s
+
+Delete=删除
+
+Frame Time: %.2fms=每帧时间: %.2fms
+
+Perspective=透视
+
+Orthographic=正交
+
+Projection=投影
+
+Vertical FOV=垂直视场角
+
+Near Clip=近裁剪面
+
+Far Clip=远裁剪面
+
+Radiance=
+
+Cast Shadows=
+
+Soft Shadows=
+
+Source Size=

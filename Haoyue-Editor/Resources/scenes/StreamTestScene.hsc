@@ -1,6 +1,6 @@
 Scene: Scene Name
 Environment:
-  AssetPath: assets\env\pink_sunrise_4k.hdr
+  AssetPath: Resources\env\pink_sunrise_4k.hdr
   Light:
     Direction: [-0.442000002, -0.58099997, -0.451999992]
     Radiance: [1, 0.999989986, 0.999989986]
@@ -14,7 +14,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [4, 4, 1]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 1
       Mass: 1
@@ -29,7 +29,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [36, 3.99999952, 4]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 0
       Mass: 1
@@ -44,7 +44,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [36, 4.00000238, 4]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 0
       Mass: 1
@@ -59,7 +59,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [0.359999985, 0.360000014, 0.360000014]
     MeshComponent:
-      AssetPath: assets\meshes\cerberus\CerberusMaterials.fbx
+      AssetPath: Resources\meshes\cerberus\CerberusMaterials.fbx
     RigidBody2DComponent:
       BodyType: 1
       Mass: 1

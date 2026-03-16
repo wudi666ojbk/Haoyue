@@ -1,6 +1,6 @@
 Scene: Scene Name
 Environment:
-  AssetPath: assets\env\pink_sunrise_4k.hdr
+  AssetPath: Resources\env\pink_sunrise_4k.hdr
   Light:
     Direction: [-0.787, -0.73299998, 1]
     Radiance: [1, 1, 1]
@@ -14,7 +14,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [50, 1, 50]
     MeshComponent:
-      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\meshes\Cube1m.fbx
+      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\meshes\Cube1m.fbx
     RigidBodyComponent:
       BodyType: 0
       Mass: 1
@@ -31,7 +31,7 @@ Entities:
       DynamicFriction: 1
       Bounciness: 0
     MeshColliderComponent:
-      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\meshes\Cube1m.fbx
+      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\meshes\Cube1m.fbx
       IsTrigger: false
   - Entity: 5178862374589434728
     TagComponent:
@@ -51,7 +51,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      AssetPath: assets\meshes\Sphere1m.fbx
+      AssetPath: Resources\meshes\Sphere1m.fbx
     RigidBodyComponent:
       BodyType: 0
       Mass: 1
@@ -78,7 +78,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [2, 2, 2]
     MeshComponent:
-      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\meshes\Cube1m.fbx
+      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\meshes\Cube1m.fbx
     RigidBodyComponent:
       BodyType: 1
       Mass: 0.5
@@ -106,7 +106,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\meshes\Sphere1m.fbx
+      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\meshes\Sphere1m.fbx
     RigidBodyComponent:
       BodyType: 1
       Mass: 0.100000001
@@ -123,7 +123,7 @@ Entities:
       DynamicFriction: 1
       Bounciness: 0.100000001
     MeshColliderComponent:
-      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\meshes\Sphere1m.fbx
+      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\meshes\Sphere1m.fbx
       IsTrigger: false
   - Entity: 3247025703490125974
     TagComponent:
@@ -145,7 +145,7 @@ Entities:
           Type: 1
           Data: 50
     MeshComponent:
-      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\meshes\Capsule.fbx
+      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\meshes\Capsule.fbx
     RigidBodyComponent:
       BodyType: 1
       Mass: 1

@@ -1,6 +1,6 @@
 Scene: Scene Name
 Environment:
-  AssetPath: assets\env\pink_sunrise_4k.hdr
+  AssetPath: Resources\env\pink_sunrise_4k.hdr
   Light:
     Direction: [-0.787, -0.73299998, 1]
     Radiance: [1, 1, 1]
@@ -14,7 +14,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [4.47999525, 4.47999525, 4.48000002]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 1
       Mass: 1
@@ -29,7 +29,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [4.47999668, 4.47999668, 4.48000002]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 1
       Mass: 1
@@ -44,7 +44,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [4.47999287, 4.47999287, 4.48000002]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 1
       Mass: 0.5
@@ -59,7 +59,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [5, 2, 2]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 1
       Mass: 0.25
@@ -74,7 +74,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [14.000001, 4.47999334, 4.48000002]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 1
       Mass: 3
@@ -89,7 +89,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [4.47999954, 4.47999954, 4.48000002]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 1
       Mass: 1
@@ -113,7 +113,7 @@ Entities:
           Type: 1
           Data: 10
     MeshComponent:
-      AssetPath: assets\meshes\Sphere1m.fbx
+      AssetPath: Resources\meshes\Sphere1m.fbx
     RigidBody2DComponent:
       BodyType: 1
       Mass: 1
@@ -134,7 +134,7 @@ Entities:
           Type: 1
           Data: 0
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 0
       Mass: 1
@@ -165,7 +165,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1.99999976, 1.99999976, 2]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 1
       Mass: 1

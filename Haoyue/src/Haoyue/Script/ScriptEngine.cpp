@@ -133,7 +133,7 @@ namespace Haoyue {
 			// mono_jit_set_trace_options("--verbose");
 			auto domain = mono_jit_init("Haoyue");
 
-			char* name = (char*)"HazelRuntime";
+			char* name = (char*)"HaoyueRuntime";
 			s_MonoDomain = mono_domain_create_appdomain(name, nullptr);
 		}
 	}
@@ -246,7 +246,7 @@ namespace Haoyue {
 		return mono_string_new(s_MonoDomain, "Hello!");
 	}
 
-	void ScriptEngine::LoadHazelRuntimeAssembly(const std::string& path)
+	void ScriptEngine::LoadHaoyueRuntimeAssembly(const std::string& path)
 	{
 		MonoDomain* domain = nullptr;
 		bool cleanup = false;
@@ -277,7 +277,7 @@ namespace Haoyue {
 
 	void ScriptEngine::ReloadAssembly(const std::string& path)
 	{
-		LoadHazelRuntimeAssembly(path);
+		LoadHaoyueRuntimeAssembly(path);
 		if (s_EntityInstanceMap.size())
 		{
 			Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
@@ -301,7 +301,7 @@ namespace Haoyue {
 
 		InitMono();
 
-		LoadHazelRuntimeAssembly(s_AssemblyPath);
+		LoadHaoyueRuntimeAssembly(s_AssemblyPath);
 	}
 
 	void ScriptEngine::Shutdown()
@@ -537,7 +537,7 @@ namespace Haoyue {
 		return monoClass != nullptr;
 	}
 
-	static FieldType GetHazelFieldType(MonoType* monoType)
+	static FieldType GetHaoyueFieldType(MonoType* monoType)
 	{
 		int type = mono_type_get_type(monoType);
 		switch (type)
@@ -627,9 +627,9 @@ namespace Haoyue {
 					continue;
 
 				MonoType* fieldType = mono_field_get_type(iter);
-				FieldType hazelFieldType = GetHazelFieldType(fieldType);
+				FieldType HaoyueFieldType = GetHaoyueFieldType(fieldType);
 
-				if (hazelFieldType == FieldType::ClassReference)
+				if (HaoyueFieldType == FieldType::ClassReference)
 					continue;
 
 				// TODO: Attributes
@@ -643,7 +643,7 @@ namespace Haoyue {
 				}
 				else
 				{
-					PublicField field = { name, typeName, hazelFieldType };
+					PublicField field = { name, typeName, HaoyueFieldType };
 					field.m_EntityInstance = &entityInstance;
 					field.m_MonoClassField = iter;
 

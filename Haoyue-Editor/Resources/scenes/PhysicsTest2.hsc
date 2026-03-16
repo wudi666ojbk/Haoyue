@@ -1,6 +1,6 @@
 Scene: Scene Name
 Environment:
-  AssetPath: assets\env\pink_sunrise_4k.hdr
+  AssetPath: Resources\env\pink_sunrise_4k.hdr
   Light:
     Direction: [-0.787, -0.73299998, 1]
     Radiance: [1, 1, 1]
@@ -14,7 +14,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [0.100000001, 0.100000001, 0.100000001]
     MeshComponent:
-      AssetPath: assets\meshes\sponza\sponza.obj
+      AssetPath: Resources\meshes\sponza\sponza.obj
     RigidBodyComponent:
       BodyType: 0
       Mass: 1
@@ -32,7 +32,7 @@ Entities:
       DynamicFriction: 1
       Bounciness: 0
     MeshColliderComponent:
-      AssetPath: assets\meshes\sponza\sponza.obj
+      AssetPath: Resources\meshes\sponza\sponza.obj
       IsTrigger: false
   - Entity: 4655832978979727422
     TagComponent:
@@ -42,7 +42,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [5, 5, 5]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBodyComponent:
       BodyType: 1
       Mass: 1

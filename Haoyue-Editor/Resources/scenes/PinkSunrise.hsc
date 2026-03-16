@@ -1,6 +1,6 @@
 Scene: Scene Name
 Environment:
-  AssetPath: assets\env\birchwood_4k.hdr
+  AssetPath: Resources\env\birchwood_4k.hdr
   Light:
     Direction: [-0.5, -0.5, 1]
     Radiance: [1, 1, 1]
@@ -20,7 +20,7 @@ Entities:
           Type: 1
           Data: 5
     MeshComponent:
-      AssetPath: assets\meshes\Sphere1m.fbx
+      AssetPath: Resources\meshes\Sphere1m.fbx
   - Entity: 5178862374589434728
     TagComponent:
       Tag: Camera
@@ -63,4 +63,4 @@ Entities:
           Type: 6
           Data: [0, 0, 0]
     MeshComponent:
-      AssetPath: assets\meshes\TestScene.fbx
+      AssetPath: Resources\meshes\TestScene.fbx

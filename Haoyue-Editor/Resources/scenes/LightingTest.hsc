@@ -1,6 +1,6 @@
 Scene: Scene Name
 Environment:
-  AssetPath: assets\env\birchwood_4k.hdr
+  AssetPath: Resources\env\birchwood_4k.hdr
   Light:
     Direction: [-0.788999975, 0.777999997, -0.782999992]
     Radiance: [1, 0.999989986, 0.999989986]
@@ -14,7 +14,7 @@ Entities:
       Rotation: [0, -0, 0]
       Scale: [0.100000001, 0.100000001, 0.100000001]
     MeshComponent:
-      AssetPath: assets\meshes\sponza\sponza.obj
+      AssetPath: Resources\meshes\sponza\sponza.obj
     RigidBodyComponent:
       BodyType: 0
       Mass: 1
@@ -32,7 +32,7 @@ Entities:
       DynamicFriction: 1
       Bounciness: 0
     MeshColliderComponent:
-      AssetPath: assets\meshes\sponza\sponza.obj
+      AssetPath: Resources\meshes\sponza\sponza.obj
       IsConvex: false
       IsTrigger: false
   - Entity: 3370882484222092056
@@ -55,7 +55,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SkyLightComponent:
-      EnvironmentAssetPath: assets\env\birchwood_4k.hdr
+      EnvironmentAssetPath: Resources\env\birchwood_4k.hdr
       Intensity: 1
       Angle: 0
   - Entity: 6988676893832268174
@@ -66,7 +66,7 @@ Entities:
       Rotation: [1.13830311e-06, 0, 4.45406357e-07]
       Scale: [5.00000381, 5.00001049, 5.00000381]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBodyComponent:
       BodyType: 1
       Mass: 1

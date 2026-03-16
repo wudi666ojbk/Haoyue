@@ -1,6 +1,6 @@
 Scene: Scene Name
 Environment:
-  AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\env\birchwood_4k.hdr
+  AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\env\birchwood_4k.hdr
   Light:
     Direction: [0, 0, 0]
     Radiance: [0, 0, 0]
@@ -14,9 +14,9 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\meshes\Capsule.fbx
+      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\meshes\Capsule.fbx
     MeshColliderComponent:
-      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\meshes\Capsule.fbx
+      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\meshes\Capsule.fbx
       IsConvex: true
       IsTrigger: false
   - Entity: 12392346523579991874
@@ -58,7 +58,7 @@ Entities:
           Type: 1
           Data: 2
     MeshComponent:
-      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\meshes\Capsule.fbx
+      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\meshes\Capsule.fbx
     RigidBodyComponent:
       BodyType: 1
       Mass: 1
@@ -90,7 +90,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\meshes\CubeScene.fbx
+      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\meshes\CubeScene.fbx
     RigidBodyComponent:
       BodyType: 0
       Mass: 1
@@ -107,7 +107,7 @@ Entities:
         LockRotationY: false
         LockRotationZ: false
     MeshColliderComponent:
-      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\meshes\CubeScene.fbx
+      AssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\meshes\CubeScene.fbx
       IsConvex: true
       IsTrigger: false
   - Entity: 2143608321399101581
@@ -118,7 +118,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SkyLightComponent:
-      EnvironmentAssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\assets\env\birchwood_4k.hdr
+      EnvironmentAssetPath: D:\Programming\C++\HazelPhysics\HaoYue-Editor\Resources\env\birchwood_4k.hdr
       Intensity: 1
       Angle: 0
   - Entity: 13882838760121718506
