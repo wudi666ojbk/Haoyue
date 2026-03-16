@@ -68,6 +68,6 @@ namespace Haoyue {
 		Timer m_Timer;
 	};
 
-#define HZ_SCOPE_PERF(name)\
+#define HY_SCOPE_PERF(name)\
 	ScopePerfTimer timer__LINE__(name, Application::Get().GetPerformanceProfiler());
 }

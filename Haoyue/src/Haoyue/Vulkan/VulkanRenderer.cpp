@@ -128,7 +128,8 @@ namespace Haoyue {
 	{
 		Renderer::Submit([pipeline, mesh, transform]() mutable
 			{
-				auto vulkanMeshVB = mesh->GetVertexBuffer().As<VulkanVertexBuffer>();
+				HY_SCOPE_PERF("VulkanRenderer::RenderMesh");
+				Ref<VulkanVertexBuffer> vulkanMeshVB = mesh->GetVertexBuffer().As<VulkanVertexBuffer>();
 				VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
 				VkDeviceSize offsets[1] = { 0 };
 				vkCmdBindVertexBuffers(s_Data->ActiveCommandBuffer, 0, 1, &vbMeshBuffer, offsets);

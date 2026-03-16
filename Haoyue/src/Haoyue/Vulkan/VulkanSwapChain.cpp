@@ -527,17 +527,20 @@ namespace Haoyue {
 
 	void VulkanSwapChain::BeginFrame()
 	{
+		HY_SCOPE_PERF("VulkanSwapChain::BeginFrame");
+
 		VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex], VK_TRUE, UINT64_MAX));
 		VK_CHECK_RESULT(AcquireNextImage(m_Semaphores.PresentComplete, &m_CurrentBufferIndex));
+		VK_CHECK_RESULT(vkResetCommandPool(m_Device->GetVulkanDevice(), m_CommandPool, 0));
 	}
 
 	void VulkanSwapChain::Present()
 	{
-		const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
+		HY_SCOPE_PERF("VulkanSwapChain::Present");
 
-		// Use a fence to wait until the command buffer has finished execution before using it again
 		VK_CHECK_RESULT(vkResetFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex]));
 
+		const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
 		// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
 		VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		// The submit info structure specifices a command buffer queue submission batch

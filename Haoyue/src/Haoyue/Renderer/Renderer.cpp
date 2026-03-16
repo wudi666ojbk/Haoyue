@@ -9,6 +9,8 @@
 #include "SceneRenderer.h"
 #include "Renderer2D.h"
 
+#include "Haoyue/Core/Timer.h"
+
 #include "Haoyue/Vulkan/VulkanRenderer.h"
 
 namespace Haoyue {
@@ -141,6 +143,7 @@ namespace Haoyue {
 
 	void Renderer::WaitAndRender()
 	{
+		HY_SCOPE_PERF("Renderer::WaitAndRender");
 		s_CommandQueue->Execute();
 	}
 

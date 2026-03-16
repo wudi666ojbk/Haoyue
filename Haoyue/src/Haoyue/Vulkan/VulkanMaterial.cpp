@@ -9,6 +9,8 @@
 #include "VulkanPipeline.h"
 #include "VulkanUniformBuffer.h"
 
+#include "Haoyue/Core/Timer.h"
+
 namespace Haoyue {
 
 	VulkanMaterial::VulkanMaterial(const Ref<Shader>& shader, const std::string& name)
@@ -337,6 +339,7 @@ namespace Haoyue {
 
 	void VulkanMaterial::RT_UpdateForRendering()
 	{
+		HY_SCOPE_PERF("VulkanMaterial::RT_UpdateForRendering");
 		auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		for (auto&& [binding, descriptor] : m_ResidentDescriptors)
 		{
