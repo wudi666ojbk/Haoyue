@@ -2,6 +2,7 @@
 
 #include "Haoyue/Core/Base.h"
 #include "Haoyue/Core/Timestep.h"
+#include "Haoyue/Core/Timer.h"
 #include "Haoyue/Core/Window.h"
 #include "Haoyue/Core/LayerStack.h"
 
@@ -47,6 +48,8 @@ namespace Haoyue {
 
 		static const char* GetConfigurationName();
 		static const char* GetPlatformName();
+
+		PerformanceProfiler* GetPerformanceProfiler() { return m_Profiler; }
 	private:
 		bool OnWindowResize(WindowResizeEvent& e);
 		bool OnWindowClose(WindowCloseEvent& e);
@@ -56,8 +59,8 @@ namespace Haoyue {
 		LayerStack m_LayerStack;
 		ImGuiLayer* m_ImGuiLayer;
 		Timestep m_TimeStep;
-
 		float m_LastFrameTime = 0.0f;
+		PerformanceProfiler* m_Profiler = nullptr; // TODO: Should be null in Dist
 
 		static Application* s_Instance;
 	};

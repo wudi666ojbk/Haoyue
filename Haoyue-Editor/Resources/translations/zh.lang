@@ -106,10 +106,40 @@ Near Clip=近裁剪面
 
 Far Clip=远裁剪面
 
-Radiance=
+Radiance=辐射度
 
-Cast Shadows=
+Cast Shadows=投射阴影
 
-Soft Shadows=
+Soft Shadows=柔和阴影
 
-Source Size=
+Source Size=光源尺寸
+
+Performance=性能面板
+
+Haoyue is an early-stage interactive application and rendering engine for Windows.=Haoyue 是一款处于早期阶段的 Windows 交互式应用程序和渲染引擎。
+
+This software contains source code provided by NVIDIA Corporation.=本软件包含由 NVIDIA 公司提供的源代码。
+
+File=文件
+
+Edit=编辑
+
+Help=帮助
+
+Reload C# Assembly=重新加载 C# 程序集
+
+Reload assembly on play=运行时重新加载程序集
+
+Physics Settings=物理设置
+
+Open Scene...=打开场景...
+
+Ctrl+S=Ctrl+S
+
+Save Scene=保存场景
+
+About=关于
+
+Language=语言
+
+Scripts=脚本

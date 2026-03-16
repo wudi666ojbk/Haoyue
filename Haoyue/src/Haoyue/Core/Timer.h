@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <unordered_map>
 
 namespace Haoyue {
 
@@ -31,4 +32,42 @@ namespace Haoyue {
 		std::chrono::time_point<std::chrono::high_resolution_clock> m_Start;
 	};
 
+	class PerformanceProfiler
+	{
+	public:
+		void SetPerFrameTiming(const char* name, float time)
+		{
+			if (m_PerFrameData.find(name) == m_PerFrameData.end())
+				m_PerFrameData[name] = 0.0f;
+
+			m_PerFrameData[name] += time;
+		}
+
+		void Clear() { m_PerFrameData.clear(); }
+
+		const std::unordered_map<const char*, float>& GetPerFrameData() const { return m_PerFrameData; }
+	private:
+		std::unordered_map<const char*, float> m_PerFrameData;
+	};
+
+	class ScopePerfTimer
+	{
+	public:
+		ScopePerfTimer(const char* name, PerformanceProfiler* profiler)
+			: m_Name(name), m_Profiler(profiler) {
+		}
+
+		~ScopePerfTimer()
+		{
+			float time = m_Timer.ElapsedMillis();
+			m_Profiler->SetPerFrameTiming(m_Name, time);
+		}
+	private:
+		const char* m_Name;
+		PerformanceProfiler* m_Profiler;
+		Timer m_Timer;
+	};
+
+#define HZ_SCOPE_PERF(name)\
+	ScopePerfTimer timer__LINE__(name, Application::Get().GetPerformanceProfiler());
 }

@@ -34,6 +34,8 @@ namespace Haoyue {
 	{
 		s_Instance = this;
 
+		m_Profiler = new PerformanceProfiler();
+
 		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(props.Name, props.WindowWidth, props.WindowHeight)));
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 		m_Window->Maximize();
@@ -70,6 +72,9 @@ namespace Haoyue {
 
 		Renderer::WaitAndRender();
 		Renderer::Shutdown();
+
+		delete m_Profiler;
+		m_Profiler = nullptr;
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -87,24 +92,37 @@ namespace Haoyue {
 	void Application::RenderImGui()
 	{
 		m_ImGuiLayer->Begin();
-		ImGui::Begin("Renderer");
-		auto& caps = Renderer::GetCapabilities();
-		ImGui::Text("Vendor: %s", caps.Vendor.c_str());
-		ImGui::Text("Renderer: %s", caps.Device.c_str());
-		ImGui::Text("Version: %s", caps.Version.c_str());
-		ImGui::Separator();
-		ImGui::Text("Frame Time: %.2fms\n", m_TimeStep.GetMilliseconds());
-
-		if (RendererAPI::Current() == RendererAPIType::Vulkan)
+		ImGui::Begin(TR("Renderer"));
 		{
-			GPUMemoryStats memoryStats = VulkanAllocator::GetStats();
-			std::string used = Utils::BytesToString(memoryStats.Used);
-			std::string free = Utils::BytesToString(memoryStats.Free);
-			ImGui::Text("Used VRAM: %s", used.c_str());
-			ImGui::Text("Free VRAM: %s", free.c_str());
-		}
+			auto& caps = Renderer::GetCapabilities();
+			ImGui::Text(TR("Vendor: %s"), caps.Vendor.c_str());
+			ImGui::Text(TR("Renderer: %s"), caps.Device.c_str());
+			ImGui::Text(TR("Version: %s"), caps.Version.c_str());
+			ImGui::Separator();
+			ImGui::Text(TR("Frame Time: %.2fms"), m_TimeStep.GetMilliseconds());
 
+			if (RendererAPI::Current() == RendererAPIType::Vulkan)
+			{
+				GPUMemoryStats memoryStats = VulkanAllocator::GetStats();
+				std::string used = Utils::BytesToString(memoryStats.Used);
+				std::string free = Utils::BytesToString(memoryStats.Free);
+				ImGui::Text(TR("Used VRAM: %s"), used.c_str());
+				ImGui::Text(TR("Free VRAM: %s"), free.c_str());
+			}
+		}
 		ImGui::End();
+
+		ImGui::Begin(TR("Performance"));
+		{
+			ImGui::Text(TR("Frame Time: %.2fms"), m_TimeStep.GetMilliseconds());
+			const auto& perFrameData = m_Profiler->GetPerFrameData();
+			for (auto&& [name, time] : perFrameData)
+			{
+				ImGui::Text(TR("%s: %.3fms"), name, time);
+			}
+		}
+		ImGui::End();
+		m_Profiler->Clear();
 
 		for (Layer* layer : m_LayerStack)
 			layer->OnImGuiRender();

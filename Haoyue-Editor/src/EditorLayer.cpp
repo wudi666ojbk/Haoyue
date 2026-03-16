@@ -602,51 +602,52 @@ namespace Haoyue {
 
 		if (ImGui::BeginMenuBar())
 		{
-			if (ImGui::BeginMenu("File"))
+			if (ImGui::BeginMenu(TR("File")))
 			{
 				if (ImGui::MenuItem(TR("New Scene"), "Ctrl+N"))
 					NewScene();
-				if (ImGui::MenuItem("Open Scene...", "Ctrl+O"))
+				if (ImGui::MenuItem(TR("Open Scene..."), "Ctrl+O"))
 					OpenScene();
 				ImGui::Separator();
-				if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+				if (ImGui::MenuItem(TR("Save Scene"), TR("Ctrl+S")))
 					SaveScene();
 				if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
 					SaveSceneAs();
-
-				ImGui::Separator();
-				std::string otherRenderer = RendererAPI::Current() == RendererAPIType::Vulkan ? "OpenGL" : "Vulkan";
-				std::string label = std::string("Restart with ") + otherRenderer;
-				if (ImGui::MenuItem(label.c_str()))
-				{
-					RendererAPI::SetAPI(RendererAPI::Current() == RendererAPIType::Vulkan ? RendererAPIType::OpenGL : RendererAPIType::Vulkan);
-					Application::Get().Close();
-				}
 				ImGui::Separator();
 				if (ImGui::MenuItem("Exit"))
 					p_open = false;
 				ImGui::EndMenu();
 			}
 
-			if (ImGui::BeginMenu("Script"))
+			if (ImGui::BeginMenu(TR("Language")))
 			{
-				if (ImGui::MenuItem("Reload C# Assembly"))
-					ScriptEngine::ReloadAssembly("/scripts/ExampleApp.dll");
-
-				ImGui::MenuItem("Reload assembly on play", nullptr, &m_ReloadScriptOnPlay);
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("Edit"))
-			{
-				ImGui::MenuItem("Physics Settings", nullptr, &m_ShowPhysicsSettings);
+				if (ImGui::MenuItem("English"))
+					TranslationManager::SetLanguage(TranslationManager::Language::English);
+				if (ImGui::MenuItem("Chinese"))
+					TranslationManager::SetLanguage(TranslationManager::Language::Chinese);
 
 				ImGui::EndMenu();
 			}
 
-			if (ImGui::BeginMenu("Help"))
+			if (ImGui::BeginMenu(TR("Scripts")))
 			{
-				if (ImGui::MenuItem("About"))
+				if (ImGui::MenuItem(TR("Reload C# Assembly")))
+					ScriptEngine::ReloadAssembly("Resources/scripts/ExampleApp.dll");
+
+				ImGui::MenuItem(TR("Reload assembly on play"), nullptr, &m_ReloadScriptOnPlay);
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu(TR("Edit")))
+			{
+				ImGui::MenuItem(TR("Physics Settings"), nullptr, &m_ShowPhysicsSettings);
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu(TR("Help")))
+			{
+				if (ImGui::MenuItem(TR("About")))
 					m_ShowAboutPopup = true;
 				ImGui::EndMenu();
 			}
@@ -1013,12 +1014,7 @@ namespace Haoyue {
 			ImGui::TextWrapped(TR("Haoyue is an early-stage interactive application and rendering engine for Windows."));
 			ImGui::Separator();
 			ImGui::PushFont(boldFont);
-			ImGui::Text(TR("Haoyue Core Team"));
 			ImGui::PopFont();
-			ImGui::Text(TR("Yan Chernikov"));
-			ImGui::Text(TR("Peter Nilsson"));
-			ImGui::Text(TR("Karim Sayed"));
-			ImGui::Text(TR("Vineet Nair"));
 			ImGui::Separator();
 			ImGui::TextColored(ImVec4{ 0.7f, 0.7f, 0.7f, 1.0f }, TR("This software contains source code provided by NVIDIA Corporation."));
 

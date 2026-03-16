@@ -36,7 +36,7 @@ namespace Haoyue {
 		appSinks[0]->set_pattern("%^[%T] %n: %v%$");
 		appSinks[1]->set_pattern("[%T] [%l] %n: %v");
 
-		s_CoreLogger = std::make_shared<spdlog::logger>("HAZEL", haoyueSinks.begin(), haoyueSinks.end());
+		s_CoreLogger = std::make_shared<spdlog::logger>("CORE", haoyueSinks.begin(), haoyueSinks.end());
 		s_CoreLogger->set_level(spdlog::level::trace);
 
 		s_ClientLogger = std::make_shared<spdlog::logger>("APP", appSinks.begin(), appSinks.end());
