@@ -118,7 +118,7 @@ namespace Haoyue {
 			const auto& perFrameData = m_Profiler->GetPerFrameData();
 			for (auto&& [name, time] : perFrameData)
 			{
-				ImGui::Text(TR("%s: %.3fms"), name, time);
+				ImGui::Text("%s: %.3fms", name, time);
 			}
 		}
 		ImGui::End();

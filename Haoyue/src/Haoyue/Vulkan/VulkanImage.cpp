@@ -40,18 +40,22 @@ namespace Haoyue {
 
 	void VulkanImage2D::Release()
 	{
-		auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-		vkDestroyImageView(vulkanDevice, m_Info.ImageView, nullptr);
-		vkDestroySampler(vulkanDevice, m_Info.Sampler, nullptr);
+		Ref<VulkanImage2D> instance = this;
+		Renderer::SubmitResourceFree([instance]() mutable
+			{
+				auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+				vkDestroyImageView(vulkanDevice, instance->m_Info.ImageView, nullptr);
+				vkDestroySampler(vulkanDevice, instance->m_Info.Sampler, nullptr);
 
-		VulkanAllocator allocator("VulkanImage2D");
-		allocator.DestroyImage(m_Info.Image, m_Info.MemoryAlloc);
+				VulkanAllocator allocator("VulkanImage2D");
+				allocator.DestroyImage(instance->m_Info.Image, instance->m_Info.MemoryAlloc);
 
-		HY_CORE_WARN("VulkanImage2D::Release ImageView = {0}", (const void*)m_Info.ImageView);
+				HY_CORE_WARN("VulkanImage2D::Release ImageView = {0}", (const void*)instance->m_Info.ImageView);
 
-		m_Info.Image = nullptr;
-		m_Info.ImageView = nullptr;
-		m_Info.Sampler = nullptr;
+				instance->m_Info.Image = nullptr;
+				instance->m_Info.ImageView = nullptr;
+				instance->m_Info.Sampler = nullptr;
+			});
 	}
 
 	void VulkanImage2D::RT_Invalidate()

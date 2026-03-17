@@ -22,6 +22,7 @@
 #include "examples/imgui_impl_vulkan_with_textures.h"
 
 #include "VulkanComputePipeline.h"
+#include "Haoyue/Core/Timer.h"
 
 #include <glm/glm.hpp>
 
@@ -171,8 +172,16 @@ namespace Haoyue {
 
 	void VulkanRenderer::RenderMeshWithMaterial(Ref<Pipeline> pipeline, Ref<Mesh> mesh, Ref<Material> material, const glm::mat4& transform, Buffer additionalUniforms)
 	{
-		Renderer::Submit([pipeline, mesh, transform]() mutable
+		Buffer pushConstantBuffer;
+		pushConstantBuffer.Allocate(sizeof(glm::mat4) + additionalUniforms.Size);
+		if (additionalUniforms.Size)
+			pushConstantBuffer.Write(additionalUniforms.Data, additionalUniforms.Size, sizeof(glm::mat4));
+
+		Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
+		Renderer::Submit([pipeline, mesh, vulkanMaterial, transform, pushConstantBuffer]() mutable
 			{
+				HY_SCOPE_PERF("VulkanRenderer::RenderMeshWithMaterial");
+
 				auto vulkanMeshVB = mesh->GetVertexBuffer().As<VulkanVertexBuffer>();
 				VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
 				VkDeviceSize offsets[1] = { 0 };
@@ -181,41 +190,27 @@ namespace Haoyue {
 				auto vulkanMeshIB = Ref<VulkanIndexBuffer>(mesh->GetIndexBuffer());
 				VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
 				vkCmdBindIndexBuffer(s_Data->ActiveCommandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
-			});
 
-		Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
-		vulkanMaterial->UpdateForRendering();
+				vulkanMaterial->RT_UpdateForRendering();
 
+				Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
+				VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
+				VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
+				vkCmdBindPipeline(s_Data->ActiveCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-		Buffer pushConstantBuffer;
-		pushConstantBuffer.Allocate(sizeof(glm::mat4) + additionalUniforms.Size);
-		if (additionalUniforms.Size)
-			pushConstantBuffer.Write(additionalUniforms.Data, additionalUniforms.Size, sizeof(glm::mat4));
+				// Bind descriptor sets describing shader binding points
+				VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet();
+				if (descriptorSet)
+					vkCmdBindDescriptorSets(s_Data->ActiveCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
 
-		Renderer::Submit([pipeline, mesh, vulkanMaterial, transform, pushConstantBuffer]() mutable
-			{
 				auto& submeshes = mesh->GetSubmeshes();
 				for (Submesh& submesh : submeshes)
 				{
-					Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
-					VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
-					VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
-					vkCmdBindPipeline(s_Data->ActiveCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-					// Bind descriptor sets describing shader binding points
-					VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet();
-					if (descriptorSet)
-						vkCmdBindDescriptorSets(s_Data->ActiveCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
-
 					glm::mat4 worldTransform = transform * submesh.Transform;
 					pushConstantBuffer.Write(&worldTransform, sizeof(glm::mat4));
 					vkCmdPushConstants(s_Data->ActiveCommandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushConstantBuffer.Size, pushConstantBuffer.Data);
 					vkCmdDrawIndexed(s_Data->ActiveCommandBuffer, submesh.IndexCount, 1, submesh.BaseIndex, submesh.BaseVertex, 0);
 				}
-			});
-
-		Renderer::Submit([pushConstantBuffer]() mutable
-			{
 				pushConstantBuffer.Release();
 			});
 	}

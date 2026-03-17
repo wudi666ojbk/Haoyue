@@ -72,7 +72,12 @@ namespace Haoyue {
 
 		if (m_Framebuffer)
 		{
-			vkDestroyFramebuffer(device, m_Framebuffer, nullptr);
+			VkFramebuffer framebuffer = m_Framebuffer;
+			Renderer::SubmitResourceFree([framebuffer]()
+			{
+				auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+				vkDestroyFramebuffer(device, framebuffer, nullptr);
+			});
 			for (auto image : m_AttachmentImages)
 				image->Release();
 

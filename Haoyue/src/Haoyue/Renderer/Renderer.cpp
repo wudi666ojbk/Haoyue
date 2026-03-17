@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "Renderer.h"
 
-#include <map>
-
 #include "Shader.h"
+
+#include <map>
 
 #include "RendererAPI.h"
 #include "SceneRenderer.h"
@@ -12,6 +12,7 @@
 #include "Haoyue/Core/Timer.h"
 
 #include "Haoyue/Vulkan/VulkanRenderer.h"
+#include "Haoyue/Vulkan/VulkanContext.h"
 
 namespace Haoyue {
 
@@ -30,7 +31,7 @@ namespace Haoyue {
 	{
 		s_ShaderDependencies[shader->GetHash()].Pipelines.push_back(pipeline);
 	}
-	
+
 	void Renderer::RegisterShaderDependency(Ref<Shader> shader, Ref<Material> material)
 	{
 		s_ShaderDependencies[shader->GetHash()].Materials.push_back(material);
@@ -53,8 +54,13 @@ namespace Haoyue {
 		}
 	}
 
+	uint32_t Renderer::GetCurrentImageIndex()
+	{
+		return VulkanContext::Get()->GetSwapChain().GetCurrentBufferIndex();
+	}
+
 	void RendererAPI::SetAPI(RendererAPIType api)
-	{	
+	{
 		// TODO: make sure this is called at a valid time
 		s_CurrentRendererAPI = api;
 	}
@@ -73,6 +79,7 @@ namespace Haoyue {
 
 	static RendererData* s_Data = nullptr;
 	static RenderCommandQueue* s_CommandQueue = nullptr;
+	static RenderCommandQueue s_ResourceFreeQueue[3];
 
 	static RendererAPI* InitRendererAPI()
 	{
@@ -83,7 +90,7 @@ namespace Haoyue {
 		HY_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
-	
+
 	void Renderer::Init()
 	{
 		s_Data = new RendererData();
@@ -101,8 +108,6 @@ namespace Haoyue {
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/Grid.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/SceneComposite.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/PBR_Static.glsl", true);
-		//Renderer::GetShaderLibrary()->Load("Resources/shaders/PBR_Anim.glsl");
-		//Renderer::GetShaderLibrary()->Load("Resources/shaders/Outline.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/Skybox.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/ShadowMap.glsl");
 
@@ -111,7 +116,7 @@ namespace Haoyue {
 
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data->WhiteTexture = Texture2D::Create(ImageFormat::RGBA, 1, 1, &whiteTextureData);
-		
+
 		uint32_t blackTextureData[6] = { 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000 };
 		s_Data->BlackCubeTexture = TextureCube::Create(ImageFormat::RGBA, 1, 1, &blackTextureData);
 
@@ -293,6 +298,11 @@ namespace Haoyue {
 	RenderCommandQueue& Renderer::GetRenderCommandQueue()
 	{
 		return *s_CommandQueue;
+	}
+
+	RenderCommandQueue& Renderer::GetRenderResourceReleaseQueue(uint32_t index)
+	{
+		return s_ResourceFreeQueue[index];
 	}
 
 	RendererConfig& Renderer::GetConfig()

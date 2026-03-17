@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "VulkanUniformBuffer.h"
 
+#include "VulkanContext.h"
+
 namespace Haoyue {
 
 	VulkanUniformBuffer::VulkanUniformBuffer(uint32_t size, uint32_t binding)
@@ -10,20 +12,22 @@ namespace Haoyue {
 
 		Ref<VulkanUniformBuffer> instance = this;
 		Renderer::Submit([instance]() mutable
-			{
-				instance->RT_Invalidate();
-			});
+		{
+			instance->RT_Invalidate();
+		});
 	}
 
 	VulkanUniformBuffer::~VulkanUniformBuffer()
-    {
-        delete[] m_LocalStorage;
-    }
+	{
+		delete[] m_LocalStorage;
+	}
 
-    void VulkanUniformBuffer::RT_Invalidate()
-    {
-		// 顶点着色器缓冲区块
-        VkBufferCreateInfo bufferInfo = {};
+	void VulkanUniformBuffer::RT_Invalidate()
+	{
+		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+
+		// Vertex shader uniform buffer block
+		VkBufferCreateInfo bufferInfo = {};
 		VkMemoryAllocateInfo allocInfo = {};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.pNext = nullptr;
@@ -32,23 +36,25 @@ namespace Haoyue {
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferInfo.size = m_Size;
 		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-		VulkanAllocator allocator;
-		m_MemoryAlloc = allocator.AllocateBuffer(bufferInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, m_Buffer);
+
+		// Create a new buffer
+		VulkanAllocator allocator("UniformBuffer");
+		m_MemoryAlloc = allocator.AllocateBuffer(bufferInfo, VMA_MEMORY_USAGE_CPU_ONLY, m_Buffer);
 
 		m_Descriptor.buffer = m_Buffer;
 		m_Descriptor.offset = 0;
 		m_Descriptor.range = m_Size;
-    }
-
+	}
+	
 	void VulkanUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
-    {
+	{
 		memcpy(m_LocalStorage, data, size);
 		Ref<VulkanUniformBuffer> instance = this;
 		Renderer::Submit([instance, size, offset]() mutable
 		{
 			instance->RT_SetData(instance->m_LocalStorage, size, offset);
 		});
-    }
+	}
 
 	void VulkanUniformBuffer::RT_SetData(const void* data, uint32_t size, uint32_t offset)
 	{

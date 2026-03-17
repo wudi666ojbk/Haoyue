@@ -53,8 +53,27 @@ namespace Haoyue {
 				// however some items like uniforms which contain std::strings still exist for now
 				// static_assert(std::is_trivially_destructible_v<FuncT>, "FuncT must be trivially destructible");
 				pFunc->~FuncT();
-			};
+				};
 			auto storageBuffer = GetRenderCommandQueue().Allocate(renderCmd, sizeof(func));
+			new (storageBuffer) FuncT(std::forward<FuncT>(func));
+		}
+
+		template<typename FuncT>
+		static void SubmitResourceFree(FuncT&& func)
+		{
+			auto renderCmd = [](void* ptr) {
+				auto pFunc = (FuncT*)ptr;
+				(*pFunc)();
+
+				// NOTE: Instead of destroying we could try and enforce all items to be trivally destructible
+				// however some items like uniforms which contain std::strings still exist for now
+				// static_assert(std::is_trivially_destructible_v<FuncT>, "FuncT must be trivially destructible");
+				pFunc->~FuncT();
+				};
+
+			uint32_t index = Renderer::GetCurrentImageIndex();
+			index = (index + 2) % 3;
+			auto storageBuffer = GetRenderResourceReleaseQueue(index).Allocate(renderCmd, sizeof(func));
 			new (storageBuffer) FuncT(std::forward<FuncT>(func));
 		}
 
@@ -98,7 +117,11 @@ namespace Haoyue {
 		static void RegisterShaderDependency(Ref<Shader> shader, Ref<Material> material);
 		static void OnShaderReloaded(size_t hash);
 
+		static uint32_t GetCurrentImageIndex();
+
 		static RendererConfig& GetConfig();
+
+		static RenderCommandQueue& GetRenderResourceReleaseQueue(uint32_t index);
 	private:
 		static RenderCommandQueue& GetRenderCommandQueue();
 	};

@@ -3,8 +3,8 @@
 
 #include "Haoyue/Renderer/Renderer.h"
 
-#include "Haoyue/Vulkan/VulkanContext.h"
-#include "Haoyue/Vulkan/VulkanDiagnostics.h""
+#include "VulkanContext.h"
+#include "VulkanDiagnostics.h""
 
 #include "Haoyue/Core/Timer.h"
 

@@ -198,7 +198,7 @@ namespace Haoyue {
 			}
 		}
 
-		swapchainPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+		swapchainPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 
 		// Determine the number of images
 		uint32_t desiredNumberOfSwapchainImages = surfCaps.minImageCount + 1;
@@ -530,15 +530,17 @@ namespace Haoyue {
 		HY_SCOPE_PERF("VulkanSwapChain::BeginFrame");
 
 		VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex], VK_TRUE, UINT64_MAX));
-		VK_CHECK_RESULT(AcquireNextImage(m_Semaphores.PresentComplete, &m_CurrentBufferIndex));
-		VK_CHECK_RESULT(vkResetCommandPool(m_Device->GetVulkanDevice(), m_CommandPool, 0));
+		uint32_t imageIndex;
+		VK_CHECK_RESULT(AcquireNextImage(m_Semaphores.PresentComplete, &imageIndex));
+		//VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex], VK_TRUE, UINT64_MAX));
+		//VK_CHECK_RESULT(vkResetCommandPool(m_Device->GetVulkanDevice(), m_CommandPool, 0));
+
+		HY_CORE_WARN("Staring frame {0} (image {1})", m_CurrentBufferIndex, imageIndex);
 	}
 
 	void VulkanSwapChain::Present()
 	{
 		HY_SCOPE_PERF("VulkanSwapChain::Present");
-
-		VK_CHECK_RESULT(vkResetFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex]));
 
 		const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
 		// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
@@ -555,6 +557,7 @@ namespace Haoyue {
 		submitInfo.commandBufferCount = 1;
 
 		// Submit to the graphics queue passing a wait fence
+		VK_CHECK_RESULT(vkResetFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex]));
 		VK_CHECK_RESULT(vkQueueSubmit(m_Device->GetQueue(), 1, &submitInfo, m_WaitFences[m_CurrentBufferIndex]));
 
 		// Present the current buffer to the swap chain
