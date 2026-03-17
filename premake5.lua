@@ -75,8 +75,8 @@ project "Haoyue"
 		"%{IncludeDir.FastNoise}",
 		"%{IncludeDir.PhysX}",
 		"%{IncludeDir.VulkanSDK}",
-		
 		"%{IncludeDir.NvidiaAftermath}",
+		"%{IncludeDir.miniaudio}",
 	}
 	
 	links
@@ -198,7 +198,8 @@ project "Haoyue-Editor"
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.ImGui}",
-		"%{IncludeDir.Vulkan}"
+		"%{IncludeDir.Vulkan}",
+		"%{IncludeDir.miniaudio}",
 	}
 
 	postbuildcommands 

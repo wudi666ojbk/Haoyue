@@ -19,6 +19,7 @@ IncludeDir["shaderc"] = "%{wks.location}/HaoYue/vendor/shaderc/include"
 IncludeDir["SPIRV_Cross"] = "%{wks.location}/HaoYue/vendor/SPIRV-Cross"
 IncludeDir["VulkanSDK"] = "%{VULKAN_SDK}/Include"
 IncludeDir["NvidiaAftermath"] = "%{wks.location}/HaoYue/vendor/NvidiaAftermath/include"
+IncludeDir["miniaudio"] = "%{wks.location}/HaoYue/vendor/miniaudio/include"
 
 LibraryDir = {}
 
