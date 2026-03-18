@@ -1,35 +1,35 @@
 
--- HaoYue Dependencies
+-- Haoyue Dependencies
 
 VULKAN_SDK = os.getenv("VULKAN_SDK")
 
 IncludeDir = {}
-IncludeDir["Assimp"] = "%{wks.location}/HaoYue/vendor/assimp/include"
-IncludeDir["stb"] = "%{wks.location}/HaoYue/vendor/stb/include"
-IncludeDir["yaml_cpp"] = "%{wks.location}/HaoYue/vendor/yaml-cpp/include"
-IncludeDir["GLFW"] = "%{wks.location}/HaoYue/vendor/GLFW/include"
-IncludeDir["ImGui"] = "%{wks.location}/HaoYue/vendor/ImGui"
-IncludeDir["glm"] = "%{wks.location}/HaoYue/vendor/glm"
-IncludeDir["Box2D"] = "%{wks.location}/HaoYue/vendor/Box2D/include"
-IncludeDir["entt"] = "%{wks.location}/HaoYue/vendor/entt/include"
-IncludeDir["FastNoise"] = "%{wks.location}/HaoYue/vendor/FastNoise"
-IncludeDir["mono"] = "%{wks.location}/HaoYue/vendor/mono/include"
-IncludeDir["PhysX"] = "%{wks.location}/HaoYue/vendor/PhysX/include"
-IncludeDir["shaderc"] = "%{wks.location}/HaoYue/vendor/shaderc/include"
-IncludeDir["SPIRV_Cross"] = "%{wks.location}/HaoYue/vendor/SPIRV-Cross"
+IncludeDir["Assimp"] = "%{wks.location}/Haoyue/vendor/assimp/include"
+IncludeDir["stb"] = "%{wks.location}/Haoyue/vendor/stb/include"
+IncludeDir["yaml_cpp"] = "%{wks.location}/Haoyue/vendor/yaml-cpp/include"
+IncludeDir["GLFW"] = "%{wks.location}/Haoyue/vendor/GLFW/include"
+IncludeDir["ImGui"] = "%{wks.location}/Haoyue/vendor/ImGui"
+IncludeDir["glm"] = "%{wks.location}/Haoyue/vendor/glm"
+IncludeDir["Box2D"] = "%{wks.location}/Haoyue/vendor/Box2D/include"
+IncludeDir["entt"] = "%{wks.location}/Haoyue/vendor/entt/include"
+IncludeDir["FastNoise"] = "%{wks.location}/Haoyue/vendor/FastNoise"
+IncludeDir["mono"] = "%{wks.location}/Haoyue/vendor/mono/include"
+IncludeDir["PhysX"] = "%{wks.location}/Haoyue/vendor/PhysX/include"
+IncludeDir["shaderc"] = "%{wks.location}/Haoyue/vendor/shaderc/include"
+IncludeDir["SPIRV_Cross"] = "%{wks.location}/Haoyue/vendor/SPIRV-Cross"
 IncludeDir["VulkanSDK"] = "%{VULKAN_SDK}/Include"
-IncludeDir["NvidiaAftermath"] = "%{wks.location}/HaoYue/vendor/NvidiaAftermath/include"
-IncludeDir["miniaudio"] = "%{wks.location}/HaoYue/vendor/miniaudio/include"
+IncludeDir["NvidiaAftermath"] = "%{wks.location}/Haoyue/vendor/NvidiaAftermath/include"
+IncludeDir["miniaudio"] = "%{wks.location}/Haoyue/vendor/miniaudio/include"
 
 LibraryDir = {}
 
-LibraryDir["PhysX"] = "%{wks.location}/HaoYue/vendor/PhysX/lib/%{cfg.buildcfg}"
+LibraryDir["PhysX"] = "%{wks.location}/Haoyue/vendor/PhysX/lib/%{cfg.buildcfg}"
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
-LibraryDir["VulkanSDK_Debug"] = "%{wks.location}/HaoYue/vendor/VulkanSDK/Lib"
-LibraryDir["NvidiaAftermath"] = "%{wks.location}/HaoYue/vendor/NvidiaAftermath/lib/x64"
+LibraryDir["VulkanSDK_Debug"] = "%{wks.location}/Haoyue/vendor/VulkanSDK/Lib"
+LibraryDir["NvidiaAftermath"] = "%{wks.location}/Haoyue/vendor/NvidiaAftermath/lib/x64"
 
 Library = {}
-Library["mono"] = "%{wks.location}/HaoYue/vendor/mono/lib/Debug/mono-2.0-sgen.lib"
+Library["mono"] = "%{wks.location}/Haoyue/vendor/mono/lib/Debug/mono-2.0-sgen.lib"
 Library["PhysX"] = "%{LibraryDir.PhysX}/PhysX_static_64.lib"
 Library["PhysXCharacterKinematic"] = "%{LibraryDir.PhysX}/PhysXCharacterKinematic_static_64.lib"
 Library["PhysXCommon"] = "%{LibraryDir.PhysX}/PhysXCommon_static_64.lib"

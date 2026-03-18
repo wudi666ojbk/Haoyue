@@ -10,6 +10,7 @@
 #include "Haoyue/Script/ScriptEngine.h"
 #include "Haoyue/Physics/Physics.h"
 #include "Haoyue/Asset/AssetManager.h"
+#include "Haoyue/Audio/AudioEngine.h"
 
 #include "Input.h"
 
@@ -53,6 +54,7 @@ namespace Haoyue {
 
 		AssetManager::Init();
 		TranslationManager::Init();
+        Audio::MiniAudioEngine::Init();
 	}
 
 	Application::~Application()
