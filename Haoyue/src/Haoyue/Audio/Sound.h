@@ -1,4 +1,8 @@
 #pragma once
+#include "SoundObject.h"
+#include "miniaudio_incl.h"
+
+#include "Haoyue/Asset/Asset.h"
 
 namespace Audio {
 
@@ -10,8 +14,56 @@ namespace Audio {
 
 	};
 
-	class Sound
+	struct SoundConfig : Haoyue::Asset
 	{
+		Haoyue::Ref<Haoyue::Asset> m_FileAsset;	// 音频资源路径
+
+		float VolumeMultiplier = 1.0f;
+		float PitchMultiplier = 1.0f;
+	};
+
+	class Sound : public SoundObject
+	{
+	public:
+		~Sound();
+
+		bool Play() override;
+		bool Stop() override;
+		bool Pause() override;
+		bool IsPlaying() override;
+
+		void SetVolume(float value) override;
+		void SetPitch(float value) override;
+		float GetVolume() override;
+		float GetPitch() override;
+
+		bool InitializeDataSource(const SoundConfig& config, MiniAudioEngine* engine);
+	private:
+		friend class MiniAudioEngine;
+
+		std::function<void()> onPlaybackComplete;
+
+		enum class ESoundState
+		{
+			Stopped,
+			Starting,
+			Playing,
+			Pausing,
+			Paused,
+			Stopping,
+		};
+		// 播放状态转字符串
+		static const std::string StringFromState(Sound::ESoundState state);
+
+		int StopNow(bool notifyPlaybackComplete = true, bool resetPlaybackPosition = true);
+	private:
+		ESoundState m_PlayState{ ESoundState::Stopped };
+
+		int m_SoundSourceID = -1;
+		ma_sound m_Sound;
+
+		bool bLooping = false;
+		bool bFinished = false;
 	};
 }
 

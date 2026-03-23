@@ -54,22 +54,28 @@ namespace Audio {
 		static void Init();
 		static void Shutdown();
 
+		static MiniAudioEngine& Get() { return *s_Instance; }
+
+		void StopAll();
+		void Update(Haoyue::Timestep ts);
+
+		static Stats GetStats();
 	private:
 		void CreateSource();
 		void ReleaseSource();
-
-		void Play();
-
-		void StopAll();
-		void Stop();
 	private:
+		friend class SourceManager;
+		friend class Sound;
+
 		ma_engine m_Engine;
-		ma_sound m_TestSound;
+
+		SourceManager m_SourceManager{ *this };
+		AudioListener m_AudioListener;
+		Haoyue::Ref<Haoyue::Scene> m_SceneContext;
+
+		std::vector<Sound*> m_SoundSource;
 
 		static MiniAudioEngine* s_Instance;
-
-		// 场景上下文
-		Haoyue::Ref<Haoyue::Scene> m_SceneContext;
 	};
 }
 

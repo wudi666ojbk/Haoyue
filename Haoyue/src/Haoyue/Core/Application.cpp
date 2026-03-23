@@ -51,10 +51,10 @@ namespace Haoyue {
 
 		ScriptEngine::Init("Resources/scripts/ExampleApp.dll");
 		Physics::Init();
+        Audio::MiniAudioEngine::Init();
 
 		AssetManager::Init();
 		TranslationManager::Init();
-        Audio::MiniAudioEngine::Init();
 	}
 
 	Application::~Application()
@@ -71,6 +71,7 @@ namespace Haoyue {
 		ScriptEngine::Shutdown();
 		TranslationManager::Shutdown();
 		AssetManager::Shutdown();
+		Audio::MiniAudioEngine::Shutdown();
 
 		Renderer::WaitAndRender();
 		Renderer::Shutdown();

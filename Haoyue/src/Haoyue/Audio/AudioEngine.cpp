@@ -7,16 +7,13 @@ namespace Audio {
 
     MiniAudioEngine::MiniAudioEngine()
     {
+        AudioThread::BindUpdateFunction([this](Haoyue::Timestep ts) { Update(ts); });
+        AudioThread::Start();
         ma_result result;
         ma_engine_config engineConfig = ma_engine_config_init_default();
         engineConfig.periodSizeInFrames = PCM_FRAME_CHUNK_SIZE;
 
         result = ma_engine_init(&engineConfig, &m_Engine);
-        // TODO: 临时代码，用于测试音频播放
-        ma_sound_init_from_file(&m_Engine, "Resources/audio/bgm.wav", MA_DATA_SOURCE_FLAG_DECODE, NULL, &m_TestSound);
-        ma_sound_set_spatialization_enabled(&m_TestSound, MA_FALSE);
-        ma_sound_start(&m_TestSound);
-        ma_sound_set_fade_in_milliseconds(&m_TestSound, 0.0f, 1.0f, 200);
     }
 
     MiniAudioEngine::~MiniAudioEngine()
@@ -28,11 +25,32 @@ namespace Audio {
     {
         HY_CORE_ASSERT(s_Instance == nullptr, "音频系统已启动，请勿重复初始化");
         s_Instance = new MiniAudioEngine();
+
+        Sound* sound = new Sound();
+        s_Instance->m_SoundSource.push_back(sound);
+        SoundConfig config;
+        config.m_FileAsset = Haoyue::Ref<Haoyue::Asset>().Create();
+        config.m_FileAsset->FilePath = "F:/Project/C++/Engine/Haoyue/Haoyue-Editor/Resources/audio/bigbgm.wav";
+        s_Instance->m_SoundSource.at(0)->InitializeDataSource(config, s_Instance);
+        s_Instance->m_SoundSource.at(0)->Play();
+        
     }
 
     void MiniAudioEngine::Shutdown()
     {
         HY_CORE_ASSERT(s_Instance != nullptr, "音频系统未启动，请勿关闭");
         // TODO: 关闭正在播放的音频，关闭线程，删除指针
+    }
+
+    void MiniAudioEngine::StopAll()
+    {
+    }
+
+    void MiniAudioEngine::Update(Haoyue::Timestep ts)
+    {
+        for (auto& sound : m_SoundSource)
+        {
+            sound->Play();
+        }
     }
 }

@@ -43,7 +43,7 @@ namespace Audio {
 	private:
 		friend class MiniAudioEngine;
 
-		// Add tasks to be executed to the audio thread's task queue.
+		// 将待执行任务添加到音频线程的任务队列中。
 		static void AddTask(AudioFunctionCallback& funCallback);
 		static void OnUpdate();
 
@@ -52,13 +52,13 @@ namespace Audio {
 		template<typename C, void (C::*F)(Haoyue::Timestep)>
 		static void BindUpdateFunction(C* instance)
 		{
-			onUpdateCallback = [instance](Hazel::Timestep ts) {(static_cast<C*>(instance)->*Function)(ts); };
+			onUpdateCallback = [instance](Haoyue::Timestep ts) {(static_cast<C*>(instance)->*Function)(ts); };
 		}
 
 		template<typename FuncT>
 		static void BindUpdateFunction(FuncT&& func)
 		{
-			onUpdateCallback = [func](Hazel::Timestep ts) { func(ts); };
+			onUpdateCallback = [func](Haoyue::Timestep ts) { func(ts); };
 		}
 	private:
 		static std::thread* s_AudioThread;
