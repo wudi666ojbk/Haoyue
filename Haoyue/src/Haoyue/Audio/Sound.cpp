@@ -100,9 +100,60 @@ namespace Audio {
     {
         return false;
     }
-    bool Sound::IsPlaying()
+    bool Sound::IsPlaying() const
     {
         return m_PlayState != ESoundState::Stopped && m_PlayState != ESoundState::Paused;
+    }
+
+    bool Sound::IsFinished() const
+    {
+        return bFinished;
+    }
+
+    void Sound::Update(Haoyue::Timestep ts)
+    {
+        auto notifyIfFinished = [&]
+        {
+            if (ma_sound_at_end(&m_Sound) == MA_TRUE && onPlaybackComplete)
+                onPlaybackComplete();
+        };
+
+        auto isNodePlaying = [&]
+        {
+            return ma_sound_is_playing(&m_Sound) == MA_TRUE;
+        };
+
+        switch (m_PlayState)
+        {
+        case ESoundState::Stopped:
+            break;
+        case ESoundState::Starting:
+            if (isNodePlaying())
+            {
+                m_PlayState = ESoundState::Playing;
+            }
+            break;
+        case ESoundState::Playing:
+            if (ma_sound_is_playing(&m_Sound) == MA_FALSE)
+            {
+                m_PlayState = ESoundState::Stopped;
+                bFinished = true;
+                notifyIfFinished();
+            }
+            break;
+        case ESoundState::Pausing:
+            StopNow(false, false);
+            m_PlayState = ESoundState::Paused;
+            break;
+        case ESoundState::Paused:
+            break;
+        case ESoundState::Stopping:
+            StopNow(true, true);
+            m_PlayState = ESoundState::Stopped;
+            break;
+        default:
+            break;
+        }
     }
 
     void Sound::SetVolume(float value)

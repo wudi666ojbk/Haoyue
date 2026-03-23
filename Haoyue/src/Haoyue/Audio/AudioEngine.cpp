@@ -92,7 +92,9 @@ namespace Audio {
     void MiniAudioEngine::Shutdown()
     {
         HY_CORE_ASSERT(s_Instance != nullptr, "音频系统未启动，请勿关闭");
-        // TODO: 关闭正在播放的音频，关闭线程，删除指针
+        s_Instance->Uninitialize();
+        delete s_Instance;
+        s_Instance = nullptr;
     }
 
     bool MiniAudioEngine::Initialize()
@@ -177,6 +179,11 @@ namespace Audio {
             s_Stats.NumActiveSounds = m_ActiveSounds.size();
         }
         m_SoundSources.clear();
+
+        for (auto* sound : m_ActiveSounds)
+            sound->Update(ts);
+
+        ReleaseFinishedSources();
     }
 
     void MiniAudioEngine::CreateSources()
@@ -189,7 +196,18 @@ namespace Audio {
             m_SoundSources.push_back(soundSource);
         }
     }
-    void MiniAudioEngine::ReleaseSources()
+    void MiniAudioEngine::ReleaseFinishedSources()
     {
+        for (int i = m_ActiveSounds.size() - 1; i >= 0; i--)
+        {
+            if (Sound* sound = dynamic_cast<Sound*>(m_ActiveSounds[i]))
+            {
+                if (sound->IsFinished())
+                {
+                    m_ActiveSounds.erase(m_ActiveSounds.begin() + i);
+                    s_Stats.NumActiveSounds = m_ActiveSounds.size();
+                }
+            }
+        }
     }
 }

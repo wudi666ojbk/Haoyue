@@ -30,7 +30,10 @@ namespace Audio {
 		bool Play() override;
 		bool Stop() override;
 		bool Pause() override;
-		bool IsPlaying() override;
+		bool IsPlaying() const override;
+		bool IsFinished() const override;
+
+		void Update(Haoyue::Timestep ts) override;
 
 		void SetVolume(float value) override;
 		void SetPitch(float value) override;

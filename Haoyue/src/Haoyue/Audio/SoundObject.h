@@ -12,7 +12,10 @@ namespace Audio {
         virtual bool Play() = 0;
         virtual bool Stop() = 0;
         virtual bool Pause() = 0;
-		virtual bool IsPlaying() = 0;
+		virtual bool IsPlaying() const = 0;
+		virtual bool IsFinished() const = 0;
+
+		virtual void Update(Haoyue::Timestep ts) = 0;
 
 		virtual void SetVolume(float value) = 0;
 		virtual void SetPitch(float value) = 0;

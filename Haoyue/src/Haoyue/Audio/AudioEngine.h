@@ -73,7 +73,7 @@ namespace Audio {
 		static void ExecuteOnAudioThread(AudioThreadCallbackFunction func, const char* jobID = "NONE");
 	private:
 		void CreateSources();
-		void ReleaseSources();
+		void ReleaseFinishedSources();
 	private:
 		friend class SourceManager;
 		friend class Sound;
