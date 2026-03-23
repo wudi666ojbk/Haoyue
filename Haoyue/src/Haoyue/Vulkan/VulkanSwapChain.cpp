@@ -532,10 +532,6 @@ namespace Haoyue {
 		VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex], VK_TRUE, UINT64_MAX));
 		uint32_t imageIndex;
 		VK_CHECK_RESULT(AcquireNextImage(m_Semaphores.PresentComplete, &imageIndex));
-		//VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex], VK_TRUE, UINT64_MAX));
-		//VK_CHECK_RESULT(vkResetCommandPool(m_Device->GetVulkanDevice(), m_CommandPool, 0));
-
-		HY_CORE_WARN("Staring frame {0} (image {1})", m_CurrentBufferIndex, imageIndex);
 	}
 
 	void VulkanSwapChain::Present()

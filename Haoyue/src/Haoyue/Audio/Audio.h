@@ -17,7 +17,7 @@ namespace Audio {
 	{
 	public:
 		AudioFunctionCallback(AudioThreadCallbackFunction f, const char* jobID = "NONE")
-			:m_Func(f), m_JobID(jobID)
+			: m_Func(std::move(f)), m_JobID(jobID)
 		{
 		}
 		void Execute()
@@ -25,9 +25,9 @@ namespace Audio {
 			m_Func();
 		}
 
-		const char* GetID() { m_JobID; }
+		const char* GetID() { return m_JobID; }
 	private:
-        AudioThreadCallbackFunction m_Func;
+        AudioThreadCallbackFunction const m_Func;
         const char* m_JobID;
 	};
 
@@ -44,12 +44,11 @@ namespace Audio {
 		friend class MiniAudioEngine;
 
 		// 将待执行任务添加到音频线程的任务队列中。
-		static void AddTask(AudioFunctionCallback& funCallback);
+		static void AddTask(AudioFunctionCallback*&& funcCb);
 		static void OnUpdate();
+		static float GetFrameTime() { return s_LastFrameTime.load(); }
 
-		static float GetFrameTime() { return  s_LastFrameTime.load(); }
-
-		template<typename C, void (C::*F)(Haoyue::Timestep)>
+		template<typename C, void (C::* Function)(Haoyue::Timestep)>
 		static void BindUpdateFunction(C* instance)
 		{
 			onUpdateCallback = [instance](Haoyue::Timestep ts) {(static_cast<C*>(instance)->*Function)(ts); };
@@ -76,7 +75,6 @@ namespace Audio {
 
 	static inline bool IsAudioThread()
 	{
-		return AudioThread::IsAudioThread();
+	    return std::this_thread::get_id() == AudioThread::GetThreadID();
 	}
 }
-

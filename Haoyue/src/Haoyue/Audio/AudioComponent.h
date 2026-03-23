@@ -8,7 +8,7 @@ namespace Audio {
 
 namespace Haoyue {
 
-	class AudioComponent
+	struct AudioComponent
 	{
 		UUID ParentHandle;
 

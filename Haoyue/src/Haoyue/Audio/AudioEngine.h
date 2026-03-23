@@ -30,13 +30,18 @@ namespace Audio {
 	
 	struct Stats
 	{
-
+		uint32_t NumActiveSounds = 0;
+		uint32_t TotalSources = 0;
+		uint64_t MemEngine = 0;
+		uint64_t MemResManager = 0;
+		float FrameTime = 0.0f;
+		uint64_t NumAudioComps = 0;
 	};
 
-	struct AllocationCallbackData
+	struct AllocationCallbackData // TODO: hide this into Source Manager?
 	{
-		bool isResourceManager;
-		Stats& stats;
+		bool isResourceManager = false;
+		Stats& Stats;
 	};
 
 	// 音频监听
@@ -54,28 +59,45 @@ namespace Audio {
 		static void Init();
 		static void Shutdown();
 
+		bool Initialize();
+		bool Uninitialize();
+
 		static MiniAudioEngine& Get() { return *s_Instance; }
 
-		void StopAll();
+		void StopAll(bool stopNow);
 		void Update(Haoyue::Timestep ts);
 
 		static Stats GetStats();
+
+		// 在音频线程上执行任意函数。用于同步游戏线程和音频线程之间的更新
+		static void ExecuteOnAudioThread(AudioThreadCallbackFunction func, const char* jobID = "NONE");
 	private:
-		void CreateSource();
-		void ReleaseSource();
+		void CreateSources();
+		void ReleaseSources();
 	private:
 		friend class SourceManager;
 		friend class Sound;
 
 		ma_engine m_Engine;
+		bool bInitialized = false;
 
 		SourceManager m_SourceManager{ *this };
+
 		AudioListener m_AudioListener;
 		Haoyue::Ref<Haoyue::Scene> m_SceneContext;
+		Haoyue::UUID m_CurrentSceneID;
 
-		std::vector<Sound*> m_SoundSource;
+		// 源数限制
+		int m_NumSources = 0;
+		std::vector<Sound*> m_SoundSources;
+		std::vector<SoundObject*> m_SoundsToStart;
+		std::vector<SoundObject*> m_ActiveSounds;
 
 		static MiniAudioEngine* s_Instance;
+
+		static Stats s_Stats;
+		AllocationCallbackData m_EngineCallbackData{ false, s_Stats };
+		AllocationCallbackData m_RMCallbackData{ true, s_Stats };
 	};
 }
 

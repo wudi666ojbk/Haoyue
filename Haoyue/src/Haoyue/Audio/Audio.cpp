@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "Audio.h"
 
-namespace Audio {
-
+namespace Audio
+{
     std::thread* AudioThread::s_AudioThread = nullptr;
     std::atomic<bool> AudioThread::s_ThreadActive = false;
     std::atomic<std::thread::id> AudioThread::s_AudioThreadID = std::thread::id();
@@ -21,20 +21,25 @@ namespace Audio {
             return false;
 
         s_ThreadActive = true;
-        s_AudioThread = new std::thread([]() {
-            HRESULT r;
-            r = SetThreadDescription(
-                GetCurrentThread(),
-                L"Hazel Audio Thread"
-            );
-
-            HY_CORE_INFO("Spinning up Audio Thread.");
-            while (s_ThreadActive)
+        s_AudioThread = new std::thread([]
             {
-                OnUpdate();
-            }
-            HY_CORE_INFO("Audio Thread stopped.");
-        });
+
+#if defined(HY_PLATFORM_WINDOWS)
+
+                HRESULT r;
+                r = SetThreadDescription(
+                    GetCurrentThread(),
+                    L"Haoyue Audio Thread"
+                );
+#endif
+
+                HY_CORE_INFO("Spinning up Audio Thread.");
+                while (s_ThreadActive)
+                {
+                    OnUpdate();
+                }
+                HY_CORE_INFO("Audio Thread stopped.");
+            });
 
         s_AudioThreadID = s_AudioThread->get_id();
         s_AudioThread->detach();
@@ -66,25 +71,41 @@ namespace Audio {
         return s_AudioThreadID;
     }
 
-    void AudioThread::AddTask(AudioFunctionCallback& funCallback)
+    void AudioThread::AddTask(AudioFunctionCallback*&& funcCb)
     {
         std::scoped_lock lock(s_AudioThreadJobsLock);
-        s_AudioThreadJobs.emplace(&funCallback);
+        s_AudioThreadJobs.emplace(std::move(funcCb));
     }
 
     void AudioThread::OnUpdate()
     {
         s_Timer.Reset();
 
+        //---------------------------
+        //--- Handle AudioThread Jobs
+
         std::scoped_lock lock(s_AudioThreadJobsLock);
         if (!s_AudioThreadJobs.empty())
         {
-            // 在作业未完成时不应运行，而是将它们重新添加以在下一个队列中运行
-            for (int i = 1 - s_AudioThreadJobs.size(); i >= 0; i--)
+            // Should not run while jobs are not complete, instead re-add them to run on the next update loop
+            //while (!s_AudioThreadJobs.empty())
+            for (int i = s_AudioThreadJobs.size() - 1; i >= 0; i--)
             {
+                auto job = s_AudioThreadJobs.front();
 
+                job->Execute();
+
+                // TODO: check if job ran successfully, if not, notify and/or add back to the queue
+                s_AudioThreadJobs.pop();
+                delete job;
             }
         }
+
+        HY_CORE_ASSERT(onUpdateCallback != nullptr, "Update Function is not bound!");
+        onUpdateCallback(s_TimeStep);
+
+        s_TimeStep = s_Timer.Elapsed();
+        s_LastFrameTime = s_TimeStep.GetMilliseconds();
     }
 
-}
+} // namespace Audio
