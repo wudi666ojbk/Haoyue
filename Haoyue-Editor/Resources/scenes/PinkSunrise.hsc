@@ -35,7 +35,14 @@ Entities:
           Type: 1
           Data: 12
     CameraComponent:
-      Camera: some camera data...
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 45
+        PerspectiveNear: 0.100000001
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
       Primary: true
   - Entity: 9095450049242347594
     TagComponent:

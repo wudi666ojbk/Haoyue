@@ -95,7 +95,14 @@ Entities:
       Rotation: [-0.738274276, 1.57079637, 0]
       Scale: [0.999979556, 0.999987841, 0.999982357]
     CameraComponent:
-      Camera: some camera data...
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 45
+        PerspectiveNear: 0.100000001
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
       Primary: true
 PhysicsLayers:
   []

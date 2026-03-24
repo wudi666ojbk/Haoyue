@@ -161,7 +161,7 @@ Entities:
           Type: 1
           Data: 3
     MeshComponent:
-      AssetPath: C:\Dev\HaoYue\dev\HaoYue-Editor\assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 1
       FixedRotation: true

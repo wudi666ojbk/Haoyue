@@ -1,40 +1,49 @@
 Scene: Scene Name
 Environment:
-  AssetPath: Resources\env\pink_sunrise_4k.hdr
+  AssetHandle: 7777554117957742455
   Light:
-    Direction: [-0.787, -0.73299998, 1]
-    Radiance: [1, 1, 1]
-    Multiplier: 0.514999986
+    Direction: [0, 0, 0]
+    Radiance: [0, 0, 0]
+    Multiplier: 1
 Entities:
-  - Entity: 15213035846546605980
+  - Entity: 16844037665270894117
+    Parent: 0
+    Children:
+      []
     TagComponent:
-      Tag: Sponza
+      Tag: 天空光
     TransformComponent:
       Position: [0, 0, 0]
       Rotation: [0, 0, 0]
-      Scale: [0.100000001, 0.100000001, 0.100000001]
-    MeshComponent:
-      AssetPath: Resources\meshes\sponza\sponza.obj
-    RigidBodyComponent:
-      BodyType: 0
-      Mass: 1
-      IsKinematic: false
-      Layer: 0
-      Constraints:
-        LockPositionX: false
-        LockPositionY: false
-        LockPositionZ: false
-        LockRotationX: false
-        LockRotationY: false
-        LockRotationZ: false
-    PhysicsMaterialComponent:
-      StaticFriction: 1
-      DynamicFriction: 1
-      Bounciness: 0
-    MeshColliderComponent:
-      AssetPath: Resources\meshes\sponza\sponza.obj
-      IsTrigger: false
+      Scale: [1, 1, 1]
+    SkyLightComponent:
+      EnvironmentMap: 7777554117957742455
+      Intensity: 1
+      Angle: 0
+  - Entity: 8711824436246927141
+    Parent: 0
+    Children:
+      []
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Position: [0, 8.93375397, 0]
+      Rotation: [0, 1.57079637, 0]
+      Scale: [0.999998212, 1, 0.999998212]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 45
+        PerspectiveNear: 0.100000001
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
+      Primary: true
   - Entity: 4655832978979727422
+    Parent: 0
+    Children:
+      []
     TagComponent:
       Tag: Empty Entity
     TransformComponent:
@@ -42,10 +51,13 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [5, 5, 5]
     MeshComponent:
-      AssetPath: Resources\meshes\Cube1m.fbx
+      AssetID: 2465601043907353901
     RigidBodyComponent:
       BodyType: 1
       Mass: 1
+      LinearDrag: 0
+      AngularDrag: 0.0500000007
+      DisableGravity: false
       IsKinematic: false
       Layer: 0
       Constraints:
@@ -55,23 +67,42 @@ Entities:
         LockRotationX: false
         LockRotationY: false
         LockRotationZ: false
-    PhysicsMaterialComponent:
-      StaticFriction: 1
-      DynamicFriction: 1
-      Bounciness: 1
     BoxColliderComponent:
       Offset: [0, 0, 0]
       Size: [1, 1, 1]
       IsTrigger: false
-  - Entity: 8711824436246927141
+      Material: 1088619180590167763
+  - Entity: 15213035846546605980
+    Parent: 0
+    Children:
+      []
     TagComponent:
-      Tag: Camera
+      Tag: Sponza
     TransformComponent:
-      Position: [16.2292404, 288.519653, 0.464014918]
+      Position: [0, 0, 0]
       Rotation: [0, 0, 0]
-      Scale: [0.999880314, 0.999906898, 0.999875307]
-    CameraComponent:
-      Camera: some camera data...
-      Primary: true
+      Scale: [0.100000001, 0.100000001, 0.100000001]
+    MeshComponent:
+      AssetID: 5084203466852979931
+    RigidBodyComponent:
+      BodyType: 0
+      Mass: 1
+      LinearDrag: 0
+      AngularDrag: 0.0500000007
+      DisableGravity: false
+      IsKinematic: false
+      Layer: 0
+      Constraints:
+        LockPositionX: false
+        LockPositionY: false
+        LockPositionZ: false
+        LockRotationX: false
+        LockRotationY: false
+        LockRotationZ: false
+    MeshColliderComponent:
+      IsConvex: false
+      IsTrigger: false
+      OverrideMesh: false
+      Material: 245906476557249746
 PhysicsLayers:
   []

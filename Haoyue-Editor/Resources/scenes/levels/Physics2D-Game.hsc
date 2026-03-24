@@ -1,6 +1,6 @@
 Scene: Scene Name
 Environment:
-  AssetPath: C:\Dev\HaoYue\dev-shadows\HaoYue-Editor\assets\env\pink_sunrise_4k.hdr
+  AssetPath: Resources\env\pink_sunrise_4k.hdr
   Light:
     Direction: [-0.787, -0.73299998, 1]
     Radiance: [1, 1, 1]
@@ -26,7 +26,7 @@ Entities:
       Rotation: [0, -0, 0]
       Scale: [1, 1, 1]
     SkyLightComponent:
-      EnvironmentAssetPath: C:\Dev\HaoYue\dev-shadows\HaoYue-Editor\assets\env\pink_sunrise_4k.hdr
+      EnvironmentAssetPath: Resources\env\pink_sunrise_4k.hdr
       Intensity: 1
       Angle: 0
   - Entity: 2842299641876190180
