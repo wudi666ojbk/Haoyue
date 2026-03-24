@@ -609,12 +609,12 @@ namespace Haoyue {
 				if (ImGui::MenuItem(TR("Open Scene..."), "Ctrl+O"))
 					OpenScene();
 				ImGui::Separator();
-				if (ImGui::MenuItem(TR("Save Scene"), TR("Ctrl+S")))
+				if (ImGui::MenuItem(TR("Save Scene"), "Ctrl+S"))
 					SaveScene();
-				if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
+				if (ImGui::MenuItem(TR("Save Scene As..."), "Ctrl+Shift+S"))
 					SaveSceneAs();
 				ImGui::Separator();
-				if (ImGui::MenuItem("Exit"))
+				if (ImGui::MenuItem(TR("Exit")))
 					p_open = false;
 				ImGui::EndMenu();
 			}
@@ -974,27 +974,12 @@ namespace Haoyue {
 
 		if (m_ShowWelcomePopup)
 		{
-			ImGui::OpenPopup("Welcome");
 			m_ShowWelcomePopup = false;
 		}
 
 		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 		ImGui::SetNextWindowSize(ImVec2{ 400,0 });
-		if (ImGui::BeginPopupModal("Welcome", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-		{
-			ImGui::Text(TR("Welcome to Haoyue!"));
-			ImGui::Separator();
-			ImGui::TextWrapped(TR("Environment maps are currently disabled because they're a little unstable on certain GPU drivers."));
-
-			UI::BeginPropertyGrid();
-			UI::Property(TR("Enable environment maps?"), Renderer::GetConfig().ComputeEnvironmentMaps);
-			UI::EndPropertyGrid();
-
-			if (ImGui::Button("OK"))
-				ImGui::CloseCurrentPopup();
-			ImGui::EndPopup();
-		}
 
 		if (m_ShowAboutPopup)
 		{

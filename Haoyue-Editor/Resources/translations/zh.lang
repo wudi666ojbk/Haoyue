@@ -134,8 +134,6 @@ Physics Settings=物理设置
 
 Open Scene...=打开场景...
 
-Ctrl+S=Ctrl+S
-
 Save Scene=保存场景
 
 About=关于
@@ -145,3 +143,27 @@ Language=语言
 Scripts=脚本
 
 Module Name=模块名称
+
+Size=尺寸
+
+Save Scene As...=另存为
+
+Exit=退出
+
+Audio Stats=音频统计
+
+Active Sounds: %s=活跃音效：%s
+
+Max Sources: %s=最大音源数：%s
+
+Audio Components: %s=音频组件：%s
+
+Frame Time: %.3fms=帧时间：%.3fms
+
+Used RAM (Engine - backend): %s=已用内存（引擎 - 后端）：%s
+
+Used RAM (Resource Manager): %s=已用内存（资源管理器）：%s
+
+Audio=音频
+
+Audio Listener=音频监听

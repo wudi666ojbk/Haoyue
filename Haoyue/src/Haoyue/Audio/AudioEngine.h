@@ -30,15 +30,15 @@ namespace Audio {
 	
 	struct Stats
 	{
-		uint32_t NumActiveSounds = 0;
-		uint32_t TotalSources = 0;
-		uint64_t MemEngine = 0;
-		uint64_t MemResManager = 0;
-		float FrameTime = 0.0f;
-		uint64_t NumAudioComps = 0;
+		uint32_t NumActiveSounds = 0;		// 当前正在播放的音频数量
+		uint32_t TotalSources = 0;			// 音频源总数
+		uint64_t MemEngine = 0;				// 音频引擎占用的内存（字节）
+		uint64_t MemResManager = 0;			// 资源管理器占用的内存（字节）
+		float FrameTime = 0.0f;				// 帧处理时间（毫秒）
+		uint64_t NumAudioComps = 0;			// 音频组件数量
 	};
 
-	struct AllocationCallbackData // TODO: hide this into Source Manager?
+	struct AllocationCallbackData
 	{
 		bool isResourceManager = false;
 		Stats& Stats;
@@ -63,11 +63,10 @@ namespace Audio {
 		bool Uninitialize();
 
 		static MiniAudioEngine& Get() { return *s_Instance; }
+		static Stats GetStats();
 
 		void StopAll(bool stopNow);
 		void Update(Haoyue::Timestep ts);
-
-		static Stats GetStats();
 
 		// 在音频线程上执行任意函数。用于同步游戏线程和音频线程之间的更新
 		static void ExecuteOnAudioThread(AudioThreadCallbackFunction func, const char* jobID = "NONE");

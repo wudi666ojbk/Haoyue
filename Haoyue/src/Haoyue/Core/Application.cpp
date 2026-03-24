@@ -115,6 +115,24 @@ namespace Haoyue {
 		}
 		ImGui::End();
 
+		ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f));
+		ImGui::Begin(TR("Audio Stats"));
+		ImGui::Separator();
+		Audio::Stats audioStats = Audio::MiniAudioEngine::GetStats();
+		std::string active = std::to_string(audioStats.NumActiveSounds);
+		std::string max = std::to_string(audioStats.TotalSources);
+		std::string numAC = std::to_string(audioStats.NumAudioComps);
+		std::string ramEn = Utils::BytesToString(audioStats.MemEngine);
+		std::string ramRM = Utils::BytesToString(audioStats.MemResManager);
+		ImGui::Text(TR("Active Sounds: %s"), active.c_str());
+		ImGui::Text(TR("Max Sources: %s"), max.c_str());
+		ImGui::Text(TR("Audio Components: %s"), numAC.c_str());
+		ImGui::Separator();
+		ImGui::Text(TR("Frame Time: %.3fms"), audioStats.FrameTime);
+		ImGui::Text(TR("Used RAM (Engine - backend): %s"), ramEn.c_str());
+		ImGui::Text(TR("Used RAM (Resource Manager): %s"), ramRM.c_str());
+		ImGui::End();
+
 		ImGui::Begin(TR("Performance"));
 		{
 			ImGui::Text(TR("Frame Time: %.2fms"), m_TimeStep.GetMilliseconds());

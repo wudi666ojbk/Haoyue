@@ -14,6 +14,9 @@
 #include "Haoyue/Physics/PXPhysicsWrappers.h"
 #include "Haoyue/Renderer/MeshFactory.h"
 
+#include "Haoyue/Audio/AudioEngine.h"
+#include "Haoyue/Audio/AudioComponent.h"
+
 #include "Haoyue/Asset/AssetManager.h"
 
 #include <assimp/scene.h>
@@ -27,8 +30,9 @@
 #include "Haoyue/Renderer/Renderer.h"
 #include "Haoyue/Editor/TranslationManager.h"
 
-// TODO:
-// - Eventually change imgui node IDs to be entity/asset GUID
+// TODO: 添加组件按钮，绘制组件面板
+// if (!m_SelectionContext.HasComponent<Component>())
+// DrawComponent<Component>(TR("Component"), entity, [](Component& cp) {}, false);
 
 namespace Haoyue {
 
@@ -685,6 +689,26 @@ namespace Haoyue {
 					ImGui::CloseCurrentPopup();
 				}
 			}
+			if (!m_SelectionContext.HasComponent<Audio::AudioComponent>())
+			{
+				if (ImGui::Button(TR("Audio")))
+				{
+					m_SelectionContext.AddComponent<Audio::AudioComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+			if (!m_SelectionContext.HasComponent<AudioListenerComponent>())
+			{
+				if (ImGui::Button(TR("Audio Listener")))
+				{
+					auto view = m_Context->GetAllEntitiesWith<AudioListenerComponent>();
+					bool listenerExists = !view.empty();
+					auto& listenerComponent = m_SelectionContext.AddComponent<AudioListenerComponent>();
+
+					listenerComponent.Active = !listenerExists;
+					ImGui::CloseCurrentPopup();
+				}
+			}
 			ImGui::EndPopup();
 		}
 
@@ -1101,6 +1125,14 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
+		DrawComponent<Audio::AudioComponent>(TR("Audio"), entity, [&](Audio::AudioComponent& ac)
+		{
+		});
+
+		DrawComponent<AudioListenerComponent>(TR("Audio Listener"), entity, [&](AudioListenerComponent& alc)
+		{
+
+		});
 	}
 
 }

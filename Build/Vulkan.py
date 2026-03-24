@@ -16,10 +16,10 @@ from colorama import Back
 from colorama import Style
 
 VULKAN_SDK = os.environ.get('VULKAN_SDK')
-HAZEL_REQUIRED_VULKAN_VERSION = '1.3' # Any 1.3 or higher version is fine
-HAZEL_INSTALL_VULKAN_VERSION = '1.3.239.0' # Specifically install this one if no 1.3 version is present
-VULKAN_SDK_INSTALLER_URL = f'https://sdk.lunarg.com/sdk/download/{HAZEL_INSTALL_VULKAN_VERSION}/windows/VulkanSDK-{HAZEL_INSTALL_VULKAN_VERSION}-Installer.exe'
-VULKAN_SDK_LOCAL_PATH = 'Hazel/vendor/VulkanSDK'
+HAOYUE_REQUIRED_VULKAN_VERSION = '1.3' # Any 1.3 or higher version is fine
+HAOYUE_INSTALL_VULKAN_VERSION = '1.3.239.0' # Specifically install this one if no 1.3 version is present
+VULKAN_SDK_INSTALLER_URL = f'https://sdk.lunarg.com/sdk/download/{HAOYUE_INSTALL_VULKAN_VERSION}/windows/VulkanSDK-{HAOYUE_INSTALL_VULKAN_VERSION}-Installer.exe'
+VULKAN_SDK_LOCAL_PATH = 'Haoyue/vendor/VulkanSDK'
 VULKAN_SDK_EXE_PATH = f'{VULKAN_SDK_LOCAL_PATH}/VulkanSDK.exe'
 
 colorama.init()
@@ -56,11 +56,11 @@ def CheckVulkanSDK():
         print(f"Located Vulkan SDK at {VULKAN_SDK}")
         version = ExtractVersion(VULKAN_SDK)
         if version is None:
-            print(f"{Style.BRIGHT}{Back.RED}Could not determine Vulkan SDK version! (Hazel requires at least {HAZEL_REQUIRED_VULKAN_VERSION}){Style.RESET_ALL}")
+            print(f"{Style.BRIGHT}{Back.RED}Could not determine Vulkan SDK version! (Haoyue requires at least {HAOYUE_REQUIRED_VULKAN_VERSION}){Style.RESET_ALL}")
             InstallVulkanPrompt()
             return False
-        elif float(version) < float(HAZEL_REQUIRED_VULKAN_VERSION):
-            print(f"{Style.BRIGHT}{Back.RED}You don't have the correct Vulkan SDK version! (Hazel requires at least {HAZEL_REQUIRED_VULKAN_VERSION}){Style.RESET_ALL}")
+        elif float(version) < float(HAOYUE_REQUIRED_VULKAN_VERSION):
+            print(f"{Style.BRIGHT}{Back.RED}You don't have the correct Vulkan SDK version! (Haoyue requires at least {HAOYUE_REQUIRED_VULKAN_VERSION}){Style.RESET_ALL}")
             InstallVulkanPrompt()
             return False
 
@@ -70,9 +70,6 @@ def CheckVulkanSDK():
 def CheckVulkanSDKDebugLibs():
     shadercdLib = Path(f"{VULKAN_SDK}/Lib/shaderc_sharedd.lib")
     if not shadercdLib.exists():
-        print(f"{Style.BRIGHT}{Back.YELLOW}Warning: No Vulkan SDK debug libs found. (Checked {shadercdLib})")
-        print(f"{Back.RED}Debug builds are not possible.{Style.RESET_ALL}")
-        print("Please install Vulkan SDK debug libs as shown in https://docs.hazelengine.com/GettingStarted#vulkan")
         return False
 
     return True

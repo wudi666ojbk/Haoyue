@@ -119,21 +119,6 @@ namespace Audio {
         m_NumSources = 32;
         CreateSources();
 
-        HY_CORE_INFO(R"(Audio Engine: engine initialized.
-                    -----------------------------
-                    Endpoint Device Name:   {0}
-                    Sample Rate:            {1}
-                    Channels:               {2}
-                    -----------------------------
-                    Callback Buffer Size:   {3}
-                    Number of Sources:      {4}
-                    -----------------------------)",
-            m_Engine.pDevice->playback.name,
-            m_Engine.pDevice->sampleRate,
-            m_Engine.pDevice->playback.channels,
-            engineConfig.periodSizeInFrames,
-            m_NumSources);
-
         s_Stats.TotalSources = m_NumSources;
 
         bInitialized = true;
@@ -153,6 +138,12 @@ namespace Audio {
         HY_CORE_INFO("音频模块已被卸载");
         bInitialized = false;
         return true;
+    }
+
+    Stats MiniAudioEngine::GetStats()
+    {
+        s_Stats.FrameTime = AudioThread::GetFrameTime();
+        return MiniAudioEngine::s_Stats;
     }
 
     void MiniAudioEngine::StopAll(bool stopNow)

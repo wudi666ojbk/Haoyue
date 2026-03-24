@@ -4,6 +4,8 @@
 
 #include "Haoyue/Asset/Asset.h"
 
+#include <glm/glm.hpp>
+
 namespace Audio {
 
 	class MiniAudioEngine;
@@ -18,8 +20,11 @@ namespace Audio {
 	{
 		Haoyue::Ref<Haoyue::Asset> m_FileAsset;	// 音频资源路径
 
+		bool bLooping = false;
 		float VolumeMultiplier = 1.0f;
 		float PitchMultiplier = 1.0f;
+
+		glm::vec3 SpawnLocation{ 0.0f, 0.0f, 0.0f };
 	};
 
 	class Sound : public SoundObject

@@ -258,4 +258,14 @@ namespace Haoyue {
 		glm::vec3 TurbidityAzimuthInclination = { 2.0, 0.0, 0.0 };
 	};
 
+	struct AudioListenerComponent
+	{
+		//int ListenerID = -1;
+		bool Active = false;
+		float ConeInnerAngleInRadians = 6.283185f; /* 360 degrees. */;
+		float ConeOuterAngleInRadians = 6.283185f; /* 360 degrees. */;
+		float ConeOuterGain = 0.0f;
+		AudioListenerComponent() = default;
+		AudioListenerComponent(const AudioListenerComponent& other) = default;
+	};
 }
