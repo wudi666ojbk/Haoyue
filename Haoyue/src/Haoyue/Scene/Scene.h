@@ -96,6 +96,9 @@ namespace Haoyue {
 
 		static Ref<Scene> GetScene(UUID uuid);
 
+		bool IsEditorScene() const { return m_IsEditorScene; }
+		bool IsPlaying() const { return m_IsPlaying; }
+
 		float GetPhysics2DGravity() const;
 		void SetPhysics2DGravity(float gravity);
 
@@ -107,6 +110,7 @@ namespace Haoyue {
 		entt::registry m_Registry;
 
 		std::string m_DebugName;
+		bool m_IsEditorScene = false;
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
 		EntityMap m_EntityIDMap;

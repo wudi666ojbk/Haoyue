@@ -178,7 +178,7 @@ namespace Audio {
     bool Sound::InitializeDataSource(const SoundConfig& config, MiniAudioEngine* engine)
     {
         ma_result result;
-        result = ma_sound_init_from_file(&engine->m_Engine, config.m_FileAsset->FilePath.c_str(), MA_SOUND_FLAG_DECODE, NULL, &m_Sound);
+        result = ma_sound_init_from_file(&engine->m_Engine, config.FileAsset->FilePath.c_str(), MA_SOUND_FLAG_DECODE, NULL, &m_Sound);
         
         if(result != MA_SUCCESS)
             return false;

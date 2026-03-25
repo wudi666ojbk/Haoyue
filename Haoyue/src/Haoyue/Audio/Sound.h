@@ -18,7 +18,7 @@ namespace Audio {
 
 	struct SoundConfig : Haoyue::Asset
 	{
-		Haoyue::Ref<Haoyue::Asset> m_FileAsset;	// 音频资源路径
+		Haoyue::Ref<Haoyue::Asset> FileAsset;	// 音频资源路径
 
 		bool bLooping = false;
 		float VolumeMultiplier = 1.0f;
