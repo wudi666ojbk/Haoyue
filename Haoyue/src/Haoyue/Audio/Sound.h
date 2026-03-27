@@ -37,6 +37,7 @@ namespace Audio {
 		bool Pause() override;
 		bool IsPlaying() const override;
 		bool IsFinished() const override;
+		bool IsStopping() const;
 
 		void Update(Haoyue::Timestep ts) override;
 
@@ -72,6 +73,9 @@ namespace Audio {
 
 		bool bLooping = false;
 		bool bFinished = false;
+
+		uint64_t m_AudioComponentID = 0;
+		uint64_t m_SceneID = 0;
 	};
 }
 

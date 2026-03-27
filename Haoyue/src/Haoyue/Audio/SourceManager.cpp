@@ -9,11 +9,6 @@ namespace Audio
     {
     }
 
-    SourceManager::~SourceManager()
-    {
-        // TODO: release all of the sources
-    }
-
     void SourceManager::Initialize()
     {
     }

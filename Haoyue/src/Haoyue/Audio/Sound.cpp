@@ -110,6 +110,11 @@ namespace Audio {
         return bFinished;
     }
 
+    bool Sound::IsStopping() const
+    {
+        return m_PlayState == ESoundState::Stopping;
+    }
+
     void Sound::Update(Haoyue::Timestep ts)
     {
         auto notifyIfFinished = [&]

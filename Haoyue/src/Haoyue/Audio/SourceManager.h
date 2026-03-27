@@ -9,19 +9,17 @@ namespace Audio
 {
     class MiniAudioEngine;
 
-    /* 
-    ===========================================================
-    音源管理器
+    /* ===========================================================
+        Sound Source Manager
 
-    负责音源的生命周期管理、音源参数变更
-    以及效果链的构建与更新
-    ===========================================================
+        Handles lifetime of sound sources, source parameter changes
+        Building and updating effect chains
+        -----------------------------------------------------------
     */
     class SourceManager
     {
     public:
         SourceManager(MiniAudioEngine& audioEngine);
-        ~SourceManager();
 
         void Initialize();
 
