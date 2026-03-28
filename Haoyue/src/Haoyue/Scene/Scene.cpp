@@ -241,7 +241,7 @@ namespace Haoyue {
 			}
 
 			{	//--- Update Audio Components ---
-			//===============================
+				//===============================
 
 				auto view = m_Registry.view<Audio::AudioComponent>();
 
@@ -291,6 +291,48 @@ namespace Haoyue {
 				for (int i = deadEntities.size() - 1; i >= 0; i--)
 				{
 					DestroyEntity(deadEntities[i]);
+				}
+			}
+
+			// Update Audio Listener position
+			{
+				auto view = m_Registry.view<AudioListenerComponent>();
+				Entity listener;
+				for (auto entity : view)
+				{
+					Entity e = { entity, this };
+					if (e.GetComponent<AudioListenerComponent>().Active)
+					{
+						listener = e;
+						auto& transform = listener.Transform();
+						Audio::MiniAudioEngine::Get().UpdateListenerPosition(transform.Translation, transform.Forward);
+						if (auto physicsActor = Physics::GetActorForEntity(listener))
+						{
+							if (physicsActor->IsDynamic())
+								Audio::MiniAudioEngine::Get().UpdateListenerVelocity(physicsActor->GetLinearVelocity());
+						}
+						break;
+					}
+				}
+
+				if (listener.m_EntityHandle == entt::null)
+				{
+					listener = GetMainCameraEntity();
+					if (listener.m_EntityHandle != entt::null)
+					{
+						// If camera was changed or destroyed during Runtime, it might not have Listener Component (?)
+						if (!listener.HasComponent<AudioListenerComponent>())
+							listener.AddComponent<AudioListenerComponent>();
+
+						auto& transform = listener.Transform();
+						Audio::MiniAudioEngine::Get().UpdateListenerPosition(transform.Translation, transform.Forward);
+
+						if (auto physicsActor = Physics::GetActorForEntity(listener))
+						{
+							if (physicsActor->IsDynamic())
+								Audio::MiniAudioEngine::Get().UpdateListenerVelocity(physicsActor->GetLinearVelocity());
+						}
+					}
 				}
 			}
 		}
@@ -484,6 +526,52 @@ namespace Haoyue {
 
 
 		SceneRenderer::EndScene();
+
+		{
+			const auto& camPosition = editorCamera.GetPosition();
+			auto camDirection = glm::rotate(editorCamera.GetOrientation(), glm::vec3(0.0f, 0.0f, -1.0f));
+			Audio::MiniAudioEngine::Get().UpdateListenerPosition(camPosition, camDirection);
+		}
+
+		//--- Update Audio Component positions (editor scene update) ---
+		{
+			auto view = m_Registry.view<Audio::AudioComponent>();
+
+			std::vector<Entity> deadEntities;
+
+			std::vector<SoundSourceUpdateData> updateData;
+			updateData.reserve(view.size());
+
+			for (auto entity : view)
+			{
+				Entity e = { entity, this };
+				auto& audioComponent = e.GetComponent<Audio::AudioComponent>();
+
+				// AutoDestroy 标志仅针对"一次性"音效设置
+				if (audioComponent.bAutoDestroy && audioComponent.bMarkedForDestroy)
+				{
+					deadEntities.push_back(e);
+					continue;
+				}
+
+				auto& transform = e.Transform();
+
+				glm::vec3 velocity{ 0.0f, 0.0f, 0.0f };
+				updateData.emplace_back(SoundSourceUpdateData{ e.GetUUID(),
+					audioComponent.VolumeMultiplier,
+					audioComponent.PitchMultiplier,
+					transform.Translation,
+					velocity });
+			}
+
+			//--- 向音频引擎提交数据以更新关联的声源 ---
+			Audio::MiniAudioEngine::Get().SubmitSourceUpdateData(updateData);
+
+			for (int i = deadEntities.size() - 1; i >= 0; i--)
+			{
+				DestroyEntity(deadEntities[i]);
+			}
+		}
 	}
 
 	void Scene::OnEvent(Event& e)
@@ -493,6 +581,7 @@ namespace Haoyue {
 	void Scene::OnRuntimeStart()
 	{
 		ScriptEngine::SetSceneContext(this);
+		Audio::MiniAudioEngine::SetSceneContext(this);
 
 		{
 			auto view = m_Registry.view<ScriptComponent>();
@@ -614,7 +703,76 @@ namespace Haoyue {
 			}
 		}
 
+		{	//--- Make sure we have an audio listener ---
+			//===========================================
+			Entity mainCam = GetMainCameraEntity();
+			Entity listener;
+
+			auto view = m_Registry.view<AudioListenerComponent>();
+			bool listenerFound = !view.empty();
+
+			if (mainCam.m_EntityHandle != entt::null)
+			{
+				if (!mainCam.HasComponent<AudioListenerComponent>())
+					mainCam.AddComponent<AudioListenerComponent>();
+			}
+
+			if (listenerFound)
+			{
+				for (auto entity : view)
+				{
+					listener = { entity, this };
+					if (listener.GetComponent<AudioListenerComponent>().Active)
+					{
+						listenerFound = true;
+						break;
+					}
+					listenerFound = false;
+				}
+			}
+
+			if (!listenerFound)
+				listener = mainCam;
+
+			if (listener.m_EntityHandle != entt::null)
+			{
+				// Initialize listener's position
+				auto& transform = listener.Transform();
+				Audio::MiniAudioEngine::Get().UpdateListenerPosition(transform.Translation, transform.Forward);
+			}
+		}
+
+		{	//--- Initialize audio component sound positions ---
+			auto view = m_Registry.view<Audio::AudioComponent>();
+
+			std::vector<SoundSourceUpdateData> updateData;
+			updateData.reserve(view.size());
+
+			for (auto entity : view)
+			{
+				auto& audioComponent = view.get(entity);
+
+				Entity e = { entity, this };
+				auto& transform = e.Transform();
+
+				audioComponent.SourcePosition = transform.Translation;
+
+
+				glm::vec3 velocity{ 0.0f, 0.0f, 0.0f };
+				updateData.emplace_back(SoundSourceUpdateData{ e.GetUUID(),
+					audioComponent.VolumeMultiplier,
+					audioComponent.PitchMultiplier,
+					transform.Translation,
+					velocity });
+			}
+
+			//--- Submit values to AudioEngine to update associated sound sources ---
+			Audio::MiniAudioEngine::Get().SubmitSourceUpdateData(updateData);
+		}
+
 		m_IsPlaying = true;
+
+		Audio::MiniAudioEngine::OnRuntimePlaying(m_SceneID);
 	}
 
 	void Scene::OnRuntimeStop()
@@ -687,6 +845,8 @@ namespace Haoyue {
 	{
 		if (entity.HasComponent<ScriptComponent>())
 			ScriptEngine::OnScriptComponentDestroyed(m_SceneID, entity.GetUUID());
+		if (entity.HasComponent<Audio::AudioComponent>())
+			Audio::MiniAudioEngine::Get().UnregisterAudioComponent(m_SceneID, entity.GetUUID());
 
 		m_Registry.destroy(entity.m_EntityHandle);
 	}
@@ -738,6 +898,8 @@ namespace Haoyue {
 		CopyComponentIfExists<SphereColliderComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
 		CopyComponentIfExists<CapsuleColliderComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
 		CopyComponentIfExists<MeshColliderComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
+		CopyComponentIfExists<Audio::AudioComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
+		CopyComponentIfExists<AudioListenerComponent>(newEntity.m_EntityHandle, entity.m_EntityHandle, m_Registry);
 	}
 
 	Entity Scene::FindEntityByTag(const std::string& tag)
@@ -816,6 +978,8 @@ namespace Haoyue {
 		CopyComponent<SphereColliderComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<CapsuleColliderComponent>(target->m_Registry, m_Registry, enttMap);
 		CopyComponent<MeshColliderComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<Audio::AudioComponent>(target->m_Registry, m_Registry, enttMap);
+		CopyComponent<AudioListenerComponent>(target->m_Registry, m_Registry, enttMap);
 
 		const auto& entityInstanceMap = ScriptEngine::GetEntityInstanceMap();
 		if (entityInstanceMap.find(target->GetUUID()) != entityInstanceMap.end())

@@ -7,6 +7,7 @@
 #include "Haoyue/Physics/PhysicsLayer.h"
 #include "Haoyue/Physics/PXPhysicsWrappers.h"
 #include "Haoyue/Renderer/MeshFactory.h"
+#include "Haoyue/Audio/AudioComponent.h"
 
 #include "Haoyue/Asset/AssetManager.h"
 
@@ -486,6 +487,55 @@ namespace Haoyue {
 			out << YAML::EndMap; // MeshColliderComponent
 		}
 
+		if (entity.HasComponent<Audio::AudioComponent>())
+		{
+			out << YAML::Key << "AudioComponent";
+			out << YAML::BeginMap; // AudioComponent
+			auto& audioComponent = entity.GetComponent<Audio::AudioComponent>();
+			const auto& soundCofig = audioComponent.SoundConfig;
+			if (soundCofig.FileAsset)
+				out << YAML::Key << "AssetID" << YAML::Value << soundCofig.FileAsset->Handle;
+			out << YAML::Key << "IsLooping" << YAML::Value << (bool)soundCofig.bLooping;
+			out << YAML::Key << "VolumeMultiplier" << YAML::Value << audioComponent.VolumeMultiplier;
+			out << YAML::Key << "PitchMultiplier" << YAML::Value << audioComponent.PitchMultiplier;
+			out << YAML::Key << "AutoDestroy" << YAML::Value << audioComponent.bAutoDestroy;
+			out << YAML::Key << "PlayOnAwake" << YAML::Value << audioComponent.bPlayOnAwake;
+
+			out << YAML::Key << "Spatialization";
+			out << YAML::BeginMap; // Spatialization
+
+			auto& spatialConfig = soundCofig.Spatialization;
+			out << YAML::Key << "Enabled" << YAML::Value << soundCofig.bSpatializationEnabled;
+			out << YAML::Key << "AttenuationModel" << YAML::Value << (int)spatialConfig.AttenuationMod;
+			out << YAML::Key << "MinGain" << YAML::Value << spatialConfig.MinGain;
+			out << YAML::Key << "MaxGain" << YAML::Value << spatialConfig.MaxGain;
+			out << YAML::Key << "MinDistance" << YAML::Value << spatialConfig.MinDistance;
+			out << YAML::Key << "MaxDistance" << YAML::Value << spatialConfig.MaxDistance;
+			out << YAML::Key << "ConeInnerAngle" << YAML::Value << spatialConfig.ConeInnerAngleInRadians;
+			out << YAML::Key << "ConeOuterAngle" << YAML::Value << spatialConfig.ConeOuterAngleInRadians;
+			out << YAML::Key << "ConeOuterGain" << YAML::Value << spatialConfig.ConeOuterGain;
+			out << YAML::Key << "DopplerFactor" << YAML::Value << spatialConfig.DopplerFactor;
+			out << YAML::Key << "Rollor" << YAML::Value << spatialConfig.Rolloff;
+			out << YAML::Key << "AirAbsorptionEnabled" << YAML::Value << spatialConfig.bAirAbsorptionEnabled;
+
+			out << YAML::EndMap; // Spatialization
+			out << YAML::EndMap; // AudioComponent
+
+		}
+
+		if (entity.HasComponent<AudioListenerComponent>())
+		{
+			out << YAML::Key << "AudioListenerComponent";
+			out << YAML::BeginMap; // AudioComponent
+			auto& audioListenerComponent = entity.GetComponent<AudioListenerComponent>();
+			out << YAML::Key << "Active" << YAML::Value << audioListenerComponent.Active;
+			out << YAML::Key << "ConeInnerAngle" << YAML::Value << audioListenerComponent.ConeInnerAngleInRadians;
+			out << YAML::Key << "ConeOuterAngle" << YAML::Value << audioListenerComponent.ConeOuterAngleInRadians;
+			out << YAML::Key << "ConeOuterGain" << YAML::Value << audioListenerComponent.ConeOuterGain;
+			out << YAML::EndMap; // AudioComponent
+
+		}
+
 		out << YAML::EndMap; // Entity
 	}
 
@@ -518,14 +568,14 @@ namespace Haoyue {
 		out << YAML::Key << "Entities";
 		out << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.each([&](auto entityID)
-		{
-			Entity entity = { entityID, m_Scene.Raw() };
-			if (!entity || !entity.HasComponent<IDComponent>())
-				return;
+			{
+				Entity entity = { entityID, m_Scene.Raw() };
+				if (!entity || !entity.HasComponent<IDComponent>())
+					return;
 
-			SerializeEntity(out, entity);
+				SerializeEntity(out, entity);
 
-		});
+			});
 		out << YAML::EndSeq;
 
 		out << YAML::Key << "PhysicsLayers";
@@ -663,41 +713,41 @@ namespace Haoyue {
 								auto dataNode = field["Data"];
 								switch (type)
 								{
-									case FieldType::Float:
-									{
-										publicFields.at(name).SetStoredValue(dataNode.as<float>());
-										break;
-									}
-									case FieldType::Int:
-									{
-										publicFields.at(name).SetStoredValue(dataNode.as<int32_t>());
-										break;
-									}
-									case FieldType::UnsignedInt:
-									{
-										publicFields.at(name).SetStoredValue(dataNode.as<uint32_t>());
-										break;
-									}
-									case FieldType::String:
-									{
-										HY_CORE_ASSERT(false, "Unimplemented");
-										break;
-									}
-									case FieldType::Vec2:
-									{
-										publicFields.at(name).SetStoredValue(dataNode.as<glm::vec2>());
-										break;
-									}
-									case FieldType::Vec3:
-									{
-										publicFields.at(name).SetStoredValue(dataNode.as<glm::vec3>());
-										break;
-									}
-									case FieldType::Vec4:
-									{
-										publicFields.at(name).SetStoredValue(dataNode.as<glm::vec4>());
-										break;
-									}
+								case FieldType::Float:
+								{
+									publicFields.at(name).SetStoredValue(dataNode.as<float>());
+									break;
+								}
+								case FieldType::Int:
+								{
+									publicFields.at(name).SetStoredValue(dataNode.as<int32_t>());
+									break;
+								}
+								case FieldType::UnsignedInt:
+								{
+									publicFields.at(name).SetStoredValue(dataNode.as<uint32_t>());
+									break;
+								}
+								case FieldType::String:
+								{
+									HY_CORE_ASSERT(false, "Unimplemented");
+									break;
+								}
+								case FieldType::Vec2:
+								{
+									publicFields.at(name).SetStoredValue(dataNode.as<glm::vec2>());
+									break;
+								}
+								case FieldType::Vec3:
+								{
+									publicFields.at(name).SetStoredValue(dataNode.as<glm::vec3>());
+									break;
+								}
+								case FieldType::Vec4:
+								{
+									publicFields.at(name).SetStoredValue(dataNode.as<glm::vec4>());
+									break;
+								}
 								}
 							}
 						}
@@ -828,7 +878,7 @@ namespace Haoyue {
 					auto& component = deserializedEntity.AddComponent<CircleCollider2DComponent>();
 					component.Offset = circleCollider2DComponent["Offset"].as<glm::vec2>();
 					component.Radius = circleCollider2DComponent["Radius"].as<float>();
-					component.Density = circleCollider2DComponent["Density"] ? circleCollider2DComponent["Density"].as<float>() : 1.0f; 
+					component.Density = circleCollider2DComponent["Density"] ? circleCollider2DComponent["Density"].as<float>() : 1.0f;
 					component.Friction = circleCollider2DComponent["Friction"] ? circleCollider2DComponent["Friction"].as<float>() : 1.0f;
 				}
 
@@ -859,7 +909,7 @@ namespace Haoyue {
 					component.Offset = boxColliderComponent["Offset"].as<glm::vec3>();
 					component.Size = boxColliderComponent["Size"].as<glm::vec3>();
 					component.IsTrigger = boxColliderComponent["IsTrigger"] ? boxColliderComponent["IsTrigger"].as<bool>() : false;
-					
+
 					auto material = boxColliderComponent["Material"];
 					if (material)
 					{
@@ -882,7 +932,7 @@ namespace Haoyue {
 					auto& component = deserializedEntity.AddComponent<SphereColliderComponent>();
 					component.Radius = sphereColliderComponent["Radius"].as<float>();
 					component.IsTrigger = sphereColliderComponent["IsTrigger"] ? sphereColliderComponent["IsTrigger"].as<bool>() : false;
-				
+
 					auto material = sphereColliderComponent["Material"];
 					if (material)
 					{
@@ -991,6 +1041,61 @@ namespace Haoyue {
 
 					if (deserializedEntity.HasComponent<MeshColliderComponent>())
 						deserializedEntity.GetComponent<MeshColliderComponent>().Material = material;
+				}
+
+				auto audioComponent = entity["AudioComponent"];
+				if (audioComponent)
+				{
+					auto& component = deserializedEntity.AddComponent<Audio::AudioComponent>();
+					Audio::SoundConfig soundConfig;
+
+					AssetHandle assetHandle = audioComponent["AssetID"] ? audioComponent["AssetID"].as<uint64_t>() : 0;
+
+					if (AssetManager::IsAssetHandleValid(assetHandle))
+						soundConfig.FileAsset = AssetManager::GetAsset<Asset>(assetHandle);
+					else
+						HY_CORE_ERROR("Tried to load invalid Audio File asset in Entity {0}", deserializedEntity.GetUUID());
+
+					soundConfig.bLooping = audioComponent["IsLooping"] ? audioComponent["IsLooping"].as<bool>() : false;
+					component.bAutoDestroy = audioComponent["AutoDestroy"] ? audioComponent["AutoDestroy"].as<bool>() : false;
+					component.bPlayOnAwake = audioComponent["PlayOnAwake"] ? audioComponent["PlayOnAwake"].as<bool>() : false;
+					component.VolumeMultiplier = audioComponent["VolumeMultiplier"] ? audioComponent["VolumeMultiplier"].as<float>() : 1.0f;
+					component.PitchMultiplier = audioComponent["PitchMultiplier"] ? audioComponent["PitchMultiplier"].as<float>() : 1.0f;
+					soundConfig.VolumeMultiplier = audioComponent["VolumeMultiplier"] ? audioComponent["VolumeMultiplier"].as<float>() : 1.0f;
+					soundConfig.PitchMultiplier = audioComponent["PitchMultiplier"] ? audioComponent["PitchMultiplier"].as<float>() : 1.0f;
+
+					auto spConfig = audioComponent["Spatialization"];
+					if (spConfig)
+					{
+						bool spatialEnabled = spConfig["Enabled"] ? spConfig["Enabled"].as<bool>() : false;
+						soundConfig.bSpatializationEnabled = spConfig["Enabled"] ? spConfig["Enabled"].as<bool>() : false;
+
+						auto& spatialConfig = soundConfig.Spatialization;
+						spatialConfig.AttenuationMod = spConfig["AttenuationModel"] ? static_cast<Audio::AttenuationModel>(spConfig["AttenuationModel"].as<int>())
+							: Audio::AttenuationModel::Inverse;
+						spatialConfig.MinGain = spConfig["MinGain"] ? spConfig["MinGain"].as<float>() : 0.0f;
+						spatialConfig.MaxGain = spConfig["MaxGain"] ? spConfig["MaxGain"].as<float>() : 1.0f;
+						spatialConfig.MinDistance = spConfig["MinDistance"] ? spConfig["MinDistance"].as<float>() : 1.0f;
+						spatialConfig.MaxDistance = spConfig["MaxDistance"] ? spConfig["MaxDistance"].as<float>() : 300.0f;
+						spatialConfig.ConeInnerAngleInRadians = spConfig["ConeInnerAngle"] ? spConfig["ConeInnerAngle"].as<float>() : 6.283185f;
+						spatialConfig.ConeOuterAngleInRadians = spConfig["ConeOuterAngle"] ? spConfig["ConeOuterAngle"].as<float>() : 6.283185f;
+						spatialConfig.ConeOuterGain = spConfig["ConeOuterGain"] ? spConfig["ConeOuterGain"].as<float>() : 0.0f;
+						spatialConfig.DopplerFactor = spConfig["DopplerFactor"] ? spConfig["DopplerFactor"].as<float>() : 1.0f;
+						spatialConfig.Rolloff = spConfig["Rollor"] ? spConfig["Rollor"].as<float>() : 1.0f;
+						spatialConfig.bAirAbsorptionEnabled = spConfig["AirAbsorptionEnabled"] ? spConfig["AirAbsorptionEnabled"].as<bool>() : true;
+					}
+
+					component.SoundConfig = soundConfig;
+				}
+
+				auto audioListener = entity["AudioListenerComponent"];
+				if (audioListener)
+				{
+					auto& component = deserializedEntity.AddComponent<AudioListenerComponent>();
+					component.Active = audioListener["Active"] ? audioListener["Active"].as<bool>() : false;
+					component.ConeInnerAngleInRadians = audioListener["ConeInnerAngle"] ? audioListener["ConeInnerAngle"].as<float>() : 6.283185f;
+					component.ConeOuterAngleInRadians = audioListener["ConeOuterAngle"] ? audioListener["ConeOuterAngle"].as<float>() : 6.283185f;
+					component.ConeOuterGain = audioListener["ConeOuterGain"] ? audioListener["ConeOuterGain"].as<float>() : 1.0f;
 				}
 			}
 		}

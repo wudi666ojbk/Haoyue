@@ -546,7 +546,7 @@ namespace Haoyue {
 		if (ImGui::Button(TR("Add Component")))
 			ImGui::OpenPopup("AddComponentPanel");
 
-		if (ImGui::BeginPopup(TR("AddComponentPanel")))
+		if (ImGui::BeginPopup("AddComponentPanel"))
 		{
 			DisplayAddComponentEntry<CameraComponent>(TR("Camera"));
 			DisplayAddComponentEntry<MeshComponent>(TR("Mesh"));
@@ -573,6 +573,19 @@ namespace Haoyue {
 						PXPhysicsWrappers::CreateTriangleMesh(component);
 					}
 
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+			if (!m_SelectionContext.HasComponent<AudioListenerComponent>())
+			{
+				if (ImGui::Button("Audio Listener"))
+				{
+					auto view = m_Context->GetAllEntitiesWith<AudioListenerComponent>();
+					bool listenerExists = !view.empty();
+					auto& listenerComponent = m_SelectionContext.AddComponent<AudioListenerComponent>();
+
+					listenerComponent.Active = !listenerExists;
 					ImGui::CloseCurrentPopup();
 				}
 			}
@@ -785,7 +798,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<RigidBody2DComponent>("Rigidbody 2D", entity, [](RigidBody2DComponent& rb2dc)
+		DrawComponent<RigidBody2DComponent>(TR("Rigidbody 2D"), entity, [](RigidBody2DComponent& rb2dc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -803,7 +816,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", entity, [](BoxCollider2DComponent& bc2dc)
+		DrawComponent<BoxCollider2DComponent>(TR("Box Collider 2D"), entity, [](BoxCollider2DComponent& bc2dc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -815,7 +828,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 	
-		DrawComponent<CircleCollider2DComponent>("Circle Collider 2D", entity, [](CircleCollider2DComponent& cc2dc)
+		DrawComponent<CircleCollider2DComponent>(TR("Circle Collider 2D"), entity, [](CircleCollider2DComponent& cc2dc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -827,7 +840,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<RigidBodyComponent>("Rigidbody", entity, [](RigidBodyComponent& rbc)
+		DrawComponent<RigidBodyComponent>(TR("Rigidbody"), entity, [](RigidBodyComponent& rbc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -877,7 +890,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<BoxColliderComponent>("Box Collider", entity, [](BoxColliderComponent& bcc)
+		DrawComponent<BoxColliderComponent>(TR("Box Collider"), entity, [](BoxColliderComponent& bcc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -891,7 +904,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<SphereColliderComponent>("Sphere Collider", entity, [](SphereColliderComponent& scc)
+		DrawComponent<SphereColliderComponent>(TR("Sphere Collider"), entity, [](SphereColliderComponent& scc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -906,7 +919,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<CapsuleColliderComponent>("Capsule Collider", entity, [=](CapsuleColliderComponent& ccc)
+		DrawComponent<CapsuleColliderComponent>(TR("Capsule Collider"), entity, [=](CapsuleColliderComponent& ccc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -929,7 +942,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<MeshColliderComponent>("Mesh Collider", entity, [&](MeshColliderComponent& mcc)
+		DrawComponent<MeshColliderComponent>(TR("Mesh Collider"), entity, [&](MeshColliderComponent& mcc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -1148,17 +1161,59 @@ namespace Haoyue {
 				propertyGridSpacing();
 				propertyGridSpacing();
 				if (UI::Property("Doppler Factor", spatialConfig.DopplerFactor, 0.01f, 0.0f, 1.0f)) {}
-				//if (UI::Property("Rolloff", spatialConfig.Rolloff, 0.01f, 0.0f, 1.0f)) {  }
 
 				propertyGridSpacing();
 				propertyGridSpacing();
-				// TODO: air absorption filter is not hooked up yet
-				//if (UI::Property("Air Absorption", spatialConfig.bAirAbsorptionEnabled)) {  }
 
 				UI::EndPropertyGrid();
 			}
 
 			colors[ImGuiCol_Separator] = oldSCol;
+		});
+
+		DrawComponent<AudioListenerComponent>(TR("Audio Listener"), entity, [&](AudioListenerComponent& alc)
+		{
+			UI::BeginPropertyGrid();
+
+			if (UI::Property("Active", alc.Active))
+			{
+				auto view = m_Context->GetAllEntitiesWith<AudioListenerComponent>();
+				if (alc.Active == true)
+				{
+					for (auto ent : view)
+					{
+						Entity e{ ent, m_Context.Raw() };
+						e.GetComponent<AudioListenerComponent>().Active = ent == entity;
+					}
+				}
+				else
+				{
+					// Fallback to using main camera as active listener
+					// - in editor main camera is already the only allowed active listener (may change that in the future)
+					// - in runtime it falls back to main camera in update loop if can't find other active listener
+				}
+			}
+
+			float inAngle = glm::degrees(alc.ConeInnerAngleInRadians);
+			float outAngle = glm::degrees(alc.ConeOuterAngleInRadians);
+			float outGain = alc.ConeOuterGain;
+			//? Have to manually clamp here because UI::Property doesn't take flags to pass in ImGuiSliderFlags_ClampOnInput
+			if (UI::Property("Inner Cone Angle", inAngle, 1.0f, 0.0f, 360.0f))
+			{
+				if (inAngle > 360.0f) inAngle = 360.0f;
+				alc.ConeInnerAngleInRadians = glm::radians(inAngle);
+			}
+			if (UI::Property("Outer Cone Angle", outAngle, 1.0f, 0.0f, 360.0f))
+			{
+				if (outAngle > 360.0f) outAngle = 360.0f;
+				alc.ConeOuterAngleInRadians = glm::radians(outAngle);
+			}
+			if (UI::Property("Outer Gain", outGain, 0.01f, 0.0f, 1.0f))
+			{
+				if (outGain > 1.0f) outGain = 1.0f;
+				alc.ConeOuterGain = outGain;
+			}
+			UI::EndPropertyGrid();
 		});
 	}
 

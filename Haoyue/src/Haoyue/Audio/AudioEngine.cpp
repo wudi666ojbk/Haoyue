@@ -350,6 +350,21 @@ namespace Audio {
 
     //==================================================================================
 
+    void MiniAudioEngine::UpdateListener()
+    {
+        if (m_AudioListener.HasChanged(true))
+        {
+            glm::vec3 pos, dir, vel;
+            m_AudioListener.GetPositionDirection(pos, dir);
+            m_AudioListener.GetVelocity(vel);
+            ma_engine_listener_set_position(&m_Engine, 0, pos.x, pos.y, pos.z);
+            ma_engine_listener_set_direction(&m_Engine, 0, dir.x, dir.y, dir.z);
+            ma_engine_listener_set_velocity(&m_Engine, 0, vel.x, vel.y, vel.z);
+            // TODO
+            //ma_engine_listener_set_cone(&m_Engine, 0);
+        }
+    }
+
     void MiniAudioEngine::UpdateSources()
     {
         
@@ -370,6 +385,17 @@ namespace Audio {
     {
         std::scoped_lock lock{ m_UpdateSourcesLock };
         m_SourceUpdateData.swap(updateData);
+    }
+
+    void MiniAudioEngine::UpdateListenerPosition(const glm::vec3& newTranslation, const glm::vec3& newDirection)
+    {
+        if (m_AudioListener.PositionNeedsUpdate(newTranslation, newDirection))
+            m_AudioListener.SetNewPositionDirection(newTranslation, newDirection);
+    }
+
+    void MiniAudioEngine::UpdateListenerVelocity(const glm::vec3& newVelocity)
+    {
+        m_AudioListener.SetNewVelocity(newVelocity);
     }
 
     void MiniAudioEngine::ReleaseFinishedSources()

@@ -44,6 +44,57 @@ namespace Audio {
 		Stats& Stats;
 	};
 
+    struct AudioListener
+    {
+        bool PositionNeedsUpdate(const glm::vec3& newPosition, const glm::vec3& newDirection) const
+        {
+            std::shared_lock lock{ m_Mutex };
+            return newPosition != m_LastPosition || newDirection != m_LastDirection;
+        }
+
+        void SetNewPositionDirection(const glm::vec3& newPosition, const glm::vec3& newDirection)
+        {
+            std::unique_lock lock{ m_Mutex };
+            m_LastPosition = newPosition;
+            m_LastDirection = newDirection;
+            m_Changed = true;
+        }
+
+        void SetNewVelocity(const glm::vec3& newVelocity)
+        {
+            std::unique_lock lock{ m_Mutex };
+            m_Changed = newVelocity != m_LastVelocity;
+            m_LastVelocity = newVelocity;
+        }
+
+        void GetVelocity(glm::vec3& velocity) const
+        {
+            std::shared_lock lock{ m_Mutex };
+            velocity = m_LastVelocity;
+        }
+
+        void GetPositionDirection(glm::vec3& position, glm::vec3& direction) const
+        {
+            std::shared_lock lock{ m_Mutex };
+            position = m_LastPosition;
+            direction = m_LastDirection;
+        }
+
+        bool HasChanged(bool resetFlag) const
+        {
+            bool changed = m_Changed.load();
+            if (resetFlag) m_Changed.store(false);
+            return changed;
+        }
+    private:
+        mutable std::shared_mutex m_Mutex;
+        glm::vec3 m_LastPosition{ 0.0f, 0.0f, 0.0f };
+        glm::vec3 m_LastDirection{ 0.0f, 0.0f, -1.0f };
+        glm::vec3 m_LastVelocity{ 0.0f, 0.0f, 0.0f };
+        mutable std::atomic<bool> m_Changed = false;
+    };
+
+
     template<typename T>
     struct EntityIDMap
     {
@@ -152,6 +203,7 @@ namespace Audio {
         void Update(Haoyue::Timestep ts);
 
         void SubmitSourceUpdateData(std::vector<SoundSourceUpdateData> updateData);
+
         void UpdateListenerPosition(const glm::vec3& newTranslation, const glm::vec3& newDirection);
         void UpdateListenerVelocity(const glm::vec3& newVelocity);
 
@@ -167,6 +219,7 @@ namespace Audio {
 		void CreateSources();
 		void ReleaseFinishedSources();
 
+        void UpdateListener();
         void UpdateSources();
         Sound* GetSoundForAudioComponent(uint64_t audioComponentID);
 
@@ -192,13 +245,14 @@ namespace Audio {
 
 		SourceManager m_SourceManager{ *this };
 
+		AudioListener m_AudioListener;
 		Haoyue::Ref<Haoyue::Scene> m_SceneContext;
 		Haoyue::UUID m_CurrentSceneID;
 
 		// 源数限制
 		int m_NumSources = 0;
 		std::vector<Sound*> m_SoundSources;
-        std::vector<SoundObject*> m_ActiveSounds;
+		std::vector<SoundObject*> m_ActiveSounds;
 		std::vector<SoundObject*> m_SoundsToStart;
 
         EntityIDMap<Sound*> m_ComponentSoundMap;
