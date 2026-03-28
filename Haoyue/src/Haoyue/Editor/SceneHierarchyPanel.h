@@ -18,6 +18,9 @@ namespace Haoyue {
 
 		void OnImGuiRender();
 	private:
+		template<typename T>
+		void DisplayAddComponentEntry(const std::string& entryName);
+
 		void DrawEntityNode(Entity entity);
 		void DrawMeshNode(const Ref<Mesh>& mesh, uint32_t& imguiMeshID);
 		void MeshNodeHierarchy(const Ref<Mesh>& mesh, aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32_t level = 0);

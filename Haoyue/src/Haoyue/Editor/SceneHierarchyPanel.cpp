@@ -30,10 +30,6 @@
 #include "Haoyue/Renderer/Renderer.h"
 #include "Haoyue/Editor/TranslationManager.h"
 
-// TODO: 添加组件按钮，绘制组件面板
-// if (!m_SelectionContext.HasComponent<Component>())
-// DrawComponent<Component>(TR("Component"), entity, [](Component& cp) {}, false);
-
 namespace Haoyue {
 
 	glm::mat4 Mat4FromAssimpMat4(const aiMatrix4x4& matrix);
@@ -222,25 +218,6 @@ namespace Haoyue {
 				DrawComponents(m_SelectionContext);
 		}
 		ImGui::End();
-
-#if TODO
-		ImGui::Begin("Mesh Debug");
-		if (ImGui::CollapsingHeader(mesh->m_FilePath.c_str()))
-		{
-			if (mesh->m_IsAnimated)
-			{
-				if (ImGui::CollapsingHeader("Animation"))
-				{
-					if (ImGui::Button(mesh->m_AnimationPlaying ? TR("Pause") : TR("Play")))
-						mesh->m_AnimationPlaying = !mesh->m_AnimationPlaying;
-
-					ImGui::SliderFloat("##AnimationTime", &mesh->m_AnimationTime, 0.0f, (float)mesh->m_Scene->mAnimations[0]->mDuration);
-					ImGui::DragFloat("Time Scale", &mesh->m_TimeMultiplier, 0.05f, 0.0f, 10.0f);
-				}
-			}
-		}
-		ImGui::End();
-#endif
 	}
 
 	void SceneHierarchyPanel::DrawEntityNode(Entity entity)
@@ -569,115 +546,25 @@ namespace Haoyue {
 		if (ImGui::Button(TR("Add Component")))
 			ImGui::OpenPopup("AddComponentPanel");
 
-		if (ImGui::BeginPopup("AddComponentPanel"))
+		if (ImGui::BeginPopup(TR("AddComponentPanel")))
 		{
-			if (!m_SelectionContext.HasComponent<CameraComponent>())
-			{
-				if (ImGui::Button(TR("Camera")))
-				{
-					m_SelectionContext.AddComponent<CameraComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<MeshComponent>())
-			{
-				if (ImGui::Button(TR("Mesh")))
-				{
-					MeshComponent& component = m_SelectionContext.AddComponent<MeshComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<DirectionalLightComponent>())
-			{
-				if (ImGui::Button(TR("Directional Light")))
-				{
-					m_SelectionContext.AddComponent<DirectionalLightComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<SkyLightComponent>())
-			{
-				if (ImGui::Button(TR("Sky Light")))
-				{
-					m_SelectionContext.AddComponent<SkyLightComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<ScriptComponent>())
-			{
-				if (ImGui::Button(TR("Script")))
-				{
-					m_SelectionContext.AddComponent<ScriptComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<SpriteRendererComponent>())
-			{
-				if (ImGui::Button(TR("Sprite Renderer")))
-				{
-					m_SelectionContext.AddComponent<SpriteRendererComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<RigidBody2DComponent>())
-			{
-				if (ImGui::Button(TR("Rigidbody 2D")))
-				{
-					m_SelectionContext.AddComponent<RigidBody2DComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<BoxCollider2DComponent>())
-			{
-				if (ImGui::Button(TR("Box Collider 2D")))
-				{
-					m_SelectionContext.AddComponent<BoxCollider2DComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<CircleCollider2DComponent>())
-			{
-				if (ImGui::Button(TR("Circle Collider 2D")))
-				{
-					m_SelectionContext.AddComponent<CircleCollider2DComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<RigidBodyComponent>())
-			{
-				if (ImGui::Button(TR("Rigidbody")))
-				{
-					m_SelectionContext.AddComponent<RigidBodyComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<BoxColliderComponent>())
-			{
-				if (ImGui::Button(TR("Box Collider")))
-				{
-					m_SelectionContext.AddComponent<BoxColliderComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<SphereColliderComponent>())
-			{
-				if (ImGui::Button(TR("Sphere Collider")))
-				{
-					m_SelectionContext.AddComponent<SphereColliderComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<CapsuleColliderComponent>())
-			{
-				if (ImGui::Button(TR("Capsule Collider")))
-				{
-					m_SelectionContext.AddComponent<CapsuleColliderComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
+			DisplayAddComponentEntry<CameraComponent>(TR("Camera"));
+			DisplayAddComponentEntry<MeshComponent>(TR("Mesh"));
+			DisplayAddComponentEntry<DirectionalLightComponent>(TR("Directional Light"));
+			DisplayAddComponentEntry<SkyLightComponent>(TR("Sky Light"));
+			DisplayAddComponentEntry<ScriptComponent>(TR("Script"));
+			DisplayAddComponentEntry<SpriteRendererComponent>(TR("Sprite Renderer"));
+			DisplayAddComponentEntry<RigidBody2DComponent>(TR("Rigidbody 2D"));
+			DisplayAddComponentEntry<BoxCollider2DComponent>(TR("Box Collider 2D"));
+			DisplayAddComponentEntry<CircleCollider2DComponent>(TR("Circle Collider 2D"));
+			DisplayAddComponentEntry<RigidBodyComponent>(TR("Rigidbody"));
+			DisplayAddComponentEntry<BoxColliderComponent>(TR("Box Collider"));
+			DisplayAddComponentEntry<SphereColliderComponent>(TR("Sphere Collider"));
+			DisplayAddComponentEntry<CapsuleColliderComponent>(TR("Capsule Collider"));
+			DisplayAddComponentEntry<Audio::AudioComponent>(TR("Audio"));
 			if (!m_SelectionContext.HasComponent<MeshColliderComponent>())
 			{
-				if (ImGui::Button(TR("Mesh Collider")))
+				if (ImGui::MenuItem(TR("Mesh Collider")))
 				{
 					MeshColliderComponent& component = m_SelectionContext.AddComponent<MeshColliderComponent>();
 					if (m_SelectionContext.HasComponent<MeshComponent>())
@@ -689,26 +576,7 @@ namespace Haoyue {
 					ImGui::CloseCurrentPopup();
 				}
 			}
-			if (!m_SelectionContext.HasComponent<Audio::AudioComponent>())
-			{
-				if (ImGui::Button(TR("Audio")))
-				{
-					m_SelectionContext.AddComponent<Audio::AudioComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-			}
-			if (!m_SelectionContext.HasComponent<AudioListenerComponent>())
-			{
-				if (ImGui::Button(TR("Audio Listener")))
-				{
-					auto view = m_Context->GetAllEntitiesWith<AudioListenerComponent>();
-					bool listenerExists = !view.empty();
-					auto& listenerComponent = m_SelectionContext.AddComponent<AudioListenerComponent>();
 
-					listenerComponent.Active = !listenerExists;
-					ImGui::CloseCurrentPopup();
-				}
-			}
 			ImGui::EndPopup();
 		}
 
@@ -909,35 +777,12 @@ namespace Haoyue {
 							}
 							break;
 						}
-						/*case FieldType::ClassReference:
-						{
-							Ref<Asset>* asset = (Ref<Asset>*)(isRuntime ? field.GetRuntimeValueRaw() : field.GetStoredValueRaw());
-							std::string label = field.Name + "(" + field.TypeName + ")";
-
-							if (!AssetManager::IsAssetHandleValid((*asset)->Handle))
-								break;
-
-							if (UI::PropertyAssetReference(label.c_str(), *asset))
-							{
-								if (isRuntime)
-									field.SetRuntimeValueRaw(asset);
-								else
-									field.SetStoredValueRaw(asset);
-							}
-							break;
-						}*/
 						}
 					}
 				}
 			}
 
 			UI::EndPropertyGrid();
-#if TODO
-			if (ImGui::Button("Run Script"))
-			{
-				ScriptEngine::OnCreateEntity(entity);
-			}
-#endif
 		});
 
 		DrawComponent<RigidBody2DComponent>("Rigidbody 2D", entity, [](RigidBody2DComponent& rb2dc)
@@ -1315,11 +1160,18 @@ namespace Haoyue {
 
 			colors[ImGuiCol_Separator] = oldSCol;
 		});
+	}
 
-		DrawComponent<AudioListenerComponent>(TR("Audio Listener"), entity, [&](AudioListenerComponent& alc)
+	template<typename T>
+	void SceneHierarchyPanel::DisplayAddComponentEntry(const std::string& entryName) {
+		if (!m_SelectionContext.HasComponent<T>())
 		{
-
-		});
+			if (ImGui::MenuItem(entryName.c_str()))
+			{
+				m_SelectionContext.AddComponent<T>();
+				ImGui::CloseCurrentPopup();
+			}
+		}
 	}
 
 }
