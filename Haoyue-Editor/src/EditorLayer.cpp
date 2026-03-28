@@ -24,6 +24,7 @@
 #include "imgui_internal.h"
 #include "Haoyue/ImGui/ImGui.h"
 #include <Haoyue/Editor/TranslationManager.h>
+#include <Haoyue/Audio/AudioEngine.h>
 
 namespace Haoyue {
 
@@ -90,6 +91,7 @@ namespace Haoyue {
 
 		m_SelectionContext.clear();
 		ScriptEngine::SetSceneContext(m_EditorScene);
+		Audio::MiniAudioEngine::SetSceneContext(m_EditorScene);
 		m_SceneHierarchyPanel->SetContext(m_EditorScene);
 		m_CurrentScene = m_EditorScene;
 	}
@@ -244,6 +246,7 @@ namespace Haoyue {
 		m_EditorScene = Ref<Scene>::Create("Empty Scene", true);
 		m_SceneHierarchyPanel->SetContext(m_EditorScene);
 		ScriptEngine::SetSceneContext(m_EditorScene);
+		Audio::MiniAudioEngine::SetSceneContext(m_EditorScene);
 		UpdateWindowTitle("Untitled Scene");
 		m_SceneFilePath = std::string();
 
@@ -271,6 +274,7 @@ namespace Haoyue {
 		UpdateWindowTitle(path.filename().string());
 		m_SceneHierarchyPanel->SetContext(m_EditorScene);
 		ScriptEngine::SetSceneContext(m_EditorScene);
+		Audio::MiniAudioEngine::SetSceneContext(m_EditorScene);
 
 		m_EditorScene->SetSelectedEntity({});
 		m_SelectionContext.clear();

@@ -139,6 +139,8 @@ namespace Haoyue {
 
 		friend void OnScriptComponentConstruct(entt::registry& registry, entt::entity entity);
 		friend void OnScriptComponentDestroy(entt::registry& registry, entt::entity entity);
+		friend void OnAudioComponentConstruct(entt::registry& registry, entt::entity entity);
+		friend void OnAudioComponentDestroy(entt::registry& registry, entt::entity entity);
 	};
 
 }

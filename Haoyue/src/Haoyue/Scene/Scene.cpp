@@ -11,6 +11,8 @@
 #include "Haoyue/Renderer/Renderer2D.h"
 #include "Haoyue/Physics/Physics.h"
 #include "Haoyue/Physics/PhysicsActor.h"
+#include "Haoyue/Audio/AudioEngine.h"
+#include "Haoyue/Audio/AudioComponent.h"
 
 #include "Haoyue/Math/Math.h"
 #include "Haoyue/Renderer/Renderer.h"
@@ -68,28 +70,21 @@ namespace Haoyue {
 				ScriptEngine::OnCollision2DEnd(b);
 		}
 
-		/// This is called after a contact is updated. This allows you to inspect a
-		/// contact before it goes to the solver. If you are careful, you can modify the
-		/// contact manifold (e.g. disable contact).
-		/// A copy of the old manifold is provided so that you can detect changes.
-		/// Note: this is called only for awake bodies.
-		/// Note: this is called even when the number of contact points is zero.
-		/// Note: this is not called for sensors.
-		/// Note: if you set the number of contact points to zero, you will not
-		/// get an EndContact callback. However, you may get a BeginContact callback
-		/// the next step.
+		/// 在更新接触后调用此函数。通过它，你可以在接触信息传递给求解器之前对其进行检查。若操作得当，你可以修改接触流形（例如禁用接触）。
+		/// 此处会提供旧流形的副本，以便你检测其变化。
+		/// 注意：此函数仅在刚体处于唤醒状态时调用。
+		/// 注意：即使接触点数量为零，此函数也会被调用。
+		/// 注意：传感器不会触发此函数。
+		/// 注意：若你将接触点数量设为零，则不会收到EndContact回调。但可能在下一步收到BeginContact回调。
 		virtual void PreSolve(b2Contact* contact, const b2Manifold* oldManifold) override
 		{
 			B2_NOT_USED(contact);
 			B2_NOT_USED(oldManifold);
 		}
 
-		/// This lets you inspect a contact after the solver is finished. This is useful
-		/// for inspecting impulses.
-		/// Note: the contact manifold does not include time of impact impulses, which can be
-		/// arbitrarily large if the sub-step is small. Hence the impulse is provided explicitly
-		/// in a separate data structure.
-		/// Note: this is only called for contacts that are touching, solid, and awake.
+		/// 在求解器完成计算后调用此函数，通过它你可以检查接触信息。这对于查看冲量非常有用。
+		/// 注意：接触流形不包含碰撞时间产生的冲量，若子步长较小，该冲量可能任意大。因此，冲量会在单独的数据结构中明确提供。
+		/// 注意：此函数仅针对正在接触、为实体且处于唤醒状态的接触进行调用。
 		virtual void PostSolve(b2Contact* contact, const b2ContactImpulse* impulse) override
 		{
 			B2_NOT_USED(contact);
@@ -127,11 +122,38 @@ namespace Haoyue {
 		ScriptEngine::OnScriptComponentDestroyed(sceneID, entityID);
 	}
 
+	static void OnAudioComponentConstruct(entt::registry& registry, entt::entity entity)
+	{
+		auto sceneView = registry.view<SceneComponent>();
+		UUID sceneID = registry.get<SceneComponent>(sceneView.front()).SceneID;
+
+		Scene* scene = s_ActiveScenes[sceneID];
+
+		auto entityID = registry.get<IDComponent>(entity).ID;
+		HY_CORE_ASSERT(scene->m_EntityIDMap.find(entityID) != scene->m_EntityIDMap.end());
+		registry.get<Audio::AudioComponent>(entity).ParentHandle = entityID;
+		Audio::MiniAudioEngine::Get().RegisterAudioComponent(scene->m_EntityIDMap.at(entityID));
+	}
+
+	//? This just throws that entity does not exist when looking for IDComponent, so it can't be use reliably
+	static void OnAudioComponentDestroy(entt::registry& registry, entt::entity entity)
+	{
+		auto sceneView = registry.view<SceneComponent>();
+		UUID sceneID = registry.get<SceneComponent>(sceneView.front()).SceneID;
+
+		Scene* scene = s_ActiveScenes[sceneID];
+
+		auto entityID = registry.get<IDComponent>(entity).ID;
+		HY_CORE_ASSERT(scene->m_EntityIDMap.find(entityID) != scene->m_EntityIDMap.end());
+		Audio::MiniAudioEngine::Get().UnregisterAudioComponent(sceneID, scene->m_EntityIDMap.at(entityID).GetUUID());
+	}
+
 	Scene::Scene(const std::string& debugName, bool isEditorScene)
-		: m_DebugName(debugName)
+		: m_DebugName(debugName), m_IsEditorScene(isEditorScene)
 	{
 		m_Registry.on_construct<ScriptComponent>().connect<&OnScriptComponentConstruct>();
 		m_Registry.on_destroy<ScriptComponent>().connect<&OnScriptComponentDestroy>();
+		m_Registry.on_construct<Audio::AudioComponent>().connect<&OnAudioComponentConstruct>();
 
 		m_SceneEntity = m_Registry.create();
 		m_Registry.emplace<SceneComponent>(m_SceneEntity, m_SceneID);
@@ -155,6 +177,7 @@ namespace Haoyue {
 		m_Registry.clear();
 		s_ActiveScenes.erase(m_SceneID);
 		ScriptEngine::OnSceneDestruct(m_SceneID);
+		Audio::MiniAudioEngine::OnSceneDestruct(m_SceneID);
 	}
 
 	void Scene::Init()
@@ -164,7 +187,6 @@ namespace Haoyue {
 		m_SkyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
 	}
 
-	// Merge OnUpdate/Render into one function?
 	void Scene::OnUpdate(Timestep ts)
 	{
 		// Box2D physics
@@ -216,6 +238,60 @@ namespace Haoyue {
 				transformComponent.Up = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 1.0f, 0.0f)));
 				transformComponent.Right = glm::normalize(glm::rotate(rotationQuat, glm::vec3(1.0f, 0.0f, 0.0f)));
 				transformComponent.Forward = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f)));
+			}
+
+			{	//--- Update Audio Components ---
+			//===============================
+
+				auto view = m_Registry.view<Audio::AudioComponent>();
+
+				std::vector<Entity> deadEntities;
+				deadEntities.reserve(view.size());
+
+				std::vector<SoundSourceUpdateData> updateData;
+				updateData.reserve(view.size());
+
+				for (auto entity : view)
+				{
+					Entity e = { entity, this };
+					auto& audioComponent = e.GetComponent<Audio::AudioComponent>();
+
+					// 1. Handle Audio Components marked for Auto Destroy
+
+					// AutoDestroy flag is only set for "one-shot" sounds
+					if (audioComponent.bAutoDestroy && audioComponent.bMarkedForDestroy)
+					{
+						deadEntities.push_back(e);
+						continue;
+					}
+
+					// 2. Update positions of associated sound sources
+
+					auto& transform = e.Transform();
+
+					// 3. Update velocities of associated sound sources
+					glm::vec3 velocity{ 0.0f, 0.0f, 0.0f };
+					if (auto physicsActor = Physics::GetActorForEntity(e))
+					{
+						if (physicsActor->IsDynamic())
+							velocity = physicsActor->GetLinearVelocity();
+					}
+
+					updateData.emplace_back(SoundSourceUpdateData{ e.GetUUID(),
+						audioComponent.VolumeMultiplier,
+						audioComponent.PitchMultiplier,
+						transform.Translation,
+						velocity });
+				}
+
+				//--- Submit values to AudioEngine to update associated sound sources ---
+				//-----------------------------------------------------------------------
+				Audio::MiniAudioEngine::Get().SubmitSourceUpdateData(updateData);
+
+				for (int i = deadEntities.size() - 1; i >= 0; i--)
+				{
+					DestroyEntity(deadEntities[i]);
+				}
 			}
 		}
 

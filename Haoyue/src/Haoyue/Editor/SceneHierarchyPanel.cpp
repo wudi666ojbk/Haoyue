@@ -1127,6 +1127,193 @@ namespace Haoyue {
 
 		DrawComponent<Audio::AudioComponent>(TR("Audio"), entity, [&](Audio::AudioComponent& ac)
 		{
+			// PropertyGrid consists out of 2 columns, so need to move cursor accordingly
+			auto propertyGridSpacing = []
+				{
+					ImGui::Spacing();
+					ImGui::NextColumn();
+					ImGui::NextColumn();
+				};
+			auto singleColumnSeparator = []
+				{
+					ImDrawList* draw_list = ImGui::GetWindowDrawList();
+					ImVec2 p = ImGui::GetCursorScreenPos();
+					draw_list->AddLine(ImVec2(p.x - 9999, p.y), ImVec2(p.x + 9999, p.y), ImGui::GetColorU32(ImGuiCol_Border));
+				};
+
+			// Making separators a little bit less bright to "separate" them visually from the text
+			auto& colors = ImGui::GetStyle().Colors;
+			auto oldSCol = colors[ImGuiCol_Separator];
+			const float brM = 0.6f;
+			colors[ImGuiCol_Separator] = ImVec4{ oldSCol.x * brM, oldSCol.y * brM, oldSCol.z * brM, 1.0f };
+
+			//=======================================================
+
+			auto& soundConfig = ac.SoundConfig;
+
+			// Adding space after header
+			ImGui::Spacing();
+
+			//--- Sound Assets and Looping
+			//----------------------------
+			UI::PushID();
+			UI::BeginPropertyGrid();
+			// Need to wrap this first Property Grid into another ID,
+			// otherwise there's a conflict with the next Property Grid.
+
+			bool bWasEmpty = soundConfig.FileAsset == nullptr;
+			if (UI::PropertyAssetReference("Sound", soundConfig.FileAsset, AssetType::Audio))
+			{
+				if (bWasEmpty)
+					soundConfig.FileAsset.Create();
+			}
+
+			propertyGridSpacing();
+
+			if (UI::Property("Volume Multiplier", soundConfig.VolumeMultiplier, 0.01f, 0.0f, 1.0f)) //TODO: switch to dBs in the future ?
+			{
+				ac.VolumeMultiplier = soundConfig.VolumeMultiplier;
+			}
+			if (UI::Property("Pitch Multiplier", soundConfig.PitchMultiplier, 0.01f, 0.0f, 24.0f)) // max pitch 24 is just an arbitrary number here
+			{
+				ac.PitchMultiplier = soundConfig.PitchMultiplier;
+			}
+
+			propertyGridSpacing();
+
+
+			UI::Property("Play on Awake", ac.bPlayOnAwake);
+			UI::Property("Looping", soundConfig.bLooping);
+
+			UI::EndPropertyGrid();
+			UI::PopID();
+
+			//--- Preview buttons
+			//-------------------
+			if (soundConfig.FileAsset != nullptr)
+			{
+
+				ImGui::Spacing();
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				// could use "inline sound" for the preview
+				// for now this playback controls are just for testing
+				// in the future should make a proper preview player with waveform view
+
+				const float space = 10.0f;
+				const ImVec2 buttonSize{ 70.0f, 30.0f };
+				ImGui::SetCursorPosX(ImGui::GetColumnWidth() - (buttonSize.x * 3));
+
+				if (ImGui::Button("Play", buttonSize))
+					AudioPlayback::Play(ac.ParentHandle);
+
+				ImGui::SetCursorPosX(0);
+			}
+
+			ImGui::Spacing();
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+			ImGui::Spacing();
+
+			//--- Enable Spatialization
+			//-------------------------
+			ImGui::Text("Spatialization");
+			ImGui::SameLine(contentRegionAvailable.x - (ImGui::GetFrameHeight() + GImGui->Style.FramePadding.y));
+			ImGui::Checkbox("##enabled", &soundConfig.bSpatializationEnabled);
+
+
+			//--- Spatialization Settings
+			//---------------------------
+			if (soundConfig.bSpatializationEnabled)
+			{
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+				ImGui::Spacing();
+
+				using AttModel = Audio::AttenuationModel;
+
+				auto& spatialConfig = soundConfig.Spatialization;
+
+				auto getTextForModel = [&](AttModel model)
+					{
+						switch (model)
+						{
+						case AttModel::None:
+							return "None";
+						case AttModel::Inverse:
+							return "Inverse";
+						case AttModel::Linear:
+							return "Linear";
+						case AttModel::Exponential:
+							return "Exponential";
+						}
+					};
+
+				const auto& attenModStr = std::vector<std::string>{ getTextForModel(AttModel::None),
+																	getTextForModel(AttModel::Inverse),
+																	getTextForModel(AttModel::Linear),
+																	getTextForModel(AttModel::Exponential) };
+
+				UI::BeginPropertyGrid();
+
+				int32_t selectedModel = static_cast<int32_t>(spatialConfig.AttenuationMod);
+				if (UI::PropertyDropdown("Attenuaion Model", attenModStr, attenModStr.size(), &selectedModel))
+				{
+					spatialConfig.AttenuationMod = static_cast<AttModel>(selectedModel);
+				}
+
+				singleColumnSeparator();
+				propertyGridSpacing();
+				propertyGridSpacing();
+				UI::Property("Min Gain", spatialConfig.MinGain, 0.01f, 0.0f, 1.0f);
+				UI::Property("Max Gain", spatialConfig.MaxGain, 0.01f, 0.0f, 1.0f);
+				UI::Property("Min Distance", spatialConfig.MinDistance, 1.00f, 0.0f, FLT_MAX);
+				UI::Property("Max Distance", spatialConfig.MaxDistance, 1.00f, 0.0f, FLT_MAX);
+
+				singleColumnSeparator();
+				propertyGridSpacing();
+				propertyGridSpacing();
+
+				float inAngle = glm::degrees(spatialConfig.ConeInnerAngleInRadians);
+				float outAngle = glm::degrees(spatialConfig.ConeOuterAngleInRadians);
+				float outGain = spatialConfig.ConeOuterGain;
+
+				//? Have to manually clamp here because UI::Property doesn't take flags to pass in ImGuiSliderFlags_ClampOnInput
+				if (UI::Property("Cone Inner Angle", inAngle, 1.0f, 0.0f, 360.0f))
+				{
+					if (inAngle > 360.0f) inAngle = 360.0f;
+					spatialConfig.ConeInnerAngleInRadians = glm::radians(inAngle);
+				}
+				if (UI::Property("Cone Outer Angle", outAngle, 1.0f, 0.0f, 360.0f))
+				{
+					if (outAngle > 360.0f) outAngle = 360.0f;
+					spatialConfig.ConeOuterAngleInRadians = glm::radians(outAngle);
+				}
+				if (UI::Property("Cone Outer Gain", outGain, 0.01f, 0.0f, 1.0f))
+				{
+					if (outGain > 1.0f) outGain = 1.0f;
+					spatialConfig.ConeOuterGain = outGain;
+				}
+
+				singleColumnSeparator();
+				propertyGridSpacing();
+				propertyGridSpacing();
+				if (UI::Property("Doppler Factor", spatialConfig.DopplerFactor, 0.01f, 0.0f, 1.0f)) {}
+				//if (UI::Property("Rolloff", spatialConfig.Rolloff, 0.01f, 0.0f, 1.0f)) {  }
+
+				propertyGridSpacing();
+				propertyGridSpacing();
+				// TODO: air absorption filter is not hooked up yet
+				//if (UI::Property("Air Absorption", spatialConfig.bAirAbsorptionEnabled)) {  }
+
+				UI::EndPropertyGrid();
+			}
+
+			colors[ImGuiCol_Separator] = oldSCol;
 		});
 
 		DrawComponent<AudioListenerComponent>(TR("Audio Listener"), entity, [&](AudioListenerComponent& alc)
