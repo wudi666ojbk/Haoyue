@@ -45,6 +45,7 @@ namespace Haoyue { namespace Script {
 	void Haoyue_TransformComponent_SetRotation(uint64_t entityID, glm::vec3* inRotation);
 	void Haoyue_TransformComponent_GetScale(uint64_t entityID, glm::vec3* outScale);
 	void Haoyue_TransformComponent_SetScale(uint64_t entityID, glm::vec3* inScale);
+	void Haoyue_TransformComponent_GetWorldTranslation(uint64_t entityID, glm::vec3* outTranslation);
 
 	void* Haoyue_MeshComponent_GetMesh(uint64_t entityID);
 	void Haoyue_MeshComponent_SetMesh(uint64_t entityID, Ref<Mesh>* inMesh);

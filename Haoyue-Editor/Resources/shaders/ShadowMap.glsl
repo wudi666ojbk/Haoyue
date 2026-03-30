@@ -1,5 +1,3 @@
-// Shadow Map shader
-
 #type vertex
 #version 450 core
 
@@ -30,5 +28,5 @@ void main()
 
 void main()
 {
-	// TODO: Check for alpha in texture
-}0
+	
+}

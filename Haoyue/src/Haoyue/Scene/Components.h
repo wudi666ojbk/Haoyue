@@ -49,6 +49,8 @@ namespace Haoyue {
 		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
 
+		glm::vec3 WorldTranslation = { 0.0f, 0.0f, 0.0f };
+
 		glm::vec3 Up = { 0.0F, 1.0F, 0.0F };
 		glm::vec3 Right = { 1.0F, 0.0F, 0.0F };
 		glm::vec3 Forward = { 0.0F, 0.0F, -1.0F };

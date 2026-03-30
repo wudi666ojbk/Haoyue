@@ -374,6 +374,16 @@ namespace Haoyue { namespace Script {
 		entity.GetComponent<TransformComponent>().Scale = *inScale;
 	}
 
+	void Haoyue_TransformComponent_GetWorldTranslation(uint64_t entityID, glm::vec3* outTranslation)
+	{
+		Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+		HY_CORE_ASSERT(scene, "No active scene!");
+		const auto& entityMap = scene->GetEntityMap();
+		HY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+		Entity entity = entityMap.at(entityID);
+		*outTranslation = entity.GetComponent<TransformComponent>().WorldTranslation;
+	}
+
 	void* Haoyue_MeshComponent_GetMesh(uint64_t entityID)
 	{
 		Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();

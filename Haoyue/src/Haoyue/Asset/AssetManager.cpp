@@ -11,6 +11,8 @@
 
 namespace Haoyue {
 
+	static const char* s_AssetRegistryPath = "Resources/AssetRegistry.hzr";
+
 	void AssetManager::Init()
 	{
 		AssetImporter::Init();
@@ -228,10 +230,10 @@ namespace Haoyue {
 
 	void AssetManager::LoadAssetRegistry()
 	{
-		if (!FileSystem::Exists("Resources/cache/AssetRegistryCache.hzr"))
+		if (!FileSystem::Exists(s_AssetRegistryPath))
 			return;
 
-		std::ifstream stream("Resources/cache/AssetRegistryCache.hzr");
+		std::ifstream stream(s_AssetRegistryPath);
 		HY_CORE_ASSERT(stream);
 		std::stringstream strStream;
 		strStream << stream.rdbuf();
@@ -405,7 +407,7 @@ namespace Haoyue {
 		out << YAML::EndSeq;
 		out << YAML::EndMap;
 
-		std::ofstream fout("Resources/cache/AssetRegistryCache.hzr");
+		std::ofstream fout(s_AssetRegistryPath);
 		fout << out.c_str();
 	}
 

@@ -37,7 +37,7 @@ Entities:
       Rotation: [0, -0, 0]
       Scale: [3.00000024, 0.300000012, 1]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 0
       FixedRotation: false
@@ -54,7 +54,7 @@ Entities:
       Rotation: [0, -0, 0]
       Scale: [3.00000024, 0.300000012, 1]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 0
       FixedRotation: false
@@ -71,7 +71,7 @@ Entities:
       Rotation: [0, 0, -0.421410441]
       Scale: [4.47999668, 4.47999668, 4.48000002]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 1
       FixedRotation: false
@@ -88,7 +88,7 @@ Entities:
       Rotation: [0, -0, 1.57079637]
       Scale: [58.4178085, 4.47997999, 4.48000002]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 0
       FixedRotation: false
@@ -117,7 +117,7 @@ Entities:
           Type: 1
           Data: 3
     MeshComponent:
-      AssetPath: assets\meshes\Sphere1m.fbx
+      AssetPath: Resources\meshes\Sphere1m.fbx
     RigidBody2DComponent:
       BodyType: 1
       FixedRotation: false
@@ -134,7 +134,7 @@ Entities:
       Rotation: [0, -0, 0]
       Scale: [1200, 1, 5]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 0
       FixedRotation: false
@@ -177,7 +177,7 @@ Entities:
       Rotation: [0, -0, 0]
       Scale: [3.00000024, 0.300000012, 1]
     MeshComponent:
-      AssetPath: assets\meshes\Cube1m.fbx
+      AssetPath: Resources\meshes\Cube1m.fbx
     RigidBody2DComponent:
       BodyType: 0
       FixedRotation: false

@@ -70,6 +70,7 @@ namespace Haoyue {
 		mono_add_internal_call("Haoyue.TransformComponent::SetRotation_Native", Haoyue::Script::Haoyue_TransformComponent_SetRotation);
 		mono_add_internal_call("Haoyue.TransformComponent::GetScale_Native", Haoyue::Script::Haoyue_TransformComponent_GetScale);
 		mono_add_internal_call("Haoyue.TransformComponent::SetScale_Native", Haoyue::Script::Haoyue_TransformComponent_SetScale);
+		mono_add_internal_call("Hazel.TransformComponent::GetWorldTranslation_Native", Haoyue::Script::Haoyue_TransformComponent_GetWorldTranslation);
 
 		mono_add_internal_call("Haoyue.MeshComponent::GetMesh_Native", Haoyue::Script::Haoyue_MeshComponent_GetMesh);
 		mono_add_internal_call("Haoyue.MeshComponent::SetMesh_Native", Haoyue::Script::Haoyue_MeshComponent_SetMesh);
