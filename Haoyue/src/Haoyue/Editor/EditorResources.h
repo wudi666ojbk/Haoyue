@@ -8,7 +8,18 @@ namespace Haoyue{
 	{
 	public:
 		// Components
-
+		inline static Ref<Texture2D> TransformIcon = nullptr;
+		inline static Ref<Texture2D> AnimationIcon = nullptr;
+		inline static Ref<Texture2D> AudioIcon = nullptr;
+		inline static Ref<Texture2D> BoxColliderIcon = nullptr;
+		inline static Ref<Texture2D> CameraIcon = nullptr;
+		inline static Ref<Texture2D> CircleColliderIcon = nullptr;
+		inline static Ref<Texture2D> ComponentIcon = nullptr;
+		inline static Ref<Texture2D> ListenerIcon = nullptr;
+		inline static Ref<Texture2D> RendererIcon = nullptr;
+		inline static Ref<Texture2D> RigidBodyIcon = nullptr;
+		inline static Ref<Texture2D> ScriptIcon = nullptr;
+		inline static Ref<Texture2D> TextIcon = nullptr;
 
 		// Icons
 		inline static Ref<Texture2D> PlayIcon = nullptr;
@@ -29,6 +40,19 @@ namespace Haoyue{
 
 		static void Init()
 		{
+			TransformIcon		= Texture2D::Create("Resources/editor/Components/Transform.png");
+			AnimationIcon		= Texture2D::Create("Resources/editor/Components/Animation.png");
+			AudioIcon			= Texture2D::Create("Resources/editor/Components/Audio.png");
+			BoxColliderIcon		= Texture2D::Create("Resources/editor/Components/BoxCollider.png");
+			CameraIcon			= Texture2D::Create("Resources/editor/Components/Camera.png");
+			CircleColliderIcon	= Texture2D::Create("Resources/editor/Components/CircleCollider.png");
+			ComponentIcon		= Texture2D::Create("Resources/editor/Components/Component.png");
+			ListenerIcon		= Texture2D::Create("Resources/editor/Components/Listener.png");
+			RendererIcon		= Texture2D::Create("Resources/editor/Components/Renderer.png");
+			RigidBodyIcon		= Texture2D::Create("Resources/editor/Components/RigidBody.png");
+			ScriptIcon			= Texture2D::Create("Resources/editor/Components/Script.png");
+			TextIcon			= Texture2D::Create("Resources/editor/Components/Text.png");
+
 			CheckerboardTex		= Texture2D::Create("Resources/editor/Checkerboard.tga");
 			PlayIcon			= Texture2D::Create("Resources/editor/PlayButton.png");
 			PauseButtonIcon		= Texture2D::Create("Resources/editor/PauseButton.png");
@@ -48,6 +72,19 @@ namespace Haoyue{
 
 		static void Shutdown()
         {
+            TransformIcon.Reset();
+            AnimationIcon.Reset();
+            AudioIcon.Reset();
+            BoxColliderIcon.Reset();
+            CameraIcon.Reset();
+            CircleColliderIcon.Reset();
+            ComponentIcon.Reset();
+            ListenerIcon.Reset();
+            RendererIcon.Reset();
+            RigidBodyIcon.Reset();
+            ScriptIcon.Reset();
+            TextIcon.Reset();
+
             CheckerboardTex.Reset();
           	PlayIcon.Reset();
             PauseButtonIcon.Reset();

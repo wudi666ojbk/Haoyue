@@ -29,6 +29,7 @@
 #include "Haoyue/ImGui/ImGui.h"
 #include "Haoyue/Renderer/Renderer.h"
 #include "Haoyue/Editor/TranslationManager.h"
+#include "Haoyue/Editor/EditorResources.h"
 
 namespace Haoyue {
 
@@ -375,7 +376,7 @@ namespace Haoyue {
 	}
 
 	template<typename T, typename UIFunction>
-	static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction, bool canBeRemoved = true)
+	static void DrawComponent(Ref<Texture2D> icon, const std::string& name, Entity entity, UIFunction uiFunction, bool canBeRemoved = true)
 	{
 		const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 		if (entity.HasComponent<T>())
@@ -390,7 +391,12 @@ namespace Haoyue {
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
 			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 			ImGui::Separator();
-			bool open = ImGui::TreeNodeEx("##dummy_id", treeNodeFlags, name.c_str());
+
+			ImGui::SameLine();
+			UI::ImageButton(icon, ImVec2{ lineHeight, lineHeight - 2.0f }, ImVec2{ 0, 0 }, ImVec2{ 1, 1 }, ImGui::GetColorU32(ImGuiCol_ButtonHovered));
+
+			ImGui::SameLine(0.0f, 3.0f);
+			bool open = ImGui::TreeNodeEx("##dummy_id", treeNodeFlags, TR(name.c_str()));
 			bool right_clicked = ImGui::IsItemClicked(ImGuiMouseButton_Right);
 			ImGui::PopStyleVar();
 
@@ -548,23 +554,23 @@ namespace Haoyue {
 
 		if (ImGui::BeginPopup("AddComponentPanel"))
 		{
-			DisplayAddComponentEntry<CameraComponent>(TR("Camera"));
-			DisplayAddComponentEntry<MeshComponent>(TR("Mesh"));
-			DisplayAddComponentEntry<DirectionalLightComponent>(TR("Directional Light"));
-			DisplayAddComponentEntry<SkyLightComponent>(TR("Sky Light"));
-			DisplayAddComponentEntry<ScriptComponent>(TR("Script"));
-			DisplayAddComponentEntry<SpriteRendererComponent>(TR("Sprite Renderer"));
-			DisplayAddComponentEntry<RigidBody2DComponent>(TR("Rigidbody 2D"));
-			DisplayAddComponentEntry<BoxCollider2DComponent>(TR("Box Collider 2D"));
-			DisplayAddComponentEntry<CircleCollider2DComponent>(TR("Circle Collider 2D"));
-			DisplayAddComponentEntry<RigidBodyComponent>(TR("Rigidbody"));
-			DisplayAddComponentEntry<BoxColliderComponent>(TR("Box Collider"));
-			DisplayAddComponentEntry<SphereColliderComponent>(TR("Sphere Collider"));
-			DisplayAddComponentEntry<CapsuleColliderComponent>(TR("Capsule Collider"));
-			DisplayAddComponentEntry<Audio::AudioComponent>(TR("Audio"));
+			DisplayAddComponentEntry<CameraComponent>("Camera");
+			DisplayAddComponentEntry<MeshComponent>("Mesh");
+			DisplayAddComponentEntry<DirectionalLightComponent>("Directional Light");
+			DisplayAddComponentEntry<SkyLightComponent>("Sky Light");
+			DisplayAddComponentEntry<ScriptComponent>("Script");
+			DisplayAddComponentEntry<SpriteRendererComponent>("Sprite Renderer");
+			DisplayAddComponentEntry<RigidBody2DComponent>("Rigidbody 2D");
+			DisplayAddComponentEntry<BoxCollider2DComponent>("Box Collider 2D");
+			DisplayAddComponentEntry<CircleCollider2DComponent>("Circle Collider 2D");
+			DisplayAddComponentEntry<RigidBodyComponent>("Rigidbody");
+			DisplayAddComponentEntry<BoxColliderComponent>("Box Collider");
+			DisplayAddComponentEntry<SphereColliderComponent>("Sphere Collider");
+			DisplayAddComponentEntry<CapsuleColliderComponent>("Capsule Collider");
+			DisplayAddComponentEntry<Audio::AudioComponent>("Audio");
 			if (!m_SelectionContext.HasComponent<MeshColliderComponent>())
 			{
-				if (ImGui::MenuItem(TR("Mesh Collider")))
+				if (ImGui::MenuItem("Mesh Collider"))
 				{
 					MeshColliderComponent& component = m_SelectionContext.AddComponent<MeshColliderComponent>();
 					if (m_SelectionContext.HasComponent<MeshComponent>())
@@ -579,7 +585,7 @@ namespace Haoyue {
 
 			if (!m_SelectionContext.HasComponent<AudioListenerComponent>())
 			{
-				if (ImGui::Button("Audio Listener"))
+				if (ImGui::MenuItem("Audio Listener"))
 				{
 					auto view = m_Context->GetAllEntitiesWith<AudioListenerComponent>();
 					bool listenerExists = !view.empty();
@@ -593,7 +599,7 @@ namespace Haoyue {
 			ImGui::EndPopup();
 		}
 
-		DrawComponent<TransformComponent>(TR("Transform"), entity, [](TransformComponent& component)
+		DrawComponent<TransformComponent>(EditorResources::TransformIcon, "Transform", entity, [](TransformComponent& component)
 		{
 			DrawVec3Control(TR("Translation"), component.Translation);
 			glm::vec3 rotation = glm::degrees(component.Rotation);
@@ -602,7 +608,7 @@ namespace Haoyue {
 			DrawVec3Control(TR("Scale"), component.Scale, 1.0f);
 		}, false);
 
-		DrawComponent<MeshComponent>(TR("Mesh"), entity, [&](MeshComponent& mc)
+		DrawComponent<MeshComponent>(EditorResources::ComponentIcon, "Mesh", entity, [&](MeshComponent& mc)
 		{
 			UI::BeginPropertyGrid();
 			if (UI::PropertyAssetReference(TR("Mesh"), mc.Mesh, AssetType::Mesh))
@@ -620,7 +626,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<CameraComponent>(TR("Camera"), entity, [](CameraComponent& cc)
+		DrawComponent<CameraComponent>(EditorResources::CameraIcon, "Camera", entity, [](CameraComponent& cc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -667,11 +673,11 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<SpriteRendererComponent>(TR("Sprite Renderer"), entity, [](SpriteRendererComponent& mc)
+		DrawComponent<SpriteRendererComponent>(EditorResources::RendererIcon, "Sprite Renderer", entity, [](SpriteRendererComponent& mc)
 		{
 		});
 
-		DrawComponent<DirectionalLightComponent>(TR("Directional Light"), entity, [](DirectionalLightComponent& dlc)
+		DrawComponent<DirectionalLightComponent>(EditorResources::ComponentIcon, "Directional Light", entity, [](DirectionalLightComponent& dlc)
 		{
 			UI::BeginPropertyGrid();
 			UI::PropertyColor(TR("Radiance"), dlc.Radiance);
@@ -682,7 +688,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<SkyLightComponent>(TR("Sky Light"), entity, [](SkyLightComponent& slc)
+		DrawComponent<SkyLightComponent>(EditorResources::ComponentIcon, "Sky Light", entity, [](SkyLightComponent& slc)
 		{
 			UI::BeginPropertyGrid();
 			UI::PropertyAssetReference(TR("Environment Map"), slc.SceneEnvironment, AssetType::EnvMap);
@@ -703,7 +709,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<ScriptComponent>(TR("Script"), entity, [=](ScriptComponent& sc) mutable
+		DrawComponent<ScriptComponent>(EditorResources::ScriptIcon, "Script", entity, [=](ScriptComponent& sc) mutable
 		{
 			UI::BeginPropertyGrid();
 			std::string oldName = sc.ModuleName;
@@ -798,7 +804,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<RigidBody2DComponent>(TR("Rigidbody 2D"), entity, [](RigidBody2DComponent& rb2dc)
+		DrawComponent<RigidBody2DComponent>(EditorResources::RigidBodyIcon, "Rigidbody 2D", entity, [](RigidBody2DComponent& rb2dc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -816,7 +822,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<BoxCollider2DComponent>(TR("Box Collider 2D"), entity, [](BoxCollider2DComponent& bc2dc)
+		DrawComponent<BoxCollider2DComponent>(EditorResources::BoxColliderIcon, "Box Collider 2D", entity, [](BoxCollider2DComponent& bc2dc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -828,7 +834,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 	
-		DrawComponent<CircleCollider2DComponent>(TR("Circle Collider 2D"), entity, [](CircleCollider2DComponent& cc2dc)
+		DrawComponent<CircleCollider2DComponent>(EditorResources::RendererIcon, "Circle Collider 2D", entity, [](CircleCollider2DComponent& cc2dc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -840,7 +846,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<RigidBodyComponent>(TR("Rigidbody"), entity, [](RigidBodyComponent& rbc)
+		DrawComponent<RigidBodyComponent>(EditorResources::RigidBodyIcon, "Rigidbody", entity, [](RigidBodyComponent& rbc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -890,7 +896,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<BoxColliderComponent>(TR("Box Collider"), entity, [](BoxColliderComponent& bcc)
+		DrawComponent<BoxColliderComponent>(EditorResources::BoxColliderIcon, "Box Collider", entity, [](BoxColliderComponent& bcc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -904,7 +910,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<SphereColliderComponent>(TR("Sphere Collider"), entity, [](SphereColliderComponent& scc)
+		DrawComponent<SphereColliderComponent>(EditorResources::ComponentIcon, "Sphere Collider", entity, [](SphereColliderComponent& scc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -919,7 +925,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<CapsuleColliderComponent>(TR("Capsule Collider"), entity, [=](CapsuleColliderComponent& ccc)
+		DrawComponent<CapsuleColliderComponent>(EditorResources::ComponentIcon, "Capsule Collider", entity, [=](CapsuleColliderComponent& ccc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -942,7 +948,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<MeshColliderComponent>(TR("Mesh Collider"), entity, [&](MeshColliderComponent& mcc)
+		DrawComponent<MeshColliderComponent>(EditorResources::ComponentIcon, "Mesh Collider", entity, [&](MeshColliderComponent& mcc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -983,7 +989,7 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		});
 
-		DrawComponent<Audio::AudioComponent>(TR("Audio"), entity, [&](Audio::AudioComponent& ac)
+		DrawComponent<Audio::AudioComponent>(EditorResources::AudioIcon, "Audio", entity, [&](Audio::AudioComponent& ac)
 		{
 			// PropertyGrid consists out of 2 columns, so need to move cursor accordingly
 			auto propertyGridSpacing = []
@@ -1171,7 +1177,7 @@ namespace Haoyue {
 			colors[ImGuiCol_Separator] = oldSCol;
 		});
 
-		DrawComponent<AudioListenerComponent>(TR("Audio Listener"), entity, [&](AudioListenerComponent& alc)
+		DrawComponent<AudioListenerComponent>(EditorResources::ListenerIcon, "Audio Listener", entity, [&](AudioListenerComponent& alc)
 		{
 			UI::BeginPropertyGrid();
 
@@ -1221,7 +1227,7 @@ namespace Haoyue {
 	void SceneHierarchyPanel::DisplayAddComponentEntry(const std::string& entryName) {
 		if (!m_SelectionContext.HasComponent<T>())
 		{
-			if (ImGui::MenuItem(entryName.c_str()))
+			if (ImGui::MenuItem(TR(entryName.c_str())))
 			{
 				m_SelectionContext.AddComponent<T>();
 				ImGui::CloseCurrentPopup();

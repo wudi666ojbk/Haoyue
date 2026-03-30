@@ -83,6 +83,20 @@ namespace Haoyue
             Z = Z / length;
         }
 
+        public float Distance(Vector3 other)
+        {
+            return (float)Math.Sqrt(Math.Pow(other.X - X, 2) +
+                                    Math.Pow(other.Y - Y, 2) +
+                                    Math.Pow(other.Z - Z, 2));
+        }
+
+        public static float Distance(Vector3 p1, Vector3 p2)
+        {
+            return (float)Math.Sqrt(Math.Pow(p2.X - p1.X, 2) +
+                                    Math.Pow(p2.Y - p1.Y, 2) +
+                                    Math.Pow(p2.Z - p1.Z, 2));
+        }
+
         public static Vector3 operator *(Vector3 left, float scalar)
 		{
 			return new Vector3(left.X * scalar, left.Y * scalar, left.Z * scalar);

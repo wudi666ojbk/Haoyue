@@ -35,8 +35,19 @@ namespace Haoyue
 			X = Mathf.Clamp(X, min.X, max.X);
 			Y = Mathf.Clamp(Y, min.Y, max.Y);
 		}
+        public float Distance(Vector3 other)
+        {
+            return (float)Math.Sqrt(Math.Pow(other.X - X, 2) +
+                                    Math.Pow(other.Y - Y, 2));
+        }
 
-		public static Vector2 operator-(Vector2 left, Vector2 right)
+        public static float Distance(Vector3 p1, Vector3 p2)
+        {
+            return (float)Math.Sqrt(Math.Pow(p2.X - p1.X, 2) +
+                                    Math.Pow(p2.Y - p1.Y, 2));
+        }
+
+        public static Vector2 operator-(Vector2 left, Vector2 right)
 		{
             return new Vector2(left.X - right.X, left.Y - right.Y);
 		}
