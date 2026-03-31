@@ -432,7 +432,7 @@ namespace Haoyue {
 		VkSampler sampler = m_DescriptorImageInfo.sampler;
 		VkImage image = m_Image;
 		VmaAllocation allocation = m_MemoryAlloc;
-		Renderer::Submit([imageView, sampler, image, allocation]()
+		Renderer::SubmitResourceFree([imageView, sampler, image, allocation]()
 		{
 			HY_CORE_TRACE("Destroying VulkanTextureCube");
 			auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();

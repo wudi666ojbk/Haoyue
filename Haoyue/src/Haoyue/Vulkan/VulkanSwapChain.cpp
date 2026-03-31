@@ -529,9 +529,11 @@ namespace Haoyue {
 	{
 		HY_SCOPE_PERF("VulkanSwapChain::BeginFrame");
 
-		VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex], VK_TRUE, UINT64_MAX));
-		uint32_t imageIndex;
-		VK_CHECK_RESULT(AcquireNextImage(m_Semaphores.PresentComplete, &imageIndex));
+		// Resource release queue
+		auto& queue = Renderer::GetRenderResourceReleaseQueue(m_CurrentBufferIndex);
+		queue.Execute();
+
+		VK_CHECK_RESULT(AcquireNextImage(m_Semaphores.PresentComplete, &m_CurrentImageIndex));
 	}
 
 	void VulkanSwapChain::Present()
@@ -549,7 +551,7 @@ namespace Haoyue {
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_Semaphores.RenderComplete;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pCommandBuffers = &m_DrawCommandBuffers[m_CurrentBufferIndex];
+		submitInfo.pCommandBuffers = &m_DrawCommandBuffers[m_CurrentImageIndex];
 		submitInfo.commandBufferCount = 1;
 
 		// Submit to the graphics queue passing a wait fence
@@ -559,7 +561,7 @@ namespace Haoyue {
 		// Present the current buffer to the swap chain
 		// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
 		// This ensures that the image is not presented to the windowing system until all commands have been submitted
-		VkResult result = QueuePresent(m_Device->GetQueue(), m_CurrentBufferIndex, m_Semaphores.RenderComplete);
+		VkResult result = QueuePresent(m_Device->GetQueue(), m_CurrentImageIndex, m_Semaphores.RenderComplete);
 
 		if (result != VK_SUCCESS || result == VK_SUBOPTIMAL_KHR)
 		{
@@ -574,13 +576,10 @@ namespace Haoyue {
 				VK_CHECK_RESULT(result);
 			}
 		}
-
-		//VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex], VK_TRUE, DEFAULT_FENCE_TIMEOUT));
-
-		// vkQueueWaitIdle(m_Queue);
-
-		// TODO: Do we need this anywhere?
-		//vkResetCommandPool(m_Device->GetVulkanDevice(), m_CommandPool, 0);
+		const auto& config = Renderer::GetConfig();
+		m_CurrentBufferIndex = (m_CurrentBufferIndex + 1) % config.FramesInFlight;
+		// Make sure the frame we're requesting has finished rendering
+		VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex], VK_TRUE, UINT64_MAX));
 	}
 
 	VkResult VulkanSwapChain::AcquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t* imageIndex)

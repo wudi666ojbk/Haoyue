@@ -33,8 +33,8 @@ namespace Haoyue {
 
 		VkRenderPass GetRenderPass() { return m_RenderPass; }
 
-		VkFramebuffer GetCurrentFramebuffer() { return GetFramebuffer(m_CurrentBufferIndex); }
-		VkCommandBuffer GetCurrentDrawCommandBuffer() { return GetDrawCommandBuffer(m_CurrentBufferIndex); }
+		VkFramebuffer GetCurrentFramebuffer() { return GetFramebuffer(m_CurrentImageIndex); }
+		VkCommandBuffer GetCurrentDrawCommandBuffer() { return GetDrawCommandBuffer(m_CurrentImageIndex); }
 
 		VkFormat GetColorFormat() { return m_ColorFormat; }
 
@@ -101,6 +101,7 @@ namespace Haoyue {
 
 		VkRenderPass m_RenderPass;
 		uint32_t m_CurrentBufferIndex = 0;
+		uint32_t m_CurrentImageIndex = 0;
 
 		uint32_t m_QueueNodeIndex = UINT32_MAX;
 		uint32_t m_Width = 0, m_Height = 0;

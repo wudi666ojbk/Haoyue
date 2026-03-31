@@ -16,16 +16,16 @@ namespace Haoyue {
 		{
 			const VulkanImageInfo& info = m_Info;
 			Renderer::Submit([info]()
-				{
-					auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-					vkDestroyImageView(vulkanDevice, info.ImageView, nullptr);
-					vkDestroySampler(vulkanDevice, info.Sampler, nullptr);
+			{
+				auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+				vkDestroyImageView(vulkanDevice, info.ImageView, nullptr);
+				vkDestroySampler(vulkanDevice, info.Sampler, nullptr);
 
-					VulkanAllocator allocator("VulkanImage2D");
-					allocator.DestroyImage(info.Image, info.MemoryAlloc);
+				VulkanAllocator allocator("VulkanImage2D");
+				allocator.DestroyImage(info.Image, info.MemoryAlloc);
 
-					HY_CORE_WARN("VulkanImage2D::Release ImageView = {0}", (const void*)info.ImageView);
-				});
+				HY_CORE_WARN("VulkanImage2D::Release ImageView = {0}", (const void*)info.ImageView);
+			});
 		}
 	}
 
@@ -33,29 +33,29 @@ namespace Haoyue {
 	{
 		Ref<VulkanImage2D> instance = this;
 		Renderer::Submit([instance]() mutable
-			{
-				instance->RT_Invalidate();
-			});
+		{
+			instance->RT_Invalidate();
+		});
 	}
 
 	void VulkanImage2D::Release()
 	{
 		Ref<VulkanImage2D> instance = this;
-		Renderer::SubmitResourceFree([instance]() mutable
-			{
-				auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				vkDestroyImageView(vulkanDevice, instance->m_Info.ImageView, nullptr);
-				vkDestroySampler(vulkanDevice, instance->m_Info.Sampler, nullptr);
+		VulkanImageInfo info = m_Info;
+		Renderer::SubmitResourceFree([info]() mutable
+		{
+			auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			vkDestroyImageView(vulkanDevice, info.ImageView, nullptr);
+			vkDestroySampler(vulkanDevice,	info.Sampler, nullptr);
 
-				VulkanAllocator allocator("VulkanImage2D");
-				allocator.DestroyImage(instance->m_Info.Image, instance->m_Info.MemoryAlloc);
+			VulkanAllocator allocator("VulkanImage2D");
+			allocator.DestroyImage(info.Image, info.MemoryAlloc);
 
-				HY_CORE_WARN("VulkanImage2D::Release ImageView = {0}", (const void*)instance->m_Info.ImageView);
-
-				instance->m_Info.Image = nullptr;
-				instance->m_Info.ImageView = nullptr;
-				instance->m_Info.Sampler = nullptr;
-			});
+			HY_CORE_WARN("VulkanImage2D::Release ImageView = {0}", (const void*)info.ImageView);
+		});
+		info.Image = nullptr;
+		info.ImageView = nullptr;
+		info.Sampler = nullptr;
 	}
 
 	void VulkanImage2D::RT_Invalidate()
