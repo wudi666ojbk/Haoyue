@@ -3,18 +3,21 @@
 
 #include "Haoyue/Renderer/Renderer.h"
 
-#include "VulkanContext.h"
-#include "VulkanTexture.h"
-#include "VulkanImage.h"
-#include "VulkanPipeline.h"
-#include "VulkanUniformBuffer.h"
+#include "Haoyue/Vulkan/VulkanContext.h"
+#include "Haoyue/Vulkan/VulkanTexture.h"
+#include "Haoyue/Vulkan/VulkanImage.h"
+#include "Haoyue/Vulkan/VulkanPipeline.h"
+#include "Haoyue/Vulkan/VulkanUniformBuffer.h"
 
 #include "Haoyue/Core/Timer.h"
 
 namespace Haoyue {
 
 	VulkanMaterial::VulkanMaterial(const Ref<Shader>& shader, const std::string& name)
-		: m_Shader(shader), m_Name(name)
+		: m_Shader(shader), m_Name(name),
+		m_WriteDescriptors(Renderer::GetConfig().FramesInFlight),
+		m_UBWriteDescriptors(Renderer::GetConfig().FramesInFlight),
+		m_DirtyDescriptorSets(Renderer::GetConfig().FramesInFlight, true)
 	{
 		Init();
 		Renderer::RegisterShaderDependency(shader, this);
@@ -31,39 +34,42 @@ namespace Haoyue {
 		m_MaterialFlags |= (uint32_t)MaterialFlag::DepthTest;
 		m_MaterialFlags |= (uint32_t)MaterialFlag::Blend;
 
-		Invalidate();
-
+#define INVALIDATE_ON_RT 1
 #if INVALIDATE_ON_RT
 		Ref<VulkanMaterial> instance = this;
 		Renderer::Submit([instance]() mutable
 			{
 				instance->Invalidate();
 			});
+#else
+		Invalidate();
 #endif
 	}
 
 	void VulkanMaterial::Invalidate()
 	{
+		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
 		auto shader = m_Shader.As<VulkanShader>();
 		if (shader->HasDescriptorSet(0))
 		{
 			const auto& shaderDescriptorSets = shader->GetShaderDescriptorSets();
 			if (!shaderDescriptorSets.empty())
 			{
-				m_DescriptorSet = shader->CreateDescriptorSets();
-
 				Ref<VulkanShader> vulkanShader = m_Shader.As<VulkanShader>();
 				for (auto&& [binding, shaderUB] : shaderDescriptorSets[0].UniformBuffers)
 				{
-					Ref<VulkanUniformBuffer> uniformBuffer = Renderer::GetUniformBuffer(binding, 0).As<VulkanUniformBuffer>(); // set = 0 for now
+					for (int frame = 0; frame < framesInFlight; frame++)
+					{
+						Ref<VulkanUniformBuffer> uniformBuffer = Renderer::GetUniformBuffer(frame, binding, 0).As<VulkanUniformBuffer>(); // set = 0 for now
 
-					VkWriteDescriptorSet writeDescriptorSet = {};
-					writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-					writeDescriptorSet.descriptorCount = 1;
-					writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-					writeDescriptorSet.pBufferInfo = &uniformBuffer->GetDescriptorBufferInfo();
-					writeDescriptorSet.dstBinding = uniformBuffer->GetBinding();
-					m_WriteDescriptors.push_back(writeDescriptorSet);
+						VkWriteDescriptorSet writeDescriptorSet = {};
+						writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+						writeDescriptorSet.descriptorCount = 1;
+						writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+						writeDescriptorSet.pBufferInfo = &uniformBuffer->GetDescriptorBufferInfo();
+						writeDescriptorSet.dstBinding = uniformBuffer->GetBinding();
+						m_UBWriteDescriptors[frame].push_back(writeDescriptorSet);
+					}
 				}
 
 				for (auto&& [binding, descriptor] : m_ResidentDescriptors)
@@ -139,6 +145,8 @@ namespace Haoyue {
 		HY_CORE_ASSERT(wds);
 		m_ResidentDescriptors[binding] = std::make_shared<PendingDescriptor>(PendingDescriptor{ PendingDescriptorType::Texture2D, *wds, {}, texture.As<Texture>(), nullptr });
 		m_PendingDescriptors.push_back(m_ResidentDescriptors.at(binding));
+
+		InvalidateDescriptorSets();
 	}
 
 	void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const Ref<TextureCube>& texture)
@@ -159,6 +167,8 @@ namespace Haoyue {
 		HY_CORE_ASSERT(wds);
 		m_ResidentDescriptors[binding] = std::make_shared<PendingDescriptor>(PendingDescriptor{ PendingDescriptorType::TextureCube, *wds, {}, texture.As<Texture>(), nullptr });
 		m_PendingDescriptors.push_back(m_ResidentDescriptors.at(binding));
+
+		InvalidateDescriptorSets();
 	}
 
 	void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const VkDescriptorImageInfo& imageInfo)
@@ -174,9 +184,12 @@ namespace Haoyue {
 
 		m_ImageInfos[name] = imageInfo;
 
-		VkWriteDescriptorSet descriptorSet = *wds;
-		descriptorSet.pImageInfo = &m_ImageInfos.at(name);
-		m_WriteDescriptors.push_back(descriptorSet);
+		// VkWriteDescriptorSet descriptorSet = *wds;
+		// descriptorSet.pImageInfo = &m_ImageInfos.at(name);
+		// m_WriteDescriptors.push_back(descriptorSet);
+		HY_CORE_ASSERT(false);
+
+		InvalidateDescriptorSets();
 	}
 
 	void VulkanMaterial::SetVulkanDescriptor(const std::string& name, const Ref<Image2D>& image)
@@ -200,6 +213,8 @@ namespace Haoyue {
 		HY_CORE_ASSERT(wds);
 		m_ResidentDescriptors[binding] = std::make_shared<PendingDescriptor>(PendingDescriptor{ PendingDescriptorType::Image2D, *wds, {}, nullptr, image.As<Image>() });
 		m_PendingDescriptors.push_back(m_ResidentDescriptors.at(binding));
+
+		InvalidateDescriptorSets();
 	}
 
 	void VulkanMaterial::Set(const std::string& name, float value)
@@ -351,45 +366,64 @@ namespace Haoyue {
 				{
 					HY_CORE_WARN("Found out of date Image2D descriptor ({0} vs. {1})", (void*)image->GetImageInfo().ImageView, (void*)descriptor->WDS.pImageInfo->imageView);
 					m_PendingDescriptors.emplace_back(descriptor);
+					InvalidateDescriptorSets();
 				}
 			}
 		}
 
-		for (auto& pd : m_PendingDescriptors)
+		uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+		if (m_DirtyDescriptorSets[frameIndex])
 		{
-			if (pd->Type == PendingDescriptorType::Texture2D)
+			m_DirtyDescriptorSets[frameIndex] = false;
+			m_WriteDescriptors[frameIndex].clear();
+
+			HY_CORE_WARN("VulkanMaterial - updating descriptor set for buffer {0}", frameIndex);
+
+			for (auto& wd : m_UBWriteDescriptors[frameIndex])
+				m_WriteDescriptors[frameIndex].push_back(wd);
+
+			for (auto&& [binding, pd] : m_ResidentDescriptors)
 			{
-				Ref<VulkanTexture2D> texture = pd->Texture.As<VulkanTexture2D>();
-				pd->ImageInfo = texture->GetVulkanDescriptorInfo();
-				pd->WDS.pImageInfo = &pd->ImageInfo;
-			}
-			else if (pd->Type == PendingDescriptorType::TextureCube)
-			{
-				Ref<VulkanTextureCube> texture = pd->Texture.As<VulkanTextureCube>();
-				pd->ImageInfo = texture->GetVulkanDescriptorInfo();
-				pd->WDS.pImageInfo = &pd->ImageInfo;
-			}
-			else if (pd->Type == PendingDescriptorType::Image2D)
-			{
-				Ref<VulkanImage2D> image = pd->Image.As<VulkanImage2D>();
-				pd->ImageInfo = image->GetDescriptor();
-				pd->WDS.pImageInfo = &pd->ImageInfo;
+				if (pd->Type == PendingDescriptorType::Texture2D)
+				{
+					Ref<VulkanTexture2D> texture = pd->Texture.As<VulkanTexture2D>();
+					pd->ImageInfo = texture->GetVulkanDescriptorInfo();
+					pd->WDS.pImageInfo = &pd->ImageInfo;
+				}
+				else if (pd->Type == PendingDescriptorType::TextureCube)
+				{
+					Ref<VulkanTextureCube> texture = pd->Texture.As<VulkanTextureCube>();
+					pd->ImageInfo = texture->GetVulkanDescriptorInfo();
+					pd->WDS.pImageInfo = &pd->ImageInfo;
+				}
+				else if (pd->Type == PendingDescriptorType::Image2D)
+				{
+					Ref<VulkanImage2D> image = pd->Image.As<VulkanImage2D>();
+					pd->ImageInfo = image->GetDescriptor();
+					pd->WDS.pImageInfo = &pd->ImageInfo;
+				}
+
+				m_WriteDescriptors[frameIndex].push_back(pd->WDS);
 			}
 
-			m_WriteDescriptors.push_back(pd->WDS);
 		}
 
-		if (m_WriteDescriptors.size())
-		{
-			for (auto& writeDescriptor : m_WriteDescriptors)
-				writeDescriptor.dstSet = m_DescriptorSet.DescriptorSets[0];
+		auto vulkanShader = m_Shader.As<VulkanShader>();
+		auto descriptorSet = vulkanShader->AllocateDescriptorSet();
+		m_DescriptorSets[frameIndex] = descriptorSet;
+		for (auto& writeDescriptor : m_WriteDescriptors[frameIndex])
+			writeDescriptor.dstSet = descriptorSet.DescriptorSets[0];
 
-			HY_CORE_WARN("VulkanMaterial - Updating {0} descriptor sets", m_WriteDescriptors.size());
-			vkUpdateDescriptorSets(vulkanDevice, m_WriteDescriptors.size(), m_WriteDescriptors.data(), 0, nullptr);
-		}
+		vkUpdateDescriptorSets(vulkanDevice, m_WriteDescriptors[frameIndex].size(), m_WriteDescriptors[frameIndex].data(), 0, nullptr);
 
 		m_PendingDescriptors.clear();
-		m_WriteDescriptors.clear();
+	}
+
+	void VulkanMaterial::InvalidateDescriptorSets()
+	{
+		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
+		for (int i = 0; i < framesInFlight; i++)
+			m_DirtyDescriptorSets[i] = true;
 	}
 
 }

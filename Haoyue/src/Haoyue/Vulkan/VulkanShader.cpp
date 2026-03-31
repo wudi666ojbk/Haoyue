@@ -4,11 +4,14 @@
 #include "Haoyue/Renderer/Renderer.h"
 
 #include "VulkanContext.h"
+#include "VulkanRenderer.h"
+
 #include <shaderc/shaderc.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
 #include <spirv-tools/libspirv.h>
 
 #include <filesystem>
+
 
 namespace Haoyue {
 
@@ -520,64 +523,23 @@ namespace Haoyue {
 		return result;
 	}
 
-	VulkanShader::ShaderMaterialDescriptorSet VulkanShader::AllocateDescriptorSets()
+	VulkanShader::ShaderMaterialDescriptorSet VulkanShader::AllocateDescriptorSet(uint32_t set)
 	{
+		HY_CORE_ASSERT(set < m_DescriptorSetLayouts.size());
 		ShaderMaterialDescriptorSet result;
 
 		if (m_ShaderDescriptorSets.empty())
 			return result;
-
-		std::vector<VkDescriptorPoolSize> poolSizes;
-		for (uint32_t set = 0; set < m_ShaderDescriptorSets.size(); set++)
-		{
-			auto& shaderDescriptorSet = m_ShaderDescriptorSets[set];
-			if (!shaderDescriptorSet) // Empty descriptor set
-				continue;
-
-			if (shaderDescriptorSet.UniformBuffers.size())
-			{
-				VkDescriptorPoolSize& typeCount = poolSizes.emplace_back();
-				typeCount.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-				typeCount.descriptorCount = shaderDescriptorSet.UniformBuffers.size();
-			}
-			if (shaderDescriptorSet.ImageSamplers.size())
-			{
-				VkDescriptorPoolSize& typeCount = poolSizes.emplace_back();
-				typeCount.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-				typeCount.descriptorCount = shaderDescriptorSet.ImageSamplers.size();
-			}
-			if (shaderDescriptorSet.StorageImages.size())
-			{
-				VkDescriptorPoolSize& typeCount = poolSizes.emplace_back();
-				typeCount.type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-				typeCount.descriptorCount = shaderDescriptorSet.StorageImages.size();
-			}
-		}
-
-		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-
-		VkDescriptorPoolCreateInfo descriptorPoolInfo = {};
-		descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		descriptorPoolInfo.pNext = nullptr;
-		descriptorPoolInfo.poolSizeCount = poolSizes.size();
-		descriptorPoolInfo.pPoolSizes = poolSizes.data();
-		descriptorPoolInfo.maxSets = m_ShaderDescriptorSets.size();
-
-		VK_CHECK_RESULT(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &result.Pool));
-
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
-		descriptorSetLayouts.reserve(m_DescriptorSetLayouts.size());
-		for (auto& shaderDescriptorSet : m_DescriptorSetLayouts)
-			descriptorSetLayouts.emplace_back(shaderDescriptorSet);
+		// TODO: remove
+		result.Pool = nullptr;
 
 		VkDescriptorSetAllocateInfo allocInfo = {};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = result.Pool;
-		allocInfo.descriptorSetCount = descriptorSetLayouts.size();
-		allocInfo.pSetLayouts = descriptorSetLayouts.data();
-
-		result.DescriptorSets.resize(m_ShaderDescriptorSets.size());
-		VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, result.DescriptorSets.data()));
+		allocInfo.descriptorSetCount = 1;
+		allocInfo.pSetLayouts = &m_DescriptorSetLayouts[set];
+		VkDescriptorSet descriptorSet = VulkanRenderer::RT_AllocateDescriptorSet(allocInfo);
+		HY_CORE_ASSERT(descriptorSet);
+		result.DescriptorSets.push_back(descriptorSet);
 		return result;
 	}
 
