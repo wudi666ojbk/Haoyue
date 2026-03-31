@@ -21,20 +21,40 @@ namespace Haoyue {
 		Renderer::Submit([instance]() mutable
 		{
 			// TODO: Use staging
-			auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			auto device = VulkanContext::GetCurrentDevice();
+			VulkanAllocator allocator("VertexBuffer");
 
-			// Vertex buffer
+			VkBufferCreateInfo bufferCreateInfo{};
+			bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			bufferCreateInfo.size = instance->m_Size;
+			bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+			bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+			VkBuffer stagingBuffer;
+			VmaAllocation stagingBufferAllocation = allocator.AllocateBuffer(bufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, stagingBuffer);
+
+			// Copy data to staging buffer
+			uint8_t* destData = allocator.MapMemory<uint8_t>(stagingBufferAllocation);
+			memcpy(destData, instance->m_LocalData.Data, instance->m_LocalData.Size);
+			allocator.UnmapMemory(stagingBufferAllocation);
+
 			VkBufferCreateInfo vertexBufferCreateInfo = {};
 			vertexBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 			vertexBufferCreateInfo.size = instance->m_Size;
 			vertexBufferCreateInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-			
-			VulkanAllocator allocator("VertexBuffer");
-			auto bufferAlloc = allocator.AllocateBuffer(vertexBufferCreateInfo, VMA_MEMORY_USAGE_CPU_ONLY, instance->m_VulkanBuffer);
+			VmaAllocation bufferAlloc = allocator.AllocateBuffer(vertexBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_VulkanBuffer);
 
-			void* dstBuffer = allocator.MapMemory<void>(bufferAlloc);
-			memcpy(dstBuffer, instance->m_LocalData.Data, instance->m_Size);
-			allocator.UnmapMemory(bufferAlloc);
+			VkCommandBuffer copyCmd = device->GetCommandBuffer(true);
+			VkBufferCopy copyRegion = {};
+
+			copyRegion.size = instance->m_LocalData.Size;
+			vkCmdCopyBuffer(
+				copyCmd,
+				stagingBuffer,
+				instance->m_VulkanBuffer,
+				1,
+				&copyRegion);
+
+			device->FlushCommandBuffer(copyCmd);
 		});
 	}
 
