@@ -30,7 +30,7 @@ namespace Haoyue {
 		void Unlock() override;
 
 		Buffer GetWriteableBuffer() override;
-		bool Loaded() const override;
+		bool Loaded() const override { return m_ImageData; }
 		const std::string& GetPath() const override;
 		uint32_t GetMipLevelCount() const override;
 

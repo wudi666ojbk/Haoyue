@@ -12,6 +12,18 @@ namespace Haoyue {
 	{
 	}
 
+	VulkanVertexBuffer::~VulkanVertexBuffer()
+	{
+		VkBuffer buffer = m_VulkanBuffer;
+		VmaAllocation allocation;
+
+		Renderer::SubmitResourceFree([buffer, allocation]()
+		{
+			VulkanAllocator allocator("VertexBuffer");
+			allocator.DestroyBuffer(buffer, allocation);
+		});
+	}
+
 	VulkanVertexBuffer::VulkanVertexBuffer(void* data, uint32_t size, VertexBufferUsage usage)
 		: m_Size(size)
 	{
@@ -40,8 +52,8 @@ namespace Haoyue {
 			VkBufferCreateInfo vertexBufferCreateInfo = {};
 			vertexBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 			vertexBufferCreateInfo.size = instance->m_Size;
-			vertexBufferCreateInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-			VmaAllocation bufferAlloc = allocator.AllocateBuffer(vertexBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_VulkanBuffer);
+			vertexBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+			instance->m_MemoryAllocation = allocator.AllocateBuffer(vertexBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_VulkanBuffer);
 
 			VkCommandBuffer copyCmd = device->GetCommandBuffer(true);
 			VkBufferCopy copyRegion = {};
@@ -55,8 +67,8 @@ namespace Haoyue {
 				&copyRegion);
 
 			device->FlushCommandBuffer(copyCmd);
+
+			allocator.DestroyBuffer(stagingBuffer, stagingBufferAllocation);
 		});
 	}
-
-
 }

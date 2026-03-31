@@ -39,8 +39,8 @@ namespace Haoyue {
 			VkBufferCreateInfo indexBufferCreateInfo = {};
 			indexBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 			indexBufferCreateInfo.size = instance->m_Size;
-			indexBufferCreateInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-			VmaAllocation bufferAlloc = allocator.AllocateBuffer(indexBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_VulkanBuffer);
+			indexBufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+			instance->m_MemoryAllocation = allocator.AllocateBuffer(indexBufferCreateInfo, VMA_MEMORY_USAGE_GPU_ONLY, instance->m_VulkanBuffer);
 
 			VkCommandBuffer copyCmd = device->GetCommandBuffer(true);
 			VkBufferCopy copyRegion = {};
@@ -54,20 +54,20 @@ namespace Haoyue {
 				&copyRegion);
 
 			device->FlushCommandBuffer(copyCmd);
+
+			allocator.DestroyBuffer(stagingBuffer, stagingBufferAllocation);
 		});
 	}
 
-	void VulkanIndexBuffer::SetData(void* buffer, uint32_t size, uint32_t offset)
+	VulkanIndexBuffer::~VulkanIndexBuffer()
 	{
-	}
-
-	void VulkanIndexBuffer::Bind() const
-	{
-	}
-
-	RendererID VulkanIndexBuffer::GetRendererID() const
-	{
-		return 0;
+		VkBuffer buffer = m_VulkanBuffer;
+		VmaAllocation allocation = m_MemoryAllocation;
+		Renderer::SubmitResourceFree([buffer, allocation]()
+		{
+			VulkanAllocator allocator("IndexBuffer");
+			allocator.DestroyBuffer(buffer, allocation);
+		});
 	}
 
 }

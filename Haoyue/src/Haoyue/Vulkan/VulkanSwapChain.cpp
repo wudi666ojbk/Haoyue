@@ -559,7 +559,11 @@ namespace Haoyue {
 		// Present the current buffer to the swap chain
 		// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
 		// This ensures that the image is not presented to the windowing system until all commands have been submitted
-		VkResult result = QueuePresent(m_Device->GetQueue(), m_CurrentImageIndex, m_Semaphores.RenderComplete);
+		VkResult result;
+		{
+			HY_SCOPE_PERF("VulkanSwapChain::Present - QueuePresent");
+			result = QueuePresent(m_Device->GetQueue(), m_CurrentImageIndex, m_Semaphores.RenderComplete);
+		}
 
 		if (result != VK_SUCCESS || result == VK_SUBOPTIMAL_KHR)
 		{

@@ -17,7 +17,7 @@ namespace Haoyue {
 
 	struct RendererConfig
 	{
-		uint32_t FramesInFlight = 2;
+		uint32_t FramesInFlight = 3;
 		// "Experimental" features
 		bool ComputeEnvironmentMaps = true;
 

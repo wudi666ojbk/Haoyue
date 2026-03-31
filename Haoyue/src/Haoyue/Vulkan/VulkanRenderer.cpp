@@ -190,11 +190,14 @@ namespace Haoyue {
 
 				uint32_t bufferIndex = VulkanContext::Get()->GetSwapChain().GetCurrentBufferIndex();
 
+				auto& materials = mesh->GetMaterials();
+				for (auto& material : materials)
+					material.As<VulkanMaterial>()->RT_UpdateForRendering();
+
 				auto& submeshes = mesh->GetSubmeshes();
 				for (Submesh& submesh : submeshes)
 				{
 					auto& material = mesh->GetMaterials()[submesh.MaterialIndex].As<VulkanMaterial>();
-					material->RT_UpdateForRendering();
 
 					VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
 					VkDescriptorSet descriptorSet = material->GetDescriptorSet(bufferIndex);
