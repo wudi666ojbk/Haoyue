@@ -20,10 +20,12 @@
 
 #include "Haoyue/Vulkan/VulkanRenderer.h"
 #include "Haoyue/Vulkan/VulkanAllocator.h"
+#include "imgui/imgui_internal.h"
 
 #include "Haoyue/Editor/TranslationManager.h"
 
 extern bool g_ApplicationRunning;
+extern ImGuiContext* GImGui;
 
 namespace Haoyue {
 
@@ -40,7 +42,7 @@ namespace Haoyue {
 		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(props.Name, props.WindowWidth, props.WindowHeight)));
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 		m_Window->Maximize();
-		m_Window->SetVSync(true);
+		m_Window->SetVSync(false);
 
 		// Init renderer and execute command queue to compile all shaders
 		Renderer::Init();

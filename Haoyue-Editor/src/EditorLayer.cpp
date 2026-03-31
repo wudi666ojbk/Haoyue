@@ -1154,7 +1154,7 @@ namespace Haoyue {
 				{
 					Entity entity = { e, m_EditorScene.Raw() };
 					auto mesh = entity.GetComponent<MeshComponent>().Mesh;
-					if (!mesh)
+					if (!mesh || mesh->Type == AssetType::Missing)
 						continue;
 
 					auto& submeshes = mesh->GetSubmeshes();

@@ -41,9 +41,9 @@ namespace Haoyue {
 		VulkanAllocator allocator("UniformBuffer");
 		m_MemoryAlloc = allocator.AllocateBuffer(bufferInfo, VMA_MEMORY_USAGE_CPU_ONLY, m_Buffer);
 
-		m_Descriptor.buffer = m_Buffer;
-		m_Descriptor.offset = 0;
-		m_Descriptor.range = m_Size;
+		m_DescriptorInfo.buffer = m_Buffer;
+		m_DescriptorInfo.offset = 0;
+		m_DescriptorInfo.range = m_Size;
 	}
 	
 	void VulkanUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
