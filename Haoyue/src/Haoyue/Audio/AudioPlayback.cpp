@@ -14,4 +14,21 @@ namespace Haoyue {
         auto& engine = MiniAudioEngine::Get();
         return engine.SubmitSoundToPlay(audioComponentID);
     }
+    bool AudioPlayback::StopActiveSound(uint64_t audioComponentID)
+    {
+        auto& engine = MiniAudioEngine::Get();
+        return engine.StopActiveSoundSource(audioComponentID);
+    }
+
+    bool AudioPlayback::PauseActiveSound(uint64_t audioComponentID)
+    {
+        auto& engine = MiniAudioEngine::Get();
+        return engine.PauseActiveSoundSource(audioComponentID);
+    }
+
+    bool AudioPlayback::IsPlaying(uint64_t audioComponentID)
+    {
+        auto& engine = MiniAudioEngine::Get();
+        return engine.IsSoundForComponentPlaying(audioComponentID);
+    }
 }

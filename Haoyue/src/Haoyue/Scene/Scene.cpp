@@ -253,99 +253,116 @@ namespace Haoyue {
 					transformComponent.WorldTranslation = transformComponent.Translation;
 				}
 			}
+		}
 
-			{	//--- Update Audio Components ---
-				//===============================
+		{	//--- Update Audio Components ---
+			//===============================
 
-				auto view = m_Registry.view<Audio::AudioComponent>();
+			auto view = m_Registry.view<Audio::AudioComponent>();
 
-				std::vector<Entity> deadEntities;
-				deadEntities.reserve(view.size());
+			std::vector<Entity> deadEntities;
+			deadEntities.reserve(view.size());
 
-				std::vector<SoundSourceUpdateData> updateData;
-				updateData.reserve(view.size());
+			std::vector<SoundSourceUpdateData> updateData;
+			updateData.reserve(view.size());
 
-				for (auto entity : view)
+			for (auto entity : view)
+			{
+				Entity e = { entity, this };
+				auto& audioComponent = e.GetComponent<Audio::AudioComponent>();
+
+				// 1. Handle Audio Components marked for Auto Destroy
+
+				// AutoDestroy flag is only set for "one-shot" sounds
+				if (audioComponent.bAutoDestroy && audioComponent.bMarkedForDestroy)
 				{
-					Entity e = { entity, this };
-					auto& audioComponent = e.GetComponent<Audio::AudioComponent>();
-
-					// 1. Handle Audio Components marked for Auto Destroy
-
-					// AutoDestroy flag is only set for "one-shot" sounds
-					if (audioComponent.bAutoDestroy && audioComponent.bMarkedForDestroy)
-					{
-						deadEntities.push_back(e);
-						continue;
-					}
-
-					// 2. Update positions of associated sound sources
-
-					auto& transform = e.Transform();
-
-					// 3. Update velocities of associated sound sources
-					glm::vec3 velocity{ 0.0f, 0.0f, 0.0f };
-					if (auto physicsActor = Physics::GetActorForEntity(e))
-					{
-						if (physicsActor->IsDynamic())
-							velocity = physicsActor->GetLinearVelocity();
-					}
-
-					updateData.emplace_back(SoundSourceUpdateData{ e.GetUUID(),
-						audioComponent.VolumeMultiplier,
-						audioComponent.PitchMultiplier,
-						transform.Translation,
-						velocity });
+					deadEntities.push_back(e);
+					continue;
 				}
 
-				//--- Submit values to AudioEngine to update associated sound sources ---
-				//-----------------------------------------------------------------------
-				Audio::MiniAudioEngine::Get().SubmitSourceUpdateData(updateData);
+				// 2. Update positions of associated sound sources
 
-				for (int i = deadEntities.size() - 1; i >= 0; i--)
+				auto& transform = e.Transform();
+
+				// 3. Update velocities of associated sound sources
+				glm::vec3 velocity{ 0.0f, 0.0f, 0.0f };
+				if (auto physicsActor = Physics::GetActorForEntity(e))
 				{
-					DestroyEntity(deadEntities[i]);
+					if (physicsActor->IsDynamic())
+						velocity = physicsActor->GetLinearVelocity();
+				}
+
+				updateData.emplace_back(SoundSourceUpdateData{ e.GetUUID(),
+					audioComponent.VolumeMultiplier,
+					audioComponent.PitchMultiplier,
+					transform.WorldTranslation,
+					velocity });
+			}
+
+			//--- Submit values to AudioEngine to update associated sound sources ---
+			//-----------------------------------------------------------------------
+			Audio::MiniAudioEngine::Get().SubmitSourceUpdateData(updateData);
+
+			for (int i = deadEntities.size() - 1; i >= 0; i--)
+			{
+				DestroyEntity(deadEntities[i]);
+			}
+		}
+
+		{	//--- Update Audio Listener ---
+			auto getParentForwardToWorld = [this](TransformComponent& transformComponent, Entity e)
+			{
+				glm::mat4 transform = GetTransformRelativeToParent(e);
+				Entity parent = FindEntityByUUID(e.GetParentUUID());
+				if (parent)
+				{
+					glm::mat4 parentMatrix = GetTransformRelativeToParent(parent);
+					//transform = glm::inverse(parentMatrix) * transform;
+					glm::vec3 translation, rotation, scale;
+					Math::DecomposeTransform(parentMatrix, translation, rotation, scale);
+					glm::quat rotationQuat = glm::quat(rotation);
+					return glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f)));
+				}
+				else
+				{
+					return transformComponent.Forward;
+				}
+			};
+			auto view = m_Registry.view<AudioListenerComponent>();
+			Entity listener;
+			for (auto entity : view)
+			{
+				Entity e = { entity, this };
+				if (e.GetComponent<AudioListenerComponent>().Active)
+				{
+					listener = e;
+					auto& transform = listener.Transform();
+					Audio::MiniAudioEngine::Get().UpdateListenerPosition(transform.WorldTranslation, getParentForwardToWorld(transform, e));
+					if (auto physicsActor = Physics::GetActorForEntity(listener))
+					{
+						if (physicsActor->IsDynamic())
+							Audio::MiniAudioEngine::Get().UpdateListenerVelocity(physicsActor->GetLinearVelocity());
+					}
+					break;
 				}
 			}
 
-			// Update Audio Listener position
+			if (listener.m_EntityHandle == entt::null)
 			{
-				auto view = m_Registry.view<AudioListenerComponent>();
-				Entity listener;
-				for (auto entity : view)
+				listener = GetMainCameraEntity();
+				if (listener.m_EntityHandle != entt::null)
 				{
-					Entity e = { entity, this };
-					if (e.GetComponent<AudioListenerComponent>().Active)
+					// If camera was changed or destroyed during Runtime, it might not have Listener Component (?)
+					if (!listener.HasComponent<AudioListenerComponent>())
+						listener.AddComponent<AudioListenerComponent>();
+
+					auto& transform = listener.Transform();
+					Audio::MiniAudioEngine::Get().UpdateListenerPosition(transform.WorldTranslation, getParentForwardToWorld(transform, listener));
+
+					if (auto physicsActor = Physics::GetActorForEntity(listener))
 					{
-						listener = e;
-						auto& transform = listener.Transform();
-						Audio::MiniAudioEngine::Get().UpdateListenerPosition(transform.Translation, transform.Forward);
-						if (auto physicsActor = Physics::GetActorForEntity(listener))
-						{
-							if (physicsActor->IsDynamic())
-								Audio::MiniAudioEngine::Get().UpdateListenerVelocity(physicsActor->GetLinearVelocity());
-						}
-						break;
-					}
-				}
-
-				if (listener.m_EntityHandle == entt::null)
-				{
-					listener = GetMainCameraEntity();
-					if (listener.m_EntityHandle != entt::null)
-					{
-						// If camera was changed or destroyed during Runtime, it might not have Listener Component (?)
-						if (!listener.HasComponent<AudioListenerComponent>())
-							listener.AddComponent<AudioListenerComponent>();
-
-						auto& transform = listener.Transform();
-						Audio::MiniAudioEngine::Get().UpdateListenerPosition(transform.Translation, transform.Forward);
-
-						if (auto physicsActor = Physics::GetActorForEntity(listener))
-						{
-							if (physicsActor->IsDynamic())
-								Audio::MiniAudioEngine::Get().UpdateListenerVelocity(physicsActor->GetLinearVelocity());
-						}
+						if (physicsActor->IsDynamic())
+							Audio::MiniAudioEngine::Get().UpdateListenerVelocity(physicsActor->GetLinearVelocity());
 					}
 				}
 			}
@@ -574,7 +591,7 @@ namespace Haoyue {
 				updateData.emplace_back(SoundSourceUpdateData{ e.GetUUID(),
 					audioComponent.VolumeMultiplier,
 					audioComponent.PitchMultiplier,
-					transform.Translation,
+					transform.WorldTranslation,
 					velocity });
 			}
 
@@ -745,14 +762,40 @@ namespace Haoyue {
 				}
 			}
 
+			// If found listener has not been set Active, fallback to using Main Camera
 			if (!listenerFound)
 				listener = mainCam;
 
+			// Don't update position if we faild to get active listener and Main Camera
 			if (listener.m_EntityHandle != entt::null)
 			{
+				//? this could be helpful to have as a helper function somewhere more accessible
+				//? can't grab forward to world at the moment, so just grabbing from parent
+				auto getParentForwardToWorld = [this](TransformComponent& transformComponent, Entity e)
+					{
+						glm::mat4 transform = GetTransformRelativeToParent(e);
+						Entity parent = FindEntityByUUID(e.GetParentUUID());
+						if (parent)
+						{
+							glm::mat4 parentMatrix = GetTransformRelativeToParent(parent);
+							//transform = glm::inverse(parentMatrix) * transform;
+
+							glm::vec3 translation, rotation, scale;
+							Math::DecomposeTransform(parentMatrix, translation, rotation, scale);
+
+							glm::quat rotationQuat = glm::quat(rotation);
+							return glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f)));
+						}
+						else
+						{
+							return transformComponent.Forward;
+						}
+					};
+
+
 				// Initialize listener's position
 				auto& transform = listener.Transform();
-				Audio::MiniAudioEngine::Get().UpdateListenerPosition(transform.Translation, transform.Forward);
+				Audio::MiniAudioEngine::Get().UpdateListenerPosition(transform.WorldTranslation, getParentForwardToWorld(transform, listener));
 			}
 		}
 
@@ -769,14 +812,15 @@ namespace Haoyue {
 				Entity e = { entity, this };
 				auto& transform = e.Transform();
 
-				audioComponent.SourcePosition = transform.Translation;
+				// If sounds are not spawned yet, this sets "spawn" position
+				audioComponent.SourcePosition = transform.WorldTranslation;
 
 
 				glm::vec3 velocity{ 0.0f, 0.0f, 0.0f };
 				updateData.emplace_back(SoundSourceUpdateData{ e.GetUUID(),
 					audioComponent.VolumeMultiplier,
 					audioComponent.PitchMultiplier,
-					transform.Translation,
+					transform.WorldTranslation,
 					velocity });
 			}
 

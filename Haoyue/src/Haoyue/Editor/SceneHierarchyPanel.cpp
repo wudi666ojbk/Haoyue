@@ -1076,6 +1076,14 @@ namespace Haoyue {
 				if (ImGui::Button("Play", buttonSize))
 					AudioPlayback::Play(ac.ParentHandle);
 
+				ImGui::SameLine(0.0f, space);
+				if (ImGui::Button("Stop", buttonSize))
+					AudioPlayback::StopActiveSound(ac.ParentHandle);
+
+				ImGui::SameLine(0.0f, space);
+				if (ImGui::Button("Pause", buttonSize))
+					AudioPlayback::PauseActiveSound(ac.ParentHandle);
+
 				ImGui::SetCursorPosX(0);
 			}
 
@@ -1170,9 +1178,12 @@ namespace Haoyue {
 				propertyGridSpacing();
 				propertyGridSpacing();
 				if (UI::Property("Doppler Factor", spatialConfig.DopplerFactor, 0.01f, 0.0f, 1.0f)) {}
+				//if (UI::Property("Rolloff", spatialConfig.Rolloff, 0.01f, 0.0f, 1.0f)) {  }
 
 				propertyGridSpacing();
 				propertyGridSpacing();
+				// TODO: air absorption filter is not hooked up yet
+				//if (UI::Property("Air Absorption", spatialConfig.bAirAbsorptionEnabled)) {  }
 
 				UI::EndPropertyGrid();
 			}
