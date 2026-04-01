@@ -37,6 +37,9 @@ namespace Haoyue { namespace Script {
 	bool Haoyue_Entity_HasComponent(uint64_t entityID, void* type);
 	uint64_t Haoyue_Entity_FindEntityByTag(MonoString* tag);
 
+	MonoString* Haoyue_TagComponent_GetTag(uint64_t entityID);
+	void Haoyue_TagComponent_SetTag(uint64_t entityID, MonoString* tag);
+
 	void Haoyue_TransformComponent_GetTransform(uint64_t entityID, TransformComponent* outTransform);
 	void Haoyue_TransformComponent_SetTransform(uint64_t entityID, TransformComponent* inTransform);
 	void Haoyue_TransformComponent_GetTranslation(uint64_t entityID, glm::vec3* outTranslation);
@@ -45,7 +48,7 @@ namespace Haoyue { namespace Script {
 	void Haoyue_TransformComponent_SetRotation(uint64_t entityID, glm::vec3* inRotation);
 	void Haoyue_TransformComponent_GetScale(uint64_t entityID, glm::vec3* outScale);
 	void Haoyue_TransformComponent_SetScale(uint64_t entityID, glm::vec3* inScale);
-	void Haoyue_TransformComponent_GetWorldTranslation(uint64_t entityID, glm::vec3* outTranslation);
+	void Haoyue_TransformComponent_GetWorldSpaceTransform(uint64_t entityID, TransformComponent* outTransform);
 
 	void* Haoyue_MeshComponent_GetMesh(uint64_t entityID);
 	void Haoyue_MeshComponent_SetMesh(uint64_t entityID, Ref<Mesh>* inMesh);

@@ -49,11 +49,9 @@ namespace Haoyue {
 		glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 Scale = { 1.0f, 1.0f, 1.0f };
 
-		glm::vec3 WorldTranslation = { 0.0f, 0.0f, 0.0f };
-
-		glm::vec3 Up = { 0.0F, 1.0F, 0.0F };
-		glm::vec3 Right = { 1.0F, 0.0F, 0.0F };
-		glm::vec3 Forward = { 0.0F, 0.0F, -1.0F };
+		glm::vec3 Up = { 0.0f, 1.0f, 0.0f };
+		glm::vec3 Right = { 1.0f, 0.0f, 0.0f };
+		glm::vec3 Forward = { 0.0f, 0.0f, -1.0f };
 
 		TransformComponent() = default;
 		TransformComponent(const TransformComponent& other) = default;
@@ -161,7 +159,7 @@ namespace Haoyue {
 		Type BodyType = Type::Static;
 		float Mass = 1.0f;
 		float LinearDrag = 0.0f;
-		float AngularDrag = 0.05F;
+		float AngularDrag = 0.05f;
 		bool DisableGravity = false;
 		bool IsKinematic = false;
 		uint32_t Layer = 0;
@@ -193,7 +191,7 @@ namespace Haoyue {
 
 	struct SphereColliderComponent
 	{
-		float Radius = 0.5F;
+		float Radius = 0.5f;
 		bool IsTrigger = false;
 		Ref<PhysicsMaterial> Material;
 
@@ -206,7 +204,7 @@ namespace Haoyue {
 
 	struct CapsuleColliderComponent
 	{
-		float Radius = 0.5F;
+		float Radius = 0.5f;
 		float Height = 1.0f;
 		bool IsTrigger = false;
 		Ref<PhysicsMaterial> Material;

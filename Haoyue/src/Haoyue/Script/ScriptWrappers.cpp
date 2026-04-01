@@ -286,6 +286,31 @@ namespace Haoyue { namespace Script {
 		return 0;
 	}
 
+
+	MonoString* Haoyue_TagComponent_GetTag(uint64_t entityID)
+	{
+		Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+		HY_CORE_ASSERT(scene, "No active scene!");
+		const auto& entityMap = scene->GetEntityMap();
+		HY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+		Entity entity = entityMap.at(entityID);
+		auto& tagComponent = entity.GetComponent<TagComponent>();
+		return mono_string_new(mono_domain_get(), tagComponent.Tag.c_str());
+	}
+
+	void Haoyue_TagComponent_SetTag(uint64_t entityID, MonoString* tag)
+	{
+		Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
+		HY_CORE_ASSERT(scene, "No active scene!");
+		const auto& entityMap = scene->GetEntityMap();
+		HY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
+
+		Entity entity = entityMap.at(entityID);
+		auto& tagComponent = entity.GetComponent<TagComponent>();
+		tagComponent.Tag = mono_string_to_utf8(tag);
+	}
+
 	void Haoyue_TransformComponent_GetTransform(uint64_t entityID, TransformComponent* outTransform)
 	{
 		Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
@@ -374,14 +399,14 @@ namespace Haoyue { namespace Script {
 		entity.GetComponent<TransformComponent>().Scale = *inScale;
 	}
 
-	void Haoyue_TransformComponent_GetWorldTranslation(uint64_t entityID, glm::vec3* outTranslation)
+	void Haoyue_TransformComponent_GetWorldSpaceTransform(uint64_t entityID, TransformComponent* outTransform)
 	{
 		Ref<Scene> scene = ScriptEngine::GetCurrentSceneContext();
 		HY_CORE_ASSERT(scene, "No active scene!");
 		const auto& entityMap = scene->GetEntityMap();
 		HY_CORE_ASSERT(entityMap.find(entityID) != entityMap.end(), "Invalid entity ID or entity doesn't exist in scene!");
 		Entity entity = entityMap.at(entityID);
-		*outTranslation = entity.GetComponent<TransformComponent>().WorldTranslation;
+		*outTransform = scene->GetWorldSpaceTransform(entity);
 	}
 
 	void* Haoyue_MeshComponent_GetMesh(uint64_t entityID)

@@ -239,24 +239,10 @@ namespace Haoyue {
 				transformComponent.Up = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 1.0f, 0.0f)));
 				transformComponent.Right = glm::normalize(glm::rotate(rotationQuat, glm::vec3(1.0f, 0.0f, 0.0f)));
 				transformComponent.Forward = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f)));
-
-				Entity parent = FindEntityByUUID(e.GetParentUUID());
-				if (parent)
-				{
-					glm::vec3 parentTranslation, parentRotation, parentScale;
-					Math::DecomposeTransform(GetTransformRelativeToParent(parent), parentTranslation, parentRotation, parentScale);
-
-					transformComponent.WorldTranslation = parentTranslation + transformComponent.Translation;
-				}
-				else
-				{
-					transformComponent.WorldTranslation = transformComponent.Translation;
-				}
 			}
 		}
 
 		{	//--- Update Audio Components ---
-			//===============================
 
 			auto view = m_Registry.view<Audio::AudioComponent>();
 
@@ -282,7 +268,7 @@ namespace Haoyue {
 
 				// 2. Update positions of associated sound sources
 
-				auto& transform = e.Transform();
+				auto& worldSpaceTransform = GetWorldSpaceTransform(e);
 
 				// 3. Update velocities of associated sound sources
 				glm::vec3 velocity{ 0.0f, 0.0f, 0.0f };
@@ -295,7 +281,7 @@ namespace Haoyue {
 				updateData.emplace_back(SoundSourceUpdateData{ e.GetUUID(),
 					audioComponent.VolumeMultiplier,
 					audioComponent.PitchMultiplier,
-					transform.WorldTranslation,
+					worldSpaceTransform.Translation,
 					velocity });
 			}
 
@@ -310,24 +296,6 @@ namespace Haoyue {
 		}
 
 		{	//--- Update Audio Listener ---
-			auto getParentForwardToWorld = [this](TransformComponent& transformComponent, Entity e)
-			{
-				glm::mat4 transform = GetTransformRelativeToParent(e);
-				Entity parent = FindEntityByUUID(e.GetParentUUID());
-				if (parent)
-				{
-					glm::mat4 parentMatrix = GetTransformRelativeToParent(parent);
-					//transform = glm::inverse(parentMatrix) * transform;
-					glm::vec3 translation, rotation, scale;
-					Math::DecomposeTransform(parentMatrix, translation, rotation, scale);
-					glm::quat rotationQuat = glm::quat(rotation);
-					return glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f)));
-				}
-				else
-				{
-					return transformComponent.Forward;
-				}
-			};
 			auto view = m_Registry.view<AudioListenerComponent>();
 			Entity listener;
 			for (auto entity : view)
@@ -336,8 +304,9 @@ namespace Haoyue {
 				if (e.GetComponent<AudioListenerComponent>().Active)
 				{
 					listener = e;
-					auto& transform = listener.Transform();
-					Audio::MiniAudioEngine::Get().UpdateListenerPosition(transform.WorldTranslation, getParentForwardToWorld(transform, e));
+					auto worldSpaceTransform = GetWorldSpaceTransform(listener);
+					Audio::MiniAudioEngine::Get().UpdateListenerPosition(worldSpaceTransform.Translation, worldSpaceTransform.Forward);
+
 					if (auto physicsActor = Physics::GetActorForEntity(listener))
 					{
 						if (physicsActor->IsDynamic())
@@ -347,6 +316,7 @@ namespace Haoyue {
 				}
 			}
 
+			// If listener wasn't found, fallback to using main camera as an active listener
 			if (listener.m_EntityHandle == entt::null)
 			{
 				listener = GetMainCameraEntity();
@@ -356,8 +326,8 @@ namespace Haoyue {
 					if (!listener.HasComponent<AudioListenerComponent>())
 						listener.AddComponent<AudioListenerComponent>();
 
-					auto& transform = listener.Transform();
-					Audio::MiniAudioEngine::Get().UpdateListenerPosition(transform.WorldTranslation, getParentForwardToWorld(transform, listener));
+					auto worldSpaceTransform = GetWorldSpaceTransform(listener);
+					Audio::MiniAudioEngine::Get().UpdateListenerPosition(worldSpaceTransform.Translation, worldSpaceTransform.Forward);
 
 					if (auto physicsActor = Physics::GetActorForEntity(listener))
 					{
@@ -585,13 +555,13 @@ namespace Haoyue {
 					continue;
 				}
 
-				auto& transform = e.Transform();
+				auto& worldSpaceTransform = GetWorldSpaceTransform(e);
 
 				glm::vec3 velocity{ 0.0f, 0.0f, 0.0f };
 				updateData.emplace_back(SoundSourceUpdateData{ e.GetUUID(),
 					audioComponent.VolumeMultiplier,
 					audioComponent.PitchMultiplier,
-					transform.WorldTranslation,
+					worldSpaceTransform.Translation,
 					velocity });
 			}
 
@@ -736,6 +706,12 @@ namespace Haoyue {
 
 		{	//--- Make sure we have an audio listener ---
 			//===========================================
+
+			// If no audio listeners were added by the user, create one on the main camera
+
+			// TODO: make a user option to automatically set active listener to the main camera vs override
+
+			// Main Camera should have listener component in case of fallback
 			Entity mainCam = GetMainCameraEntity();
 			Entity listener;
 
@@ -769,33 +745,9 @@ namespace Haoyue {
 			// Don't update position if we faild to get active listener and Main Camera
 			if (listener.m_EntityHandle != entt::null)
 			{
-				//? this could be helpful to have as a helper function somewhere more accessible
-				//? can't grab forward to world at the moment, so just grabbing from parent
-				auto getParentForwardToWorld = [this](TransformComponent& transformComponent, Entity e)
-					{
-						glm::mat4 transform = GetTransformRelativeToParent(e);
-						Entity parent = FindEntityByUUID(e.GetParentUUID());
-						if (parent)
-						{
-							glm::mat4 parentMatrix = GetTransformRelativeToParent(parent);
-							//transform = glm::inverse(parentMatrix) * transform;
-
-							glm::vec3 translation, rotation, scale;
-							Math::DecomposeTransform(parentMatrix, translation, rotation, scale);
-
-							glm::quat rotationQuat = glm::quat(rotation);
-							return glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f)));
-						}
-						else
-						{
-							return transformComponent.Forward;
-						}
-					};
-
-
 				// Initialize listener's position
-				auto& transform = listener.Transform();
-				Audio::MiniAudioEngine::Get().UpdateListenerPosition(transform.WorldTranslation, getParentForwardToWorld(transform, listener));
+				auto& worldSpaceTransform = GetWorldSpaceTransform(listener);
+				Audio::MiniAudioEngine::Get().UpdateListenerPosition(worldSpaceTransform.Translation, worldSpaceTransform.Forward);
 			}
 		}
 
@@ -810,17 +762,17 @@ namespace Haoyue {
 				auto& audioComponent = view.get(entity);
 
 				Entity e = { entity, this };
-				auto& transform = e.Transform();
+				auto& worldSpaceTransform = GetWorldSpaceTransform(e);
 
 				// If sounds are not spawned yet, this sets "spawn" position
-				audioComponent.SourcePosition = transform.WorldTranslation;
+				audioComponent.SourcePosition = worldSpaceTransform.Translation;
 
 
 				glm::vec3 velocity{ 0.0f, 0.0f, 0.0f };
 				updateData.emplace_back(SoundSourceUpdateData{ e.GetUUID(),
 					audioComponent.VolumeMultiplier,
 					audioComponent.PitchMultiplier,
-					transform.WorldTranslation,
+					worldSpaceTransform.Translation,
 					velocity });
 			}
 
@@ -987,15 +939,112 @@ namespace Haoyue {
 		return Entity{};
 	}
 
+	void Scene::ConvertToLocalSpace(Entity entity)
+	{
+		Entity parent = FindEntityByUUID(entity.GetParentUUID());
+
+		if (!parent)
+			return;
+
+		auto& transform = entity.Transform();
+		glm::mat4 parentTransform = GetWorldSpaceTransformMatrix(parent);
+
+		glm::mat4 localTransform = glm::inverse(parentTransform) * transform.GetTransform();
+		Math::DecomposeTransform(localTransform, transform.Translation, transform.Rotation, transform.Scale);
+	}
+
+	void Scene::ConvertToWorldSpace(Entity entity)
+	{
+		Entity parent = FindEntityByUUID(entity.GetParentUUID());
+
+		if (!parent)
+			return;
+
+		glm::mat4 transform = GetTransformRelativeToParent(entity);
+		auto& entityTransform = entity.Transform();
+		Math::DecomposeTransform(transform, entityTransform.Translation, entityTransform.Rotation, entityTransform.Scale);
+	}
+
 	glm::mat4 Scene::GetTransformRelativeToParent(Entity entity)
 	{
-		glm::mat4 transform(1.0F);
+		glm::mat4 transform(1.0f);
 
 		Entity parent = FindEntityByUUID(entity.GetParentUUID());
 		if (parent)
 			transform = GetTransformRelativeToParent(parent);
 
 		return transform * entity.Transform().GetTransform();
+	}
+
+	glm::mat4 Scene::GetWorldSpaceTransformMatrix(Entity entity)
+	{
+		glm::mat4 transform = entity.Transform().GetTransform();
+
+		while (Entity parent = FindEntityByUUID(entity.GetParentUUID()))
+		{
+			transform = parent.Transform().GetTransform() * transform;
+			entity = parent;
+		}
+
+		return transform;
+	}
+
+	// TODO: Definitely cache this at some point
+	TransformComponent Scene::GetWorldSpaceTransform(Entity entity)
+	{
+		glm::mat4 transform = GetWorldSpaceTransformMatrix(entity);
+		TransformComponent transformComponent;
+
+		Math::DecomposeTransform(transform, transformComponent.Translation, transformComponent.Rotation, transformComponent.Scale);
+
+		glm::quat rotationQuat = glm::quat(transformComponent.Rotation);
+		transformComponent.Up = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 1.0f, 0.0f)));
+		transformComponent.Right = glm::normalize(glm::rotate(rotationQuat, glm::vec3(1.0f, 0.0f, 0.0f)));
+		transformComponent.Forward = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f)));
+
+		return transformComponent;
+	}
+
+	void Scene::ParentEntity(Entity entity, Entity parent)
+	{
+		if (parent.IsDescendantOf(entity))
+		{
+			UnparentEntity(parent);
+
+			Entity newParent = FindEntityByUUID(entity.GetParentUUID());
+			if (newParent)
+			{
+				UnparentEntity(entity);
+				ParentEntity(parent, newParent);
+			}
+		}
+		else
+		{
+			Entity previousParent = FindEntityByUUID(entity.GetParentUUID());
+
+			if (previousParent)
+				UnparentEntity(entity);
+		}
+
+		entity.SetParentUUID(parent.GetUUID());
+		parent.Children().push_back(entity.GetUUID());
+
+		ConvertToLocalSpace(entity);
+	}
+
+	void Scene::UnparentEntity(Entity entity)
+	{
+		Entity parent = FindEntityByUUID(entity.GetParentUUID());
+
+		if (!parent)
+			return;
+
+		auto& parentChildren = parent.Children();
+		parentChildren.erase(std::remove(parentChildren.begin(), parentChildren.end(), entity.GetUUID()), parentChildren.end());
+
+		ConvertToWorldSpace(entity);
+
+		entity.SetParentUUID(0);
 	}
 
 	// Copy to runtime

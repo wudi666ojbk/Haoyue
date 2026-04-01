@@ -22,7 +22,7 @@ namespace Haoyue
             }
             set
             {
-                SetTag_Native(value);
+                SetTag_Native(Entity.ID, value);
             }
         }
 
@@ -30,7 +30,7 @@ namespace Haoyue
         public static extern string GetTag_Native(ulong entityID);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void SetTag_Native(string tag);
+        public static extern void SetTag_Native(ulong Entity, string tag);
 
     }
 
@@ -93,13 +93,10 @@ namespace Haoyue
             }
         }
 
-        public Vector3 WorldTranslation
+        public Transform GetWorldSpaceTransform()
         {
-            get
-            {
-                GetWorldTranslation_Native(Entity.ID, out Vector3 result);
-                return result;
-            }
+            GetWorldSpaceTransform_Native(Entity.ID, out Transform transform);
+            return transform;
         }
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -119,7 +116,7 @@ namespace Haoyue
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void SetScale_Native(ulong entityID, ref Vector3 inScale);
         [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern void GetWorldTranslation_Native(ulong entityID, out Vector3 outTranslation);
+        internal static extern void GetWorldSpaceTransform_Native(ulong entityID, out Transform outTransform);
     }
 
 	public class MeshComponent : Component

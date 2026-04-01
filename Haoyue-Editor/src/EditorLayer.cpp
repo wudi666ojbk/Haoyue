@@ -114,6 +114,15 @@ namespace Haoyue {
 		return 0.0f;
 	}
 
+	void EditorLayer::DeleteEntity(Entity entity)
+	{
+		for (UUID entityID : entity.Children())
+			DeleteEntity(m_EditorScene->FindEntityByUUID(entityID));
+
+		m_EditorScene->UnparentEntity(entity);
+        m_EditorScene->DestroyEntity(entity);
+	}
+
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		auto [x, y] = GetMouseViewportSpace();
@@ -537,8 +546,8 @@ namespace Haoyue {
 					Entity parent = m_CurrentScene->FindEntityByUUID(selection.Entity.GetParentUUID());
 					if (parent)
 					{
-						glm::mat4 parentMatrix = m_CurrentScene->GetTransformRelativeToParent(parent);
-						transform = glm::inverse(parentMatrix) * transform;
+						glm::mat4 parentTransform = m_CurrentScene->GetTransformRelativeToParent(parent);
+						transform = glm::inverse(parentTransform) * transform;
 
 						glm::vec3 translation, rotation, scale;
 						Math::DecomposeTransform(transform, translation, rotation, scale);
@@ -1082,8 +1091,7 @@ namespace Haoyue {
 			case KeyCode::Delete: // TODO: this should be in the scene hierarchy panel
 				if (m_SelectionContext.size())
 				{
-					Entity selectedEntity = m_SelectionContext[0].Entity;
-					m_EditorScene->DestroyEntity(selectedEntity);
+					DeleteEntity(m_SelectionContext[0].Entity);
 					m_SelectionContext.clear();
 					m_EditorScene->SetSelectedEntity({});
 					m_SceneHierarchyPanel->SetSelected({});

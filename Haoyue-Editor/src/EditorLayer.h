@@ -69,6 +69,8 @@ namespace Haoyue {
 		void UpdateWindowTitle(const std::string& sceneName);
 
 		float GetSnapValue();
+
+		void DeleteEntity(Entity entity);
 	private:
 		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		Scope<ContentBrowserPanel> m_ContentBrowserPanel;
