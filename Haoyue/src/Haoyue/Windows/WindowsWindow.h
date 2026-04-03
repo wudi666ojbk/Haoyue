@@ -2,6 +2,7 @@
 
 #include "Haoyue/Core/Window.h"
 #include "Haoyue/Renderer/RendererContext.h"
+#include "Haoyue/Vulkan/VulkanSwapChain.h"
 
 #include <GLFW/glfw3.h>
 
@@ -13,6 +14,7 @@ namespace Haoyue {
 		WindowsWindow(const WindowProps& props);
 		virtual ~WindowsWindow();
 
+		virtual void Init() override;
 		virtual void ProcessEvents() override;
 		virtual void SwapBuffers() override;
 
@@ -35,12 +37,13 @@ namespace Haoyue {
 		inline void* GetNativeWindow() const { return m_Window; }
 
 		virtual Ref<RendererContext> GetRenderContext() override { return m_RendererContext; }
+		virtual VulkanSwapChain& GetSwapChain() override { return m_SwapChain; }
 	private:
-		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
 	private:
 		GLFWwindow* m_Window;
 		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };
+		WindowProps m_Properties;
 
 		struct WindowData
 		{
@@ -55,6 +58,7 @@ namespace Haoyue {
 		float m_LastFrameTime = 0.0f;
 
 		Ref<RendererContext> m_RendererContext;
+		VulkanSwapChain m_SwapChain;
 	};
 
 }

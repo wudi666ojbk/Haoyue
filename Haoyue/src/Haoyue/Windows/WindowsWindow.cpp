@@ -7,6 +7,8 @@
 
 #include "Haoyue/Renderer/RendererAPI.h"
 
+#include "Haoyue/Vulkan/VulkanContext.h"
+
 #include <imgui.h>
 
 namespace Haoyue {
@@ -15,7 +17,7 @@ namespace Haoyue {
 	{
 		HY_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
 	}
-	
+
 	static bool s_GLFWInitialized = false;
 
 	Window* Window::Create(const WindowProps& props)
@@ -24,8 +26,8 @@ namespace Haoyue {
 	}
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
+		: m_Properties(props)
 	{
-		Init(props);
 	}
 
 	WindowsWindow::~WindowsWindow()
@@ -33,13 +35,13 @@ namespace Haoyue {
 		Shutdown();
 	}
 
-	void WindowsWindow::Init(const WindowProps& props)
+	void WindowsWindow::Init()
 	{
-		m_Data.Title = props.Title;
-		m_Data.Width = props.Width;
-		m_Data.Height = props.Height;
+		m_Data.Title = m_Properties.Title;
+		m_Data.Width = m_Properties.Width;
+		m_Data.Height = m_Properties.Height;
 
-		HY_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
+		HY_CORE_INFO("Creating window {0} ({1}, {2})", m_Properties.Title, m_Properties.Width, m_Properties.Height);
 
 		if (!s_GLFWInitialized)
 		{
@@ -53,40 +55,49 @@ namespace Haoyue {
 
 		if (RendererAPI::Current() == RendererAPIType::Vulkan)
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+
+		m_Window = glfwCreateWindow((int)m_Properties.Width, (int)m_Properties.Height, m_Data.Title.c_str(), nullptr, nullptr);
 
 		// Create Renderer Context
-		m_RendererContext = RendererContext::Create(m_Window);
-		m_RendererContext->Create();
+		m_RendererContext = RendererContext::Create();
+		m_RendererContext->Init();
+
+		Ref<VulkanContext> context = m_RendererContext.As<VulkanContext>();
+
+		m_SwapChain.Init(VulkanContext::GetInstance(), context->GetDevice());
+		m_SwapChain.InitSurface(m_Window);
+
+		uint32_t width = m_Data.Width, height = m_Data.Height;
+		m_SwapChain.Create(&width, &height, true);
 
 		//glfwMaximizeWindow(m_Window);
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 
 		// Set GLFW callbacks
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
-		{
-			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+			{
+				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
-			WindowResizeEvent event((unsigned int)width, (unsigned int)height);
-			data.EventCallback(event);
-			data.Width = width;
-			data.Height = height;
-		});
+				WindowResizeEvent event((unsigned int)width, (unsigned int)height);
+				data.EventCallback(event);
+				data.Width = width;
+				data.Height = height;
+			});
 
 		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
-		{
-			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+			{
+				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
-			WindowCloseEvent event;
-			data.EventCallback(event);
-		});
+				WindowCloseEvent event;
+				data.EventCallback(event);
+			});
 
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
-		{
-			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
-
-			switch (action)
 			{
+				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+
+				switch (action)
+				{
 				case GLFW_PRESS:
 				{
 					KeyPressedEvent event((KeyCode)key, 0);
@@ -105,23 +116,23 @@ namespace Haoyue {
 					data.EventCallback(event);
 					break;
 				}
-			}
-		});
+				}
+			});
 
 		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int codepoint)
-		{
-			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+			{
+				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
-			KeyTypedEvent event((KeyCode)codepoint);
-			data.EventCallback(event);
-		});
+				KeyTypedEvent event((KeyCode)codepoint);
+				data.EventCallback(event);
+			});
 
 		glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
-		{
-			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
-
-			switch (action)
 			{
+				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+
+				switch (action)
+				{
 				case GLFW_PRESS:
 				{
 					MouseButtonPressedEvent event(button);
@@ -134,23 +145,23 @@ namespace Haoyue {
 					data.EventCallback(event);
 					break;
 				}
-			}
-		});
+				}
+			});
 
 		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xOffset, double yOffset)
-		{
-			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+			{
+				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
-			MouseScrolledEvent event((float)xOffset, (float)yOffset);
-			data.EventCallback(event);
-		});
+				MouseScrolledEvent event((float)xOffset, (float)yOffset);
+				data.EventCallback(event);
+			});
 
 		glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double x, double y)
-		{
-			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
-			MouseMovedEvent event((float)x, (float)y);
-			data.EventCallback(event);
-		});
+			{
+				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+				MouseMovedEvent event((float)x, (float)y);
+				data.EventCallback(event);
+			});
 
 		m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
 		m_ImGuiMouseCursors[ImGuiMouseCursor_TextInput] = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
@@ -166,7 +177,7 @@ namespace Haoyue {
 			int width, height;
 			glfwGetWindowSize(m_Window, &width, &height);
 			m_Data.Width = width;
-			m_Data.Height= height;
+			m_Data.Height = height;
 		}
 	}
 
@@ -186,7 +197,7 @@ namespace Haoyue {
 	void WindowsWindow::ProcessEvents()
 	{
 		glfwPollEvents();
-		
+
 		//ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
 		//glfwSetCursor(m_Window, m_ImGuiMouseCursors[imgui_cursor] ? m_ImGuiMouseCursors[imgui_cursor] : m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow]);
 		//glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -194,7 +205,7 @@ namespace Haoyue {
 
 	void WindowsWindow::SwapBuffers()
 	{
-		m_RendererContext->SwapBuffers();
+		m_SwapChain.Present();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)

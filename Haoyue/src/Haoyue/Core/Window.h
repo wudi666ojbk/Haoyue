@@ -8,6 +8,8 @@
 
 namespace Haoyue {
 
+	class VulkanSwapChain;
+
 	struct WindowProps
 	{
 		std::string Title;
@@ -30,6 +32,7 @@ namespace Haoyue {
 
 		virtual ~Window() {}
 
+		virtual void Init() = 0;
 		virtual void ProcessEvents() = 0;
 		virtual void SwapBuffers() = 0;
 
@@ -51,6 +54,7 @@ namespace Haoyue {
 		virtual void* GetNativeWindow() const = 0;
 
 		virtual Ref<RendererContext> GetRenderContext() = 0;
+		virtual VulkanSwapChain& GetSwapChain() = 0;
 
 		static Window* Create(const WindowProps& props = WindowProps());
 	};

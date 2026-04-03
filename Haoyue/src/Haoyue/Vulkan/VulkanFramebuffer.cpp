@@ -42,7 +42,7 @@ namespace Haoyue {
 		}
 		else
 		{
-			VulkanSwapChain& swapChain = VulkanContext::Get()->GetSwapChain();
+			VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
 			m_RenderPass = swapChain.GetRenderPass();
 		}
 

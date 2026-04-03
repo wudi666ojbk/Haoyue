@@ -20,6 +20,7 @@
 
 #include "Haoyue/Vulkan/VulkanRenderer.h"
 #include "Haoyue/Vulkan/VulkanAllocator.h"
+#include "Haoyue/Vulkan/VulkanSwapChain.h"
 #include "imgui/imgui_internal.h"
 
 #include "Haoyue/Editor/TranslationManager.h"
@@ -40,6 +41,7 @@ namespace Haoyue {
 		m_Profiler = new PerformanceProfiler();
 
 		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(props.Name, props.WindowWidth, props.WindowHeight)));
+		m_Window->Init();
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 		m_Window->Maximize();
 		m_Window->SetVSync(false);
@@ -174,7 +176,7 @@ namespace Haoyue {
 				Renderer::EndFrame();
 
 				// On Render thread
-				m_Window->GetRenderContext()->BeginFrame();
+				m_Window->GetSwapChain().BeginFrame();
 				Renderer::WaitAndRender();
 				m_Window->SwapBuffers();
 			}
@@ -218,7 +220,7 @@ namespace Haoyue {
 		}
 		m_Minimized = false;
 		
-		m_Window->GetRenderContext()->OnResize(width, height);
+		m_Window->GetSwapChain().OnResize(width, height);
 
 		auto& fbs = FramebufferPool::GetGlobal()->GetAll();
 		for (auto& fb : fbs)

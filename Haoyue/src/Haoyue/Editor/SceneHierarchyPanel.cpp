@@ -129,13 +129,13 @@ namespace Haoyue {
 						if (ImGui::MenuItem(TR("Capsule")))
 						{
 							auto newEntity = m_Context->CreateEntity(TR("Capsule"));
-							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("/meshes/Default/Capsule.fbx"));
+							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("Resources/meshes/Default/Capsule.fbx"));
 							SetSelected(newEntity);
 						}
 						if (ImGui::MenuItem(TR("Plane")))
 						{
 							auto newEntity = m_Context->CreateEntity(TR("Plane"));
-							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("/meshes/Default/Plane.fbx"));
+							newEntity.AddComponent<MeshComponent>(AssetManager::GetAsset<Mesh>("Resources/meshes/Default/Plane.fbx"));
 							SetSelected(newEntity);
 						}
 						ImGui::EndMenu();

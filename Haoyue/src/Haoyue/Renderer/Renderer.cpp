@@ -56,7 +56,7 @@ namespace Haoyue {
 
 	uint32_t Renderer::GetCurrentFrameIndex()
 	{
-		return VulkanContext::Get()->GetSwapChain().GetCurrentBufferIndex();
+		return Application::Get().GetWindow().GetSwapChain().GetCurrentBufferIndex();
 	}
 
 	void RendererAPI::SetAPI(RendererAPIType api)

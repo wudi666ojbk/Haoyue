@@ -188,7 +188,7 @@ namespace Haoyue {
 				VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
 				vkCmdBindPipeline(s_Data->ActiveCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-				uint32_t bufferIndex = VulkanContext::Get()->GetSwapChain().GetCurrentBufferIndex();
+				uint32_t bufferIndex = Application::Get().GetWindow().GetSwapChain().GetCurrentBufferIndex();
 
 				auto& materials = mesh->GetMaterials();
 				for (auto& material : materials)
@@ -289,7 +289,7 @@ namespace Haoyue {
 				VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
 				vkCmdBindPipeline(s_Data->ActiveCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-				uint32_t bufferIndex = VulkanContext::Get()->GetSwapChain().GetCurrentBufferIndex();
+				uint32_t bufferIndex = Application::Get().GetWindow().GetSwapChain().GetCurrentBufferIndex();
 				VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet(bufferIndex);
 				if (descriptorSet)
 					vkCmdBindDescriptorSets(s_Data->ActiveCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
@@ -304,7 +304,7 @@ namespace Haoyue {
 
 	VkDescriptorSet VulkanRenderer::RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& allocInfo)
 	{
-		uint32_t bufferIndex = VulkanContext::Get()->GetSwapChain().GetCurrentBufferIndex();
+		uint32_t bufferIndex = Application::Get().GetWindow().GetSwapChain().GetCurrentBufferIndex();
 		allocInfo.descriptorPool = s_Data->DescriptorPools[bufferIndex];
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 		VkDescriptorSet result;
@@ -336,7 +336,7 @@ namespace Haoyue {
 				VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
 				vkCmdBindPipeline(s_Data->ActiveCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-				uint32_t bufferIndex = VulkanContext::Get()->GetSwapChain().GetCurrentBufferIndex();
+				uint32_t bufferIndex = Application::Get().GetWindow().GetSwapChain().GetCurrentBufferIndex();
 				VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet(bufferIndex);
 				if (descriptorSet)
 					vkCmdBindDescriptorSets(s_Data->ActiveCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
@@ -355,47 +355,46 @@ namespace Haoyue {
 			environment = Renderer::GetEmptyEnvironment();
 
 		Renderer::Submit([environment, shadow]() mutable
-			{
-				auto shader = Renderer::GetShaderLibrary()->Get("PBR_Static");
-				Ref<VulkanShader> pbrShader = shader.As<VulkanShader>();
+		{
+			auto shader = Renderer::GetShaderLibrary()->Get("PBR_Static");
+			Ref<VulkanShader> pbrShader = shader.As<VulkanShader>();
 
-				std::array<VkWriteDescriptorSet, 4> writeDescriptors;
+			std::array<VkWriteDescriptorSet, 4> writeDescriptors;
 
-				Ref<VulkanTextureCube> radianceMap = environment->RadianceMap.As<VulkanTextureCube>();
-				Ref<VulkanTextureCube> irradianceMap = environment->IrradianceMap.As<VulkanTextureCube>();
-				uint32_t bufferIndex = VulkanContext::Get()->GetSwapChain().GetCurrentBufferIndex();
+			Ref<VulkanTextureCube> radianceMap = environment->RadianceMap.As<VulkanTextureCube>();
+			Ref<VulkanTextureCube> irradianceMap = environment->IrradianceMap.As<VulkanTextureCube>();
+			uint32_t bufferIndex = Application::Get().GetWindow().GetSwapChain().GetCurrentBufferIndex();
 
-				writeDescriptors[0] = *pbrShader->GetDescriptorSet("u_EnvRadianceTex", 1);
-				writeDescriptors[0].dstSet = s_Data->RendererDescriptorSet[bufferIndex].DescriptorSets[0];
-				const auto& radianceMapImageInfo = radianceMap->GetVulkanDescriptorInfo();
-				writeDescriptors[0].pImageInfo = &radianceMapImageInfo;
+			writeDescriptors[0] = *pbrShader->GetDescriptorSet("u_EnvRadianceTex", 1);
+			writeDescriptors[0].dstSet = s_Data->RendererDescriptorSet[bufferIndex].DescriptorSets[0];
+			const auto& radianceMapImageInfo = radianceMap->GetVulkanDescriptorInfo();
+			writeDescriptors[0].pImageInfo = &radianceMapImageInfo;
 
-				writeDescriptors[1] = *pbrShader->GetDescriptorSet("u_EnvIrradianceTex", 1);
-				writeDescriptors[1].dstSet = s_Data->RendererDescriptorSet[bufferIndex].DescriptorSets[0];
-				const auto& irradianceMapImageInfo = irradianceMap->GetVulkanDescriptorInfo();
-				writeDescriptors[1].pImageInfo = &irradianceMapImageInfo;
+			writeDescriptors[1] = *pbrShader->GetDescriptorSet("u_EnvIrradianceTex", 1);
+			writeDescriptors[1].dstSet = s_Data->RendererDescriptorSet[bufferIndex].DescriptorSets[0];
+			const auto& irradianceMapImageInfo = irradianceMap->GetVulkanDescriptorInfo();
+			writeDescriptors[1].pImageInfo = &irradianceMapImageInfo;
 
-				writeDescriptors[2] = *pbrShader->GetDescriptorSet("u_BRDFLUTTexture", 1);
-				writeDescriptors[2].dstSet = s_Data->RendererDescriptorSet[bufferIndex].DescriptorSets[0];
-				const auto& brdfLutImageInfo = s_Data->BRDFLut.As<VulkanTexture2D>()->GetVulkanDescriptorInfo();
-				writeDescriptors[2].pImageInfo = &brdfLutImageInfo;
+			writeDescriptors[2] = *pbrShader->GetDescriptorSet("u_BRDFLUTTexture", 1);
+			writeDescriptors[2].dstSet = s_Data->RendererDescriptorSet[bufferIndex].DescriptorSets[0];
+			const auto& brdfLutImageInfo = s_Data->BRDFLut.As<VulkanTexture2D>()->GetVulkanDescriptorInfo();
+			writeDescriptors[2].pImageInfo = &brdfLutImageInfo;
 
-				writeDescriptors[3] = *pbrShader->GetDescriptorSet("u_ShadowMapTexture", 1);
-				writeDescriptors[3].dstSet = s_Data->RendererDescriptorSet[bufferIndex].DescriptorSets[0];
-				const auto& shadowImageInfo = shadow.As<VulkanImage2D>()->GetDescriptor();
-				writeDescriptors[3].pImageInfo = &shadowImageInfo;
+			writeDescriptors[3] = *pbrShader->GetDescriptorSet("u_ShadowMapTexture", 1);
+			writeDescriptors[3].dstSet = s_Data->RendererDescriptorSet[bufferIndex].DescriptorSets[0];
+			const auto& shadowImageInfo = shadow.As<VulkanImage2D>()->GetDescriptor();
+			writeDescriptors[3].pImageInfo = &shadowImageInfo;
 
-				auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				vkUpdateDescriptorSets(vulkanDevice, writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
-			});
+			auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			vkUpdateDescriptorSets(vulkanDevice, writeDescriptors.size(), writeDescriptors.data(), 0, nullptr);
+		});
 	}
 
 	void VulkanRenderer::BeginFrame()
 	{
 		Renderer::Submit([]()
-			{
-				Ref<VulkanContext> context = VulkanContext::Get();
-				VulkanSwapChain& swapChain = context->GetSwapChain();
+		{
+			VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
 
 				// Reset descriptor pools here
 				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
@@ -417,10 +416,10 @@ namespace Haoyue {
 	void VulkanRenderer::EndFrame()
 	{
 		Renderer::Submit([]()
-			{
-				VK_CHECK_RESULT(vkEndCommandBuffer(s_Data->ActiveCommandBuffer));
-				s_Data->ActiveCommandBuffer = nullptr;
-			});
+		{
+			VK_CHECK_RESULT(vkEndCommandBuffer(s_Data->ActiveCommandBuffer));
+			s_Data->ActiveCommandBuffer = nullptr;
+		});
 	}
 
 	void VulkanRenderer::BeginRenderPass(const Ref<RenderPass>& renderPass)
@@ -480,9 +479,9 @@ namespace Haoyue {
 		//HY_CORE_ASSERT(s_Data->m_ActiveRenderPass, "No active render pass! Have you called Renderer::EndRenderPass twice?");
 
 		Renderer::Submit([]()
-			{
-				vkCmdEndRenderPass(s_Data->ActiveCommandBuffer);
-			});
+		{
+			vkCmdEndRenderPass(s_Data->ActiveCommandBuffer);
+		});
 	}
 
 	std::pair<Ref<TextureCube>, Ref<TextureCube>> VulkanRenderer::CreateEnvironmentMap(const std::string& filepath)
@@ -504,105 +503,105 @@ namespace Haoyue {
 		Ref<VulkanComputePipeline> equirectangularConversionPipeline = Ref<VulkanComputePipeline>::Create(equirectangularConversionShader);
 
 		Renderer::Submit([equirectangularConversionPipeline, envEquirect, envUnfiltered, cubemapSize]() mutable
-			{
-				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				Ref<VulkanShader> shader = equirectangularConversionPipeline->GetShader();
+		{
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			Ref<VulkanShader> shader = equirectangularConversionPipeline->GetShader();
 
-				std::array<VkWriteDescriptorSet, 2> writeDescriptors;
-				auto descriptorSet = shader->CreateDescriptorSets();
-				Ref<VulkanTextureCube> envUnfilteredCubemap = envUnfiltered.As<VulkanTextureCube>();
-				writeDescriptors[0] = *shader->GetDescriptorSet("o_CubeMap");
-				writeDescriptors[0].dstSet = descriptorSet.DescriptorSets[0]; // Should this be set inside the shader?
-				writeDescriptors[0].pImageInfo = &envUnfilteredCubemap->GetVulkanDescriptorInfo();
+			std::array<VkWriteDescriptorSet, 2> writeDescriptors;
+			auto descriptorSet = shader->CreateDescriptorSets();
+			Ref<VulkanTextureCube> envUnfilteredCubemap = envUnfiltered.As<VulkanTextureCube>();
+			writeDescriptors[0] = *shader->GetDescriptorSet("o_CubeMap");
+			writeDescriptors[0].dstSet = descriptorSet.DescriptorSets[0]; // Should this be set inside the shader?
+			writeDescriptors[0].pImageInfo = &envUnfilteredCubemap->GetVulkanDescriptorInfo();
 
-				Ref<VulkanTexture2D> envEquirectVK = envEquirect.As<VulkanTexture2D>();
-				writeDescriptors[1] = *shader->GetDescriptorSet("u_EquirectangularTex");
-				writeDescriptors[1].dstSet = descriptorSet.DescriptorSets[0]; // Should this be set inside the shader?
-				writeDescriptors[1].pImageInfo = &envEquirectVK->GetVulkanDescriptorInfo();
+			Ref<VulkanTexture2D> envEquirectVK = envEquirect.As<VulkanTexture2D>();
+			writeDescriptors[1] = *shader->GetDescriptorSet("u_EquirectangularTex");
+			writeDescriptors[1].dstSet = descriptorSet.DescriptorSets[0]; // Should this be set inside the shader?
+			writeDescriptors[1].pImageInfo = &envEquirectVK->GetVulkanDescriptorInfo();
 
-				vkUpdateDescriptorSets(device, writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
-				equirectangularConversionPipeline->Execute(descriptorSet.DescriptorSets.data(), descriptorSet.DescriptorSets.size(), cubemapSize / 32, cubemapSize / 32, 6);
+			vkUpdateDescriptorSets(device, writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
+			equirectangularConversionPipeline->Execute(descriptorSet.DescriptorSets.data(), descriptorSet.DescriptorSets.size(), cubemapSize / 32, cubemapSize / 32, 6);
 
-				envUnfilteredCubemap->GenerateMips(true);
-			});
+			envUnfilteredCubemap->GenerateMips(true);
+		});
 
 		Ref<Shader> environmentMipFilterShader = Renderer::GetShaderLibrary()->Get("EnvironmentMipFilter");
 		Ref<VulkanComputePipeline> environmentMipFilterPipeline = Ref<VulkanComputePipeline>::Create(environmentMipFilterShader);
 
 		Renderer::Submit([environmentMipFilterPipeline, envUnfiltered, envFiltered, cubemapSize]() mutable
+		{
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			Ref<VulkanShader> shader = environmentMipFilterPipeline->GetShader();
+
+			Ref<VulkanTextureCube> envFilteredCubemap = envFiltered.As<VulkanTextureCube>();
+			VkDescriptorImageInfo imageInfo = envFilteredCubemap->GetVulkanDescriptorInfo();
+
+			uint32_t mipCount = Utils::CalculateMipCount(cubemapSize, cubemapSize);
+
+			std::vector<VkWriteDescriptorSet> writeDescriptors(mipCount * 2);
+			std::vector<VkDescriptorImageInfo> mipImageInfos(mipCount);
+			auto descriptorSet = shader->CreateDescriptorSets(0, 12);
+			for (uint32_t i = 0; i < mipCount; i++)
 			{
-				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				Ref<VulkanShader> shader = environmentMipFilterPipeline->GetShader();
+				VkDescriptorImageInfo& mipImageInfo = mipImageInfos[i];
+				mipImageInfo = imageInfo;
+				mipImageInfo.imageView = envFilteredCubemap->CreateImageViewSingleMip(i);
 
-				Ref<VulkanTextureCube> envFilteredCubemap = envFiltered.As<VulkanTextureCube>();
-				VkDescriptorImageInfo imageInfo = envFilteredCubemap->GetVulkanDescriptorInfo();
+				writeDescriptors[i * 2 + 0] = *shader->GetDescriptorSet("outputTexture");
+				writeDescriptors[i * 2 + 0].dstSet = descriptorSet.DescriptorSets[i]; // Should this be set inside the shader?
+				writeDescriptors[i * 2 + 0].pImageInfo = &mipImageInfo;
 
-				uint32_t mipCount = Utils::CalculateMipCount(cubemapSize, cubemapSize);
+				Ref<VulkanTextureCube> envUnfilteredCubemap = envUnfiltered.As<VulkanTextureCube>();
+				writeDescriptors[i * 2 + 1] = *shader->GetDescriptorSet("inputTexture");
+				writeDescriptors[i * 2 + 1].dstSet = descriptorSet.DescriptorSets[i]; // Should this be set inside the shader?
+				writeDescriptors[i * 2 + 1].pImageInfo = &envUnfilteredCubemap->GetVulkanDescriptorInfo();
+			}
 
-				std::vector<VkWriteDescriptorSet> writeDescriptors(mipCount * 2);
-				std::vector<VkDescriptorImageInfo> mipImageInfos(mipCount);
-				auto descriptorSet = shader->CreateDescriptorSets(0, 12);
-				for (uint32_t i = 0; i < mipCount; i++)
-				{
-					VkDescriptorImageInfo& mipImageInfo = mipImageInfos[i];
-					mipImageInfo = imageInfo;
-					mipImageInfo.imageView = envFilteredCubemap->CreateImageViewSingleMip(i);
+			vkUpdateDescriptorSets(device, writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
 
-					writeDescriptors[i * 2 + 0] = *shader->GetDescriptorSet("outputTexture");
-					writeDescriptors[i * 2 + 0].dstSet = descriptorSet.DescriptorSets[i]; // Should this be set inside the shader?
-					writeDescriptors[i * 2 + 0].pImageInfo = &mipImageInfo;
-
-					Ref<VulkanTextureCube> envUnfilteredCubemap = envUnfiltered.As<VulkanTextureCube>();
-					writeDescriptors[i * 2 + 1] = *shader->GetDescriptorSet("inputTexture");
-					writeDescriptors[i * 2 + 1].dstSet = descriptorSet.DescriptorSets[i]; // Should this be set inside the shader?
-					writeDescriptors[i * 2 + 1].pImageInfo = &envUnfilteredCubemap->GetVulkanDescriptorInfo();
-				}
-
-				vkUpdateDescriptorSets(device, writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
-
-				environmentMipFilterPipeline->Begin(); // begin compute pass
-				const float deltaRoughness = 1.0f / glm::max((float)envFiltered->GetMipLevelCount() - 1.0f, 1.0f);
-				for (uint32_t i = 0, size = cubemapSize; i < mipCount; i++, size /= 2)
-				{
-					uint32_t numGroups = glm::max(1u, size / 32);
-					float roughness = i * deltaRoughness;
-					roughness = glm::max(roughness, 0.05f);
-					environmentMipFilterPipeline->SetPushConstants(&roughness, sizeof(float));
-					environmentMipFilterPipeline->Dispatch(descriptorSet.DescriptorSets[i], numGroups, numGroups, 6);
-				}
-				environmentMipFilterPipeline->End();
-			});
+			environmentMipFilterPipeline->Begin(); // begin compute pass
+			const float deltaRoughness = 1.0f / glm::max((float)envFiltered->GetMipLevelCount() - 1.0f, 1.0f);
+			for (uint32_t i = 0, size = cubemapSize; i < mipCount; i++, size /= 2)
+			{
+				uint32_t numGroups = glm::max(1u, size / 32);
+				float roughness = i * deltaRoughness;
+				roughness = glm::max(roughness, 0.05f);
+				environmentMipFilterPipeline->SetPushConstants(&roughness, sizeof(float));
+				environmentMipFilterPipeline->Dispatch(descriptorSet.DescriptorSets[i], numGroups, numGroups, 6);
+			}
+			environmentMipFilterPipeline->End();
+		});
 
 		Ref<Shader> environmentIrradianceShader = Renderer::GetShaderLibrary()->Get("EnvironmentIrradiance");
 		Ref<VulkanComputePipeline> environmentIrradiancePipeline = Ref<VulkanComputePipeline>::Create(environmentIrradianceShader);
 		Ref<TextureCube> irradianceMap = TextureCube::Create(ImageFormat::RGBA32F, irradianceMapSize, irradianceMapSize);
 
 		Renderer::Submit([environmentIrradiancePipeline, irradianceMap, envFiltered]() mutable
-			{
-				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				Ref<VulkanShader> shader = environmentIrradiancePipeline->GetShader();
+		{
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			Ref<VulkanShader> shader = environmentIrradiancePipeline->GetShader();
 
-				Ref<VulkanTextureCube> envFilteredCubemap = envFiltered.As<VulkanTextureCube>();
-				Ref<VulkanTextureCube> irradianceCubemap = irradianceMap.As<VulkanTextureCube>();
-				auto descriptorSet = shader->CreateDescriptorSets();
+			Ref<VulkanTextureCube> envFilteredCubemap = envFiltered.As<VulkanTextureCube>();
+			Ref<VulkanTextureCube> irradianceCubemap = irradianceMap.As<VulkanTextureCube>();
+			auto descriptorSet = shader->CreateDescriptorSets();
 
-				std::array<VkWriteDescriptorSet, 2> writeDescriptors;
-				writeDescriptors[0] = *shader->GetDescriptorSet("o_IrradianceMap");
-				writeDescriptors[0].dstSet = descriptorSet.DescriptorSets[0];
-				writeDescriptors[0].pImageInfo = &irradianceCubemap->GetVulkanDescriptorInfo();
+			std::array<VkWriteDescriptorSet, 2> writeDescriptors;
+			writeDescriptors[0] = *shader->GetDescriptorSet("o_IrradianceMap");
+			writeDescriptors[0].dstSet = descriptorSet.DescriptorSets[0];
+			writeDescriptors[0].pImageInfo = &irradianceCubemap->GetVulkanDescriptorInfo();
 
-				writeDescriptors[1] = *shader->GetDescriptorSet("u_RadianceMap");
-				writeDescriptors[1].dstSet = descriptorSet.DescriptorSets[0];
-				writeDescriptors[1].pImageInfo = &envFilteredCubemap->GetVulkanDescriptorInfo();
+			writeDescriptors[1] = *shader->GetDescriptorSet("u_RadianceMap");
+			writeDescriptors[1].dstSet = descriptorSet.DescriptorSets[0];
+			writeDescriptors[1].pImageInfo = &envFilteredCubemap->GetVulkanDescriptorInfo();
 
-				vkUpdateDescriptorSets(device, writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
-				environmentIrradiancePipeline->Begin();
-				environmentIrradiancePipeline->SetPushConstants(&Renderer::GetConfig().IrradianceMapComputeSamples, sizeof(uint32_t));
-				environmentIrradiancePipeline->Dispatch(descriptorSet.DescriptorSets[0], irradianceMap->GetWidth() / 32, irradianceMap->GetHeight() / 32, 6);
-				environmentIrradiancePipeline->End();
+			vkUpdateDescriptorSets(device, writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
+			environmentIrradiancePipeline->Begin();
+			environmentIrradiancePipeline->SetPushConstants(&Renderer::GetConfig().IrradianceMapComputeSamples, sizeof(uint32_t));
+			environmentIrradiancePipeline->Dispatch(descriptorSet.DescriptorSets[0], irradianceMap->GetWidth() / 32, irradianceMap->GetHeight() / 32, 6);
+			environmentIrradiancePipeline->End();
 
-				irradianceCubemap->GenerateMips();
-			});
+			irradianceCubemap->GenerateMips();
+		});
 
 		return { envFiltered, irradianceMap };
 	}
@@ -619,26 +618,26 @@ namespace Haoyue {
 
 		glm::vec3 params = { turbidity, azimuth, inclination };
 		Renderer::Submit([preethamSkyComputePipeline, environmentMap, cubemapSize, params]() mutable
-			{
-				VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
-				Ref<VulkanShader> shader = preethamSkyComputePipeline->GetShader();
+		{
+			VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			Ref<VulkanShader> shader = preethamSkyComputePipeline->GetShader();
 
-				std::array<VkWriteDescriptorSet, 1> writeDescriptors;
-				auto descriptorSet = shader->CreateDescriptorSets();
-				Ref<VulkanTextureCube> envUnfilteredCubemap = environmentMap.As<VulkanTextureCube>();
-				writeDescriptors[0] = *shader->GetDescriptorSet("o_CubeMap");
-				writeDescriptors[0].dstSet = descriptorSet.DescriptorSets[0]; // Should this be set inside the shader?
-				writeDescriptors[0].pImageInfo = &envUnfilteredCubemap->GetVulkanDescriptorInfo();
+			std::array<VkWriteDescriptorSet, 1> writeDescriptors;
+			auto descriptorSet = shader->CreateDescriptorSets();
+			Ref<VulkanTextureCube> envUnfilteredCubemap = environmentMap.As<VulkanTextureCube>();
+			writeDescriptors[0] = *shader->GetDescriptorSet("o_CubeMap");
+			writeDescriptors[0].dstSet = descriptorSet.DescriptorSets[0]; // Should this be set inside the shader?
+			writeDescriptors[0].pImageInfo = &envUnfilteredCubemap->GetVulkanDescriptorInfo();
 
-				vkUpdateDescriptorSets(device, writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
+			vkUpdateDescriptorSets(device, writeDescriptors.size(), writeDescriptors.data(), 0, NULL);
 
-				preethamSkyComputePipeline->Begin();
-				preethamSkyComputePipeline->SetPushConstants(&params, sizeof(glm::vec3));
-				preethamSkyComputePipeline->Dispatch(descriptorSet.DescriptorSets[0], cubemapSize / 32, cubemapSize / 32, 6);
-				preethamSkyComputePipeline->End();
+			preethamSkyComputePipeline->Begin();
+			preethamSkyComputePipeline->SetPushConstants(&params, sizeof(glm::vec3));
+			preethamSkyComputePipeline->Dispatch(descriptorSet.DescriptorSets[0], cubemapSize / 32, cubemapSize / 32, 6);
+			preethamSkyComputePipeline->End();
 
-				envUnfilteredCubemap->GenerateMips(true);
-			});
+			envUnfilteredCubemap->GenerateMips(true);
+		});
 
 		return environmentMap;
 	}

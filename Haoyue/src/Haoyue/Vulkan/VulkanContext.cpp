@@ -19,21 +19,19 @@ namespace Haoyue {
 		return VK_FALSE;
 	}
 
-	VulkanContext::VulkanContext(GLFWwindow* windowHandle)
-		: m_WindowHandle(windowHandle)
+	VulkanContext::VulkanContext()
 	{
 	}
 
 	VulkanContext::~VulkanContext()
 	{
-		m_SwapChain.Cleanup();
 		m_Device->Destroy();
 		
 		vkDestroyInstance(s_VulkanInstance, nullptr);
 		s_VulkanInstance = nullptr;
 	}
 
-	void VulkanContext::Create()
+	void VulkanContext::Init()
 	{
 		HY_CORE_INFO("VulkanContext::Create");
 
@@ -123,32 +121,11 @@ namespace Haoyue {
 		m_Device = Ref<VulkanDevice>::Create(m_PhysicalDevice, enabledFeatures);
 
 		VulkanAllocator::Init(m_Device);
-		
-		m_SwapChain.Init(s_VulkanInstance, m_Device);
-		m_SwapChain.InitSurface(m_WindowHandle);
-
-		uint32_t width = 1280, height = 720;
-		m_SwapChain.Create(&width, &height, true);
 
 		// Pipeline Cache
 		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
 		pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
 		VK_CHECK_RESULT(vkCreatePipelineCache(m_Device->GetVulkanDevice(), &pipelineCacheCreateInfo, nullptr, &m_PipelineCache));
-	}
-
-	void VulkanContext::OnResize(uint32_t width, uint32_t height)
-	{
-		m_SwapChain.OnResize(width, height);
-	}
-
-	void VulkanContext::BeginFrame()
-	{
-		m_SwapChain.BeginFrame();
-	}
-
-	void VulkanContext::SwapBuffers()
-	{
-		m_SwapChain.Present();
 	}
 
 }
