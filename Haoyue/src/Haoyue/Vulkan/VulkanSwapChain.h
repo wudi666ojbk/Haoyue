@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Haoyue/Core/Base.h"
+#include "Haoyue/Renderer/RenderCommandBuffer.h"
 
 #include "Vulkan.h"
 #include "VulkanDevice.h"
@@ -41,13 +42,13 @@ namespace Haoyue {
 		uint32_t GetCurrentBufferIndex() const { return m_CurrentBufferIndex; }
 		VkFramebuffer GetFramebuffer(uint32_t index)
 		{
-			HY_CORE_ASSERT(index < m_ImageCount);
+			HY_CORE_ASSERT(index < m_Framebuffers.size());
 			return m_Framebuffers[index];
 		}
 		VkCommandBuffer GetDrawCommandBuffer(uint32_t index)
 		{
-			HY_CORE_ASSERT(index < m_ImageCount);
-			return m_DrawCommandBuffers[index];
+			HY_CORE_ASSERT(index < m_CommandBuffers.size());
+			return m_CommandBuffers[index];
 		}
 
 		void Cleanup();
@@ -57,7 +58,6 @@ namespace Haoyue {
 
 		void CreateFramebuffer();
 		void CreateDepthStencil();
-		void CreateDrawBuffers();
 		void FindImageFormatAndColorSpace();
 	private:
 		VkInstance m_Instance;
@@ -85,8 +85,8 @@ namespace Haoyue {
 		} m_DepthStencil;
 
 		std::vector<VkFramebuffer> m_Framebuffers;
-		VkCommandPool m_CommandPool;
-		std::vector<VkCommandBuffer> m_DrawCommandBuffers;
+		VkCommandPool m_CommandPool = nullptr;
+		std::vector<VkCommandBuffer> m_CommandBuffers;
 
 		struct
 		{

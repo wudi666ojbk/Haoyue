@@ -341,7 +341,7 @@ namespace Haoyue {
 		Physics::Simulate(ts);
 	}
 
-	void Scene::OnRenderRuntime(Timestep ts)
+	void Scene::OnRenderRuntime(Ref<SceneRenderer> renderer, Timestep ts)
 	{
 		/////////////////////////////////////////////////////////////////////
 		// RENDER 3D SCENE
@@ -391,7 +391,8 @@ namespace Haoyue {
 		m_SkyboxMaterial->Set("u_Uniforms.TextureLod", m_SkyboxLod);
 
 		auto group = m_Registry.group<MeshComponent>(entt::get<TransformComponent>);
-		SceneRenderer::BeginScene(this, { camera, cameraViewMatrix });
+		renderer->SetScene(this);
+		renderer->BeginScene({ camera, cameraViewMatrix });
 		for (auto entity : group)
 		{
 			auto [transformComponent, meshComponent] = group.get<TransformComponent, MeshComponent>(entity);
@@ -401,13 +402,13 @@ namespace Haoyue {
 				glm::mat4 transform = GetTransformRelativeToParent(Entity(entity, this));
 
 				// TODO: Should we render (logically)
-				SceneRenderer::SubmitMesh(meshComponent, transform);
+				renderer->SubmitMesh(meshComponent, transform);
 			}
 		}
-		SceneRenderer::EndScene();
+		renderer->EndScene();
 	}
 
-	void Scene::OnRenderEditor(Timestep ts, const EditorCamera& editorCamera)
+	void Scene::OnRenderEditor(Ref<SceneRenderer> renderer, Timestep ts, const EditorCamera& editorCamera)
 	{
 		/////////////////////////////////////////////////////////////////////
 		// RENDER 3D SCENE
@@ -454,7 +455,8 @@ namespace Haoyue {
 		m_SkyboxMaterial->Set("u_Uniforms.TextureLod", m_SkyboxLod);
 
 		auto group = m_Registry.group<MeshComponent>(entt::get<TransformComponent>);
-		SceneRenderer::BeginScene(this, { editorCamera, editorCamera.GetViewMatrix(), 0.1f, 1000.0f, 45.0f }); // TODO: real values
+		renderer->SetScene(this);
+		renderer->BeginScene({ editorCamera, editorCamera.GetViewMatrix(), 0.1f, 1000.0f, 45.0f }); // TODO: real values
 		for (auto entity : group)
 		{
 			auto [meshComponent, transformComponent] = group.get<MeshComponent, TransformComponent>(entity);
@@ -467,9 +469,9 @@ namespace Haoyue {
 
 				// TODO: Should we render (logically)
 				if (m_SelectedEntity == entity)
-					SceneRenderer::SubmitSelectedMesh(meshComponent, transform);
+					renderer->SubmitSelectedMesh(meshComponent, transform);
 				else
-					SceneRenderer::SubmitMesh(meshComponent, transform);
+					renderer->SubmitMesh(meshComponent, transform);
 			}
 		}
 
@@ -482,7 +484,7 @@ namespace Haoyue {
 				auto& collider = e.GetComponent<BoxColliderComponent>();
 
 				if (m_SelectedEntity == entity)
-					SceneRenderer::SubmitColliderMesh(collider, transform);
+					renderer->SubmitColliderMesh(collider, transform);
 			}
 		}
 
@@ -495,7 +497,7 @@ namespace Haoyue {
 				auto& collider = e.GetComponent<SphereColliderComponent>();
 
 				if (m_SelectedEntity == entity)
-					SceneRenderer::SubmitColliderMesh(collider, transform);
+					renderer->SubmitColliderMesh(collider, transform);
 			}
 		}
 
@@ -508,7 +510,7 @@ namespace Haoyue {
 				auto& collider = e.GetComponent<CapsuleColliderComponent>();
 
 				if (m_SelectedEntity == entity)
-					SceneRenderer::SubmitColliderMesh(collider, transform);
+					renderer->SubmitColliderMesh(collider, transform);
 			}
 		}
 
@@ -521,12 +523,12 @@ namespace Haoyue {
 				auto& collider = e.GetComponent<MeshColliderComponent>();
 
 				if (m_SelectedEntity == entity)
-					SceneRenderer::SubmitColliderMesh(collider, transform);
+					renderer->SubmitColliderMesh(collider, transform);
 			}
 		}
 
 
-		SceneRenderer::EndScene();
+		renderer->EndScene();
 
 		{
 			const auto& camPosition = editorCamera.GetPosition();

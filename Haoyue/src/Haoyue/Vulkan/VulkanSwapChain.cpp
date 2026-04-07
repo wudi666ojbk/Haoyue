@@ -310,7 +310,23 @@ namespace Haoyue {
 			VK_CHECK_RESULT(vkCreateImageView(device, &colorAttachmentView, nullptr, &m_Buffers[i].view));
 		}
 
-		CreateDrawBuffers();
+		// Create command buffers
+		{
+			VkCommandPoolCreateInfo cmdPoolInfo = {};
+			cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+			cmdPoolInfo.queueFamilyIndex = m_QueueNodeIndex;
+			cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+			VK_CHECK_RESULT(vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &m_CommandPool));
+
+			VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
+			commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			commandBufferAllocateInfo.commandPool = m_CommandPool;
+			commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			uint32_t count = m_ImageCount;// Renderer::GetConfig().FramesInFlight;
+			commandBufferAllocateInfo.commandBufferCount = count;
+			m_CommandBuffers.resize(count);
+			VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, m_CommandBuffers.data()));
+		}
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Synchronization Objects
@@ -341,11 +357,10 @@ namespace Haoyue {
 		VkFenceCreateInfo fenceCreateInfo{};
 		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-		m_WaitFences.resize(m_DrawCommandBuffers.size());
+
+		m_WaitFences.resize(Renderer::GetConfig().FramesInFlight);
 		for (auto& fence : m_WaitFences)
-		{
 			VK_CHECK_RESULT(vkCreateFence(m_Device->GetVulkanDevice(), &fenceCreateInfo, nullptr, &fence));
-		}
 
 		CreateDepthStencil();
 
@@ -476,26 +491,6 @@ namespace Haoyue {
 		}
 	}
 
-	void VulkanSwapChain::CreateDrawBuffers()
-	{
-		// Create one command buffer for each swap chain image and reuse for rendering
-		m_DrawCommandBuffers.resize(m_ImageCount);
-
-		// TODO: Move this somewhere maybe?
-		VkCommandPoolCreateInfo cmdPoolInfo = {};
-		cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		cmdPoolInfo.queueFamilyIndex = m_QueueNodeIndex;
-		cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		VK_CHECK_RESULT(vkCreateCommandPool(m_Device->GetVulkanDevice(), &cmdPoolInfo, nullptr, &m_CommandPool));
-
-		VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
-		commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		commandBufferAllocateInfo.commandPool = m_CommandPool;
-		commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		commandBufferAllocateInfo.commandBufferCount = static_cast<uint32_t>(m_DrawCommandBuffers.size());
-		VK_CHECK_RESULT(vkAllocateCommandBuffers(m_Device->GetVulkanDevice(), &commandBufferAllocateInfo, m_DrawCommandBuffers.data()));
-	}
-
 	void VulkanSwapChain::OnResize(uint32_t width, uint32_t height)
 	{
 		HY_CORE_WARN("VulkanContext::OnResize");
@@ -515,11 +510,6 @@ namespace Haoyue {
 
 		CreateFramebuffer();
 
-		// Command buffers need to be recreated as they may store
-		// references to the recreated frame buffer
-		vkFreeCommandBuffers(device, m_CommandPool, static_cast<uint32_t>(m_DrawCommandBuffers.size()), m_DrawCommandBuffers.data());
-		CreateDrawBuffers();
-
 		vkDeviceWaitIdle(device);
 	}
 
@@ -527,10 +517,15 @@ namespace Haoyue {
 	{
 		HY_SCOPE_PERF("VulkanSwapChain::BeginFrame");
 
+		// Make sure the frame we're requesting has finished rendering
+		//VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[(m_CurrentBufferIndex + 2) % 3], VK_TRUE, UINT64_MAX));
+
 		// Resource release queue
 		auto& queue = Renderer::GetRenderResourceReleaseQueue(m_CurrentBufferIndex);
 		queue.Execute();
 
+		//VK_CHECK_RESULT(vkWaitForFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex], VK_TRUE, UINT64_MAX));
+		//VK_CHECK_RESULT(vkResetCommandPool(m_Device->GetVulkanDevice(), m_CommandPool, 0));
 		VK_CHECK_RESULT(AcquireNextImage(m_Semaphores.PresentComplete, &m_CurrentImageIndex));
 	}
 
@@ -539,6 +534,7 @@ namespace Haoyue {
 		HY_SCOPE_PERF("VulkanSwapChain::Present");
 
 		const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
+
 		// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
 		VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		// The submit info structure specifices a command buffer queue submission batch
@@ -549,12 +545,11 @@ namespace Haoyue {
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_Semaphores.RenderComplete;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pCommandBuffers = &m_DrawCommandBuffers[m_CurrentImageIndex];
+		submitInfo.pCommandBuffers = &m_CommandBuffers[m_CurrentImageIndex];
 		submitInfo.commandBufferCount = 1;
 
-		// Submit to the graphics queue passing a wait fence
 		VK_CHECK_RESULT(vkResetFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex]));
-		VK_CHECK_RESULT(vkQueueSubmit(m_Device->GetQueue(), 1, &submitInfo, m_WaitFences[m_CurrentBufferIndex]));
+		VK_CHECK_RESULT(vkQueueSubmit(m_Device->GetGraphicsQueue(), 1, &submitInfo, m_WaitFences[m_CurrentBufferIndex]));
 
 		// Present the current buffer to the swap chain
 		// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
@@ -562,7 +557,7 @@ namespace Haoyue {
 		VkResult result;
 		{
 			HY_SCOPE_PERF("VulkanSwapChain::Present - QueuePresent");
-			result = QueuePresent(m_Device->GetQueue(), m_CurrentImageIndex, m_Semaphores.RenderComplete);
+			result = QueuePresent(m_Device->GetGraphicsQueue(), m_CurrentImageIndex, m_Semaphores.RenderComplete);
 		}
 
 		if (result != VK_SUCCESS || result == VK_SUBOPTIMAL_KHR)
@@ -578,6 +573,7 @@ namespace Haoyue {
 				VK_CHECK_RESULT(result);
 			}
 		}
+
 		const auto& config = Renderer::GetConfig();
 		m_CurrentBufferIndex = (m_CurrentBufferIndex + 1) % config.FramesInFlight;
 		// Make sure the frame we're requesting has finished rendering
@@ -623,8 +619,6 @@ namespace Haoyue {
 			fpDestroySwapchainKHR(device, m_SwapChain, nullptr);
 			vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
 		}
-
-		vkDestroyCommandPool(device, m_CommandPool, nullptr);
 
 		m_Surface = VK_NULL_HANDLE;
 		m_SwapChain = VK_NULL_HANDLE;

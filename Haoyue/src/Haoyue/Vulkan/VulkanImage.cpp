@@ -45,17 +45,16 @@ namespace Haoyue {
 		Renderer::SubmitResourceFree([info]() mutable
 		{
 			auto vulkanDevice = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
+			HY_CORE_WARN("VulkanImage2D::Release ImageView = {0}", (const void*)info.ImageView);
 			vkDestroyImageView(vulkanDevice, info.ImageView, nullptr);
-			vkDestroySampler(vulkanDevice,	info.Sampler, nullptr);
+			vkDestroySampler(vulkanDevice, info.Sampler, nullptr);
 
 			VulkanAllocator allocator("VulkanImage2D");
 			allocator.DestroyImage(info.Image, info.MemoryAlloc);
-
-			HY_CORE_WARN("VulkanImage2D::Release ImageView = {0}", (const void*)info.ImageView);
 		});
-		info.Image = nullptr;
-		info.ImageView = nullptr;
-		info.Sampler = nullptr;
+		m_Info.Image = nullptr;
+		m_Info.ImageView = nullptr;
+		m_Info.Sampler = nullptr;
 	}
 
 	void VulkanImage2D::RT_Invalidate()
@@ -135,9 +134,9 @@ namespace Haoyue {
 	{
 		Ref<VulkanImage2D> instance = this;
 		Renderer::Submit([instance]() mutable
-			{
-				instance->RT_CreatePerLayerImageViews();
-			});
+		{
+			instance->RT_CreatePerLayerImageViews();
+		});
 	}
 
 	void VulkanImage2D::RT_CreatePerLayerImageViews()
@@ -180,7 +179,7 @@ namespace Haoyue {
 		m_DescriptorImageInfo.imageView = m_Info.ImageView;
 		m_DescriptorImageInfo.sampler = m_Info.Sampler;
 
-		HY_CORE_WARN("VulkanImage2D::UpdateDescriptor to ImageView = {0}", (const void*)m_Info.ImageView);
+		//HY_CORE_WARN("VulkanImage2D::UpdateDescriptor to ImageView = {0}", (const void*)m_Info.ImageView);
 	}
 
 }

@@ -26,18 +26,17 @@ namespace Haoyue {
 	{
 		VkDevice device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 
-		// Vertex shader uniform buffer block
-		VkBufferCreateInfo bufferInfo = {};
 		VkMemoryAllocateInfo allocInfo = {};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.pNext = nullptr;
 		allocInfo.allocationSize = 0;
 		allocInfo.memoryTypeIndex = 0;
-		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferInfo.size = m_Size;
-		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-		// Create a new buffer
+		VkBufferCreateInfo bufferInfo = {};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		bufferInfo.size = m_Size;
+
 		VulkanAllocator allocator("UniformBuffer");
 		m_MemoryAlloc = allocator.AllocateBuffer(bufferInfo, VMA_MEMORY_USAGE_CPU_ONLY, m_Buffer);
 
@@ -48,6 +47,7 @@ namespace Haoyue {
 	
 	void VulkanUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
 	{
+		// TODO: local storage should be potentially replaced with render thread storage
 		memcpy(m_LocalStorage, data, size);
 		Ref<VulkanUniformBuffer> instance = this;
 		Renderer::Submit([instance, size, offset]() mutable
@@ -63,5 +63,6 @@ namespace Haoyue {
 		memcpy(pData, (uint8_t*)data + offset, size);
 		allocator.UnmapMemory(m_MemoryAlloc);
 	}
+
 
 }

@@ -31,7 +31,7 @@ namespace Haoyue::Utils {
 				data[i].sType = VK_STRUCTURE_TYPE_CHECKPOINT_DATA_NV;
 
 			uint32_t retrievedCount = checkpointCount;
-			vkGetQueueCheckpointDataNV(::Haoyue::VulkanContext::GetCurrentDevice()->GetQueue(), &retrievedCount, data);
+			vkGetQueueCheckpointDataNV(::Haoyue::VulkanContext::GetCurrentDevice()->GetGraphicsQueue(), &retrievedCount, data);
 			HY_CORE_ERROR("RetrieveDiagnosticCheckpoints (Graphics Queue):");
 			for (uint32_t i = 0; i < retrievedCount; i++)
 			{

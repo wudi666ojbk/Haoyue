@@ -3,7 +3,7 @@
 #include "Haoyue/Utilities/StringUtils.h"
 #include "Haoyue/Utilities/FileSystem.h"
 #include "Haoyue/Renderer/Mesh.h"
-#include "Haoyue/Renderer/SceneRenderer.h"
+#include "Haoyue/Renderer/Renderer.h"
 
 #include "yaml-cpp/yaml.h"
 
@@ -38,7 +38,7 @@ namespace Haoyue {
 
 	bool EnvironmentSerializer::TryLoadData(Ref<Asset>& asset) const
 	{
-		auto [radiance, irradiance] = SceneRenderer::CreateEnvironmentMap(asset->FilePath);
+		auto [radiance, irradiance] = Renderer::CreateEnvironmentMap(asset->FilePath);
 
 		if (!radiance || !irradiance)
 			return false;

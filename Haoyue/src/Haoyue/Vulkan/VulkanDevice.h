@@ -61,7 +61,7 @@ namespace Haoyue {
 
 		void Destroy();
 
-		VkQueue GetQueue() { return m_Queue; }
+		VkQueue GetGraphicsQueue() { return m_GraphicsQueue; }
 		VkQueue GetComputeQueue() { return m_ComputeQueue; }
 
 		VkCommandBuffer GetCommandBuffer(bool begin, bool compute = false);
@@ -78,7 +78,7 @@ namespace Haoyue {
 		VkPhysicalDeviceFeatures m_EnabledFeatures;
 		VkCommandPool m_CommandPool, m_ComputeCommandPool;
 
-		VkQueue m_Queue;
+		VkQueue m_GraphicsQueue;
 		VkQueue m_ComputeQueue;
 
 		bool m_EnableDebugMarkers = false;

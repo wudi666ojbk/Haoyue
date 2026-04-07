@@ -4,6 +4,7 @@
 #include "VulkanShader.h"
 #include "VulkanContext.h"
 #include "VulkanFramebuffer.h"
+#include "VulkanUniformBuffer.h"
 
 #include "Haoyue/Renderer/Renderer.h"
 
@@ -230,9 +231,9 @@ namespace Haoyue {
 	{
 		Ref<VulkanPipeline> instance = this;
 		Renderer::Submit([instance, uniformBuffer, binding, set]() mutable
-			{
-				instance->RT_SetUniformBuffer(uniformBuffer, binding, set);
-			});
+		{
+			instance->RT_SetUniformBuffer(uniformBuffer, binding, set);
+		});
 	}
 
 	void VulkanPipeline::RT_SetUniformBuffer(Ref<UniformBuffer> uniformBuffer, uint32_t binding, uint32_t set)

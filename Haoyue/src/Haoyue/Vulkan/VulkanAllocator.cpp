@@ -3,6 +3,12 @@
 
 #include "VulkanContext.h"
 
+#if HY_LOG_RENDERER_ALLOCATIONS
+#define HY_ALLOCATOR_LOG(...) HY_CORE_TRACE(__VA_ARGS__)
+#else
+#define HY_ALLOCATOR_LOG(...)
+#endif
+
 namespace Haoyue {
 
 	namespace Utils {
@@ -57,11 +63,11 @@ namespace Haoyue {
 		// TODO: Tracking
 		VmaAllocationInfo allocInfo;
 		vmaGetAllocationInfo(s_Data->Allocator, allocation, &allocInfo);
-		HY_CORE_TRACE("VulkanAllocator ({0}): allocating buffer; size = {1}", m_Tag, Utils::BytesToString(allocInfo.size));
+		HY_ALLOCATOR_LOG("VulkanAllocator ({0}): allocating buffer; size = {1}", m_Tag, Utils::BytesToString(allocInfo.size));
 
 		{
 			s_Data->TotalAllocatedBytes += allocInfo.size;
-			HY_CORE_TRACE("VulkanAllocator ({0}): total allocated since start is {1}", m_Tag, Utils::BytesToString(s_Data->TotalAllocatedBytes));
+			HY_ALLOCATOR_LOG("VulkanAllocator ({0}): total allocated since start is {1}", m_Tag, Utils::BytesToString(s_Data->TotalAllocatedBytes));
 		}
 
 		return allocation;
@@ -78,11 +84,11 @@ namespace Haoyue {
 		// TODO: Tracking
 		VmaAllocationInfo allocInfo;
 		vmaGetAllocationInfo(s_Data->Allocator, allocation, &allocInfo);
-		HY_CORE_TRACE("VulkanAllocator ({0}): allocating image; size = {1}", m_Tag, Utils::BytesToString(allocInfo.size));
+		HY_ALLOCATOR_LOG("VulkanAllocator ({0}): allocating image; size = {1}", m_Tag, Utils::BytesToString(allocInfo.size));
 
 		{
 			s_Data->TotalAllocatedBytes += allocInfo.size;
-			HY_CORE_TRACE("VulkanAllocator ({0}): total allocated since start is {1}", m_Tag, Utils::BytesToString(s_Data->TotalAllocatedBytes));
+			HY_ALLOCATOR_LOG("VulkanAllocator ({0}): total allocated since start is {1}", m_Tag, Utils::BytesToString(s_Data->TotalAllocatedBytes));
 		}
 		return allocation;
 	}

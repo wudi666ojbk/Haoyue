@@ -2,7 +2,7 @@
 
 #include "Haoyue/Renderer/RendererAPI.h"
 
-#include <vulkan/vulkan.h>
+#include "vulkan/vulkan.h"
 
 namespace Haoyue {
 
@@ -17,17 +17,17 @@ namespace Haoyue {
 		virtual void BeginFrame() override;
 		virtual void EndFrame() override;
 
-		virtual void BeginRenderPass(const Ref<RenderPass>& renderPass) override;
-		virtual void EndRenderPass() override;
-		virtual void SubmitFullscreenQuad(Ref<Pipeline> pipeline, Ref<Material> material) override;
+		virtual void BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, const Ref<RenderPass>& renderPass) override;
+		virtual void EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer) override;
+		virtual void SubmitFullscreenQuad(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Material> material) override;
 
-		virtual void SetSceneEnvironment(Ref<Environment> environment, Ref<Image2D> shadow) override;
+		virtual void SetSceneEnvironment(Ref<SceneRenderer> sceneRenderer, Ref<Environment> environment, Ref<Image2D> shadow) override;
 		virtual std::pair<Ref<TextureCube>, Ref<TextureCube>> CreateEnvironmentMap(const std::string& filepath) override;
 		virtual Ref<TextureCube> CreatePreethamSky(float turbidity, float azimuth, float inclination) override;
 
-		virtual void RenderMesh(Ref<Pipeline> pipeline, Ref<Mesh> mesh, const glm::mat4& transform) override;
-		virtual void RenderMeshWithMaterial(Ref<Pipeline> pipeline, Ref<Mesh> mesh, Ref<Material> material, const glm::mat4& transform, Buffer additionalUniforms = Buffer()) override;
-		virtual void RenderQuad(Ref<Pipeline> pipeline, Ref<Material> material, const glm::mat4& transform) override;
+		virtual void RenderMesh(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, const glm::mat4& transform) override;
+		virtual void RenderMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, Ref<Material> material, const glm::mat4& transform, Buffer additionalUniforms = Buffer()) override;
+		virtual void RenderQuad(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Material> material, const glm::mat4& transform) override;
 	public:
 		static VkDescriptorSet RT_AllocateDescriptorSet(VkDescriptorSetAllocateInfo& allocInfo);
 	};

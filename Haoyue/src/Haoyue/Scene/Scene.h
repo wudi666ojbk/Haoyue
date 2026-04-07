@@ -16,6 +16,8 @@
 
 namespace Haoyue {
 
+	class SceneRenderer;
+
 	struct Light
 	{
 		glm::vec3 Direction = { 0.0f, 0.0f, 0.0f };
@@ -53,8 +55,8 @@ namespace Haoyue {
 		void Init();
 
 		void OnUpdate(Timestep ts);
-		void OnRenderRuntime(Timestep ts);
-		void OnRenderEditor(Timestep ts, const EditorCamera& editorCamera);
+		void OnRenderRuntime(Ref<SceneRenderer> renderer, Timestep ts);
+		void OnRenderEditor(Ref<SceneRenderer> renderer, Timestep ts, const EditorCamera& editorCamera);
 		void OnEvent(Event& e);
 
 		// Runtime

@@ -53,6 +53,8 @@ namespace Haoyue {
 
 		NewScene();
 
+		m_ViewportRenderer = Ref<SceneRenderer>::Create(m_CurrentScene);
+
 		AssetEditorPanel::RegisterDefaultEditors();
 		FileSystem::StartWatching();
 	}
@@ -131,13 +133,14 @@ namespace Haoyue {
 		{
 			case SceneState::Edit:
 			{
-					m_EditorCamera.OnUpdate(ts);
+				m_EditorCamera.OnUpdate(ts);
 
-				m_EditorScene->OnRenderEditor(ts, m_EditorCamera);
+				m_EditorScene->OnRenderEditor(m_ViewportRenderer, ts, m_EditorCamera);
 
+#ifdef RENDERER_2D
 				if (m_DrawOnTopBoundingBoxes)
 				{
-					Renderer::BeginRenderPass(SceneRenderer::GetFinalRenderPass(), false);
+					Renderer::BeginRenderPass(m_ViewportRenderer->GetFinalRenderPass(), false);
 					auto viewProj = m_EditorCamera.GetViewProjection();
 					Renderer2D::BeginScene(viewProj, false);
 					// TODO: Renderer::DrawAABB(m_MeshEntity.GetComponent<MeshComponent>(), m_MeshEntity.GetComponent<TransformComponent>());
@@ -192,7 +195,7 @@ namespace Haoyue {
 					}
 
 				}
-
+#endif
 				break;
 			}
 			case SceneState::Play:
@@ -201,7 +204,7 @@ namespace Haoyue {
 					m_EditorCamera.OnUpdate(ts);
 
 				m_RuntimeScene->OnUpdate(ts);
-				m_RuntimeScene->OnRenderRuntime(ts);
+				m_RuntimeScene->OnRenderRuntime(m_ViewportRenderer, ts);
 				break;
 			}
 			case SceneState::Pause:
@@ -209,7 +212,7 @@ namespace Haoyue {
 				if (m_ViewportPanelFocused)
 					m_EditorCamera.OnUpdate(ts);
 
-				m_RuntimeScene->OnRenderRuntime(ts);
+				m_RuntimeScene->OnRenderRuntime(m_ViewportRenderer, ts);
 				break;
 			}
 		}
@@ -217,7 +220,7 @@ namespace Haoyue {
 
 	void EditorLayer::ShowBoundingBoxes(bool show, bool onTop)
 	{
-		SceneRenderer::GetOptions().ShowBoundingBoxes = show && !onTop;
+		m_ViewportRenderer->GetOptions().ShowBoundingBoxes = show && !onTop;
 		m_DrawOnTopBoundingBoxes = show && onTop;
 	}
 
@@ -492,7 +495,7 @@ namespace Haoyue {
 
 		auto viewportOffset = ImGui::GetCursorPos(); // includes tab bar
 		auto viewportSize = ImGui::GetContentRegionAvail();
-		SceneRenderer::SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
+		m_ViewportRenderer->SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 		m_EditorScene->SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 		if (m_RuntimeScene)
 			m_RuntimeScene->SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
@@ -500,7 +503,7 @@ namespace Haoyue {
 		m_EditorCamera.SetViewportSize((uint32_t)viewportSize.x, (uint32_t)viewportSize.y);
 
 		// Render viewport image
-		UI::Image(SceneRenderer::GetFinalPassImage(), viewportSize, { 0, 1 }, { 1, 0 });
+		UI::Image(m_ViewportRenderer->GetFinalPassImage(), viewportSize, { 0, 1 }, { 1, 0 });
 
 		static int counter = 0;
 		auto windowSize = ImGui::GetWindowSize();
@@ -514,7 +517,7 @@ namespace Haoyue {
 		m_AllowViewportCameraEvents = ImGui::IsMouseHoveringRect(minBound, maxBound);
 
 		// Gizmos
-		if (m_GizmoType != -1 && m_SelectionContext.size())
+		if (m_GizmoType != -1 && m_SelectionContext.size() && m_ViewportPanelMouseOver)
 		{
 			auto& selection = m_SelectionContext[0];
 
@@ -984,7 +987,7 @@ namespace Haoyue {
 		ImGui::End();
 
 		ScriptEngine::OnImGuiRender();
-		SceneRenderer::OnImGuiRender();
+		m_ViewportRenderer->OnImGuiRender();
 		PhysicsSettingsWindow::OnImGuiRender(m_ShowPhysicsSettings);
 
 		ImGui::End();
@@ -1118,7 +1121,7 @@ namespace Haoyue {
 					break;
 				case KeyCode::G:
 					// Toggle grid
-					SceneRenderer::GetOptions().ShowGrid = !SceneRenderer::GetOptions().ShowGrid;
+					m_ViewportRenderer->GetOptions().ShowGrid = !m_ViewportRenderer->GetOptions().ShowGrid;
 					break;
 				case KeyCode::N:
 					NewScene();

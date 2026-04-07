@@ -59,9 +59,9 @@ namespace Haoyue {
 	{
 		Ref< VulkanFramebuffer> instance = this;
 		Renderer::Submit([instance]() mutable
-			{
-				instance->RT_Invalidate();
-			});
+		{
+			instance->RT_Invalidate();
+		});
 	}
 
 	void VulkanFramebuffer::RT_Invalidate()

@@ -14,152 +14,29 @@
 
 namespace Haoyue {
 
-	struct SceneRendererData
+	SceneRenderer::SceneRenderer(Ref<Scene> scene)
+		: m_Scene(scene)
 	{
-		const Scene* ActiveScene = nullptr;
-		struct SceneInfo
-		{
-			SceneRendererCamera SceneCamera;
+		Init();
+	}
 
-			// Resources
-			Ref<Environment> SceneEnvironment;
-			float SkyboxLod = 0.0f;
-			float SceneEnvironmentIntensity;
-			LightEnvironment SceneLightEnvironment;
-			Light ActiveLight;
-		} SceneData;
-
-		Ref<Texture2D> BRDFLUT;
-		Ref<Shader> CompositeShader;
-		Ref<Shader> BloomBlurShader;
-		Ref<Shader> BloomBlendShader;
-
-		Ref<RenderPass> GeoPass;
-		Ref<RenderPass> CompositePass;
-		Ref<RenderPass> BloomBlurPass[2];
-		Ref<RenderPass> BloomBlendPass;
-
-		struct UBCamera
-		{
-			glm::mat4 ViewProjection;
-			glm::mat4 InverseViewProjection;
-			glm::mat4 View;
-		} CameraData;
-		std::vector<Ref<UniformBuffer>> CameraUniformBuffer;
-
-struct UBShadow
-{
-	glm::mat4 ViewProjection[4];
-} ShadowData;
-std::vector<Ref<UniformBuffer>> ShadowUniformBuffer;
-
-struct Light
-{
-	glm::vec3 Direction;
-	float Padding = 0.0f;
-	glm::vec3 Radiance;
-	float Multiplier;
-};
-
-struct UBScene
-{
-	Light lights;
-	glm::vec3 u_CameraPosition;
-} SceneDataUB;
-std::vector<Ref<UniformBuffer>> SceneUniformBuffer;
-
-struct UBRendererData
-{
-	glm::vec4 u_CascadeSplits;
-	bool ShowCascades = false;
-	char Padding0[3]; // Bools are 4-bytes in GLSL
-	bool SoftShadows = true;
-	char Padding1[3];
-	float LightSize = 0.5f;
-	float MaxShadowDistance = 200.0f;
-	float ShadowFade;
-	bool CascadeFading = true;
-	char Padding2[3];
-	float CascadeTransitionFade = 1.0f;
-} RendererDataUB;
-std::vector<Ref<UniformBuffer>> RendererDataUniformBuffer;
-
-Ref<Shader> ShadowMapShader, ShadowMapAnimShader;
-Ref<RenderPass> ShadowMapRenderPass[4];
-float LightDistance = 0.1f;
-float CascadeSplitLambda = 0.98f;
-glm::vec4 CascadeSplits;
-float CascadeFarPlaneOffset = 15.0f, CascadeNearPlaneOffset = -15.0f;
-
-bool EnableBloom = false;
-float BloomThreshold = 1.5f;
-
-glm::vec2 FocusPoint = { 0.5f, 0.5f };
-
-RendererID ShadowMapSampler;
-Ref<Material> CompositeMaterial;
-
-Ref<Pipeline> GeometryPipeline;
-Ref<Pipeline> CompositePipeline;
-Ref<Pipeline> ShadowPassPipeline;
-Ref<Material> ShadowPassMaterial;
-Ref<Pipeline> SkyboxPipeline;
-Ref<Material> SkyboxMaterial;
-
-struct DrawCommand
-{
-	Ref<Mesh> Mesh;
-	Ref<Material> Material;
-	glm::mat4 Transform;
-};
-std::vector<DrawCommand> DrawList;
-std::vector<DrawCommand> SelectedMeshDrawList;
-std::vector<DrawCommand> ColliderDrawList;
-std::vector<DrawCommand> ShadowPassDrawList;
-
-// Grid
-Ref<Pipeline> GridPipeline;
-Ref<Shader> GridShader;
-Ref<Material> GridMaterial;
-Ref<Material> OutlineMaterial, OutlineAnimMaterial;
-Ref<Material> ColliderMaterial;
-
-SceneRendererOptions Options;
-
-uint32_t ViewportWidth = 0, ViewportHeight = 0;
-bool NeedsResize = false;
-	};
-
-	static SceneRendererData* s_Data = nullptr;
+	SceneRenderer::~SceneRenderer()
+	{
+	}
 
 	void SceneRenderer::Init()
 	{
-		s_Data = new SceneRendererData();
+		m_CommandBuffer = RenderCommandBuffer::Create();
 
-		s_Data->BRDFLUT = Texture2D::Create("Resources/textures/BRDF_LUT.tga");
-
-		// Create uniform buffers
 		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
-		s_Data->CameraUniformBuffer.resize(framesInFlight);
-		s_Data->ShadowUniformBuffer.resize(framesInFlight);
-		s_Data->SceneUniformBuffer.resize(framesInFlight);
-		s_Data->RendererDataUniformBuffer.resize(framesInFlight);
+		m_UniformBufferSet = UniformBufferSet::Create(framesInFlight);
+		m_UniformBufferSet->Create(sizeof(UBCamera), 0);
+		m_UniformBufferSet->Create(sizeof(UBShadow), 1);
+		m_UniformBufferSet->Create(sizeof(UBScene), 2);
+		m_UniformBufferSet->Create(sizeof(UBRendererData), 3);
 
-		for (uint32_t i = 0; i < framesInFlight; i++)
-		{
-			s_Data->CameraUniformBuffer[i] = UniformBuffer::Create(sizeof(SceneRendererData::UBCamera), 0);
-			s_Data->ShadowUniformBuffer[i] = UniformBuffer::Create(sizeof(SceneRendererData::UBShadow), 1);
-			s_Data->SceneUniformBuffer[i] = UniformBuffer::Create(sizeof(SceneRendererData::UBScene), 2);
-			s_Data->RendererDataUniformBuffer[i] = UniformBuffer::Create(sizeof(SceneRendererData::UBRendererData), 3);
-
-			Renderer::SetUniformBuffer(s_Data->CameraUniformBuffer[i], i, 0);
-			Renderer::SetUniformBuffer(s_Data->ShadowUniformBuffer[i], i, 0);
-			Renderer::SetUniformBuffer(s_Data->SceneUniformBuffer[i], i, 0);
-			Renderer::SetUniformBuffer(s_Data->RendererDataUniformBuffer[i], i, 0);
-		}
-
-		s_Data->CompositeShader = Renderer::GetShaderLibrary()->Get("SceneComposite");
-		s_Data->CompositeMaterial = Material::Create(s_Data->CompositeShader);
+		m_CompositeShader = Renderer::GetShaderLibrary()->Get("SceneComposite");
+		CompositeMaterial = Material::Create(m_CompositeShader);
 
 		// Shadow pass
 		{
@@ -189,7 +66,7 @@ bool NeedsResize = false;
 				RenderPassSpecification shadowMapRenderPassSpec;
 				shadowMapRenderPassSpec.TargetFramebuffer = Framebuffer::Create(shadowMapFramebufferSpec);
 				shadowMapRenderPassSpec.DebugName = "ShadowMap";
-				s_Data->ShadowMapRenderPass[i] = RenderPass::Create(shadowMapRenderPassSpec);
+				ShadowMapRenderPass[i] = RenderPass::Create(shadowMapRenderPassSpec);
 			}
 
 			auto shadowPassShader = Renderer::GetShaderLibrary()->Get("ShadowMap");
@@ -204,9 +81,9 @@ bool NeedsResize = false;
 				{ ShaderDataType::Float3, "a_Binormal" },
 				{ ShaderDataType::Float2, "a_TexCoord" }
 			};
-			pipelineSpec.RenderPass = s_Data->ShadowMapRenderPass[0];
-			s_Data->ShadowPassPipeline = Pipeline::Create(pipelineSpec);
-			s_Data->ShadowPassMaterial = Material::Create(shadowPassShader, "ShadowPass");
+			pipelineSpec.RenderPass = ShadowMapRenderPass[0];
+			m_ShadowPassPipeline = Pipeline::Create(pipelineSpec);
+			m_ShadowPassMaterial = Material::Create(shadowPassShader, "ShadowPass");
 		}
 
 		// Geometry
@@ -235,7 +112,7 @@ bool NeedsResize = false;
 			renderPassSpec.DebugName = "Geometry";
 			pipelineSpecification.RenderPass = RenderPass::Create(renderPassSpec);
 			pipelineSpecification.DebugName = "PBR-Static";
-			s_Data->GeometryPipeline = Pipeline::Create(pipelineSpecification);
+			m_GeometryPipeline = Pipeline::Create(pipelineSpecification);
 		}
 
 		// Composite
@@ -260,28 +137,33 @@ bool NeedsResize = false;
 			renderPassSpec.DebugName = "Composite";
 			pipelineSpecification.RenderPass = RenderPass::Create(renderPassSpec);
 			pipelineSpecification.DebugName = "SceneComposite";
-			s_Data->CompositePipeline = Pipeline::Create(pipelineSpecification);
+			m_CompositePipeline = Pipeline::Create(pipelineSpecification);
 		}
 
 		// Grid
 		{
-			s_Data->GridShader = Renderer::GetShaderLibrary()->Get("Grid");
+			m_GridShader = Renderer::GetShaderLibrary()->Get("Grid");
 			const float gridScale = 16.025f;
 			const float gridSize = 0.025f;
-			s_Data->GridMaterial = Material::Create(s_Data->GridShader);
-			s_Data->GridMaterial->Set("u_Settings.Scale", gridScale);
-			s_Data->GridMaterial->Set("u_Settings.Size", gridSize);
+			m_GridMaterial = Material::Create(m_GridShader);
+			m_GridMaterial->Set("u_Settings.Scale", gridScale);
+			m_GridMaterial->Set("u_Settings.Size", gridSize);
 
 			PipelineSpecification pipelineSpec;
 			pipelineSpec.DebugName = "Grid";
-			pipelineSpec.Shader = s_Data->GridShader;
+			pipelineSpec.Shader = m_GridShader;
 			pipelineSpec.Layout = {
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float2, "a_TexCoord" }
 			};
-			pipelineSpec.RenderPass = s_Data->GeometryPipeline->GetSpecification().RenderPass;
-			s_Data->GridPipeline = Pipeline::Create(pipelineSpec);
+			pipelineSpec.RenderPass = m_GeometryPipeline->GetSpecification().RenderPass;
+			m_GridPipeline = Pipeline::Create(pipelineSpec);
 		}
+
+		// Collider
+		//auto colliderShader = Shader::Create("assets/shaders/Collider.glsl");
+		//ColliderMaterial = Material::Create(Material::Create(colliderShader));
+		//ColliderMaterial->SetFlag(MaterialFlag::DepthTest, false);
 
 		// Skybox
 		{
@@ -294,43 +176,43 @@ bool NeedsResize = false;
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float2, "a_TexCoord" }
 			};
-			pipelineSpec.RenderPass = s_Data->GeometryPipeline->GetSpecification().RenderPass;
-			s_Data->SkyboxPipeline = Pipeline::Create(pipelineSpec);
+			pipelineSpec.RenderPass = m_GeometryPipeline->GetSpecification().RenderPass;
+			m_SkyboxPipeline = Pipeline::Create(pipelineSpec);
 
-			s_Data->SkyboxMaterial = Material::Create(skyboxShader);
-			s_Data->SkyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
+			m_SkyboxMaterial = Material::Create(skyboxShader);
+			m_SkyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
 		}
+
+		Ref<SceneRenderer> instance = this;
+		Renderer::Submit([instance]() mutable
+			{
+				instance->m_ResourcesCreated = true;
+			});
 	}
 
-	void SceneRenderer::Shutdown()
+	void SceneRenderer::SetScene(Ref<Scene> scene)
 	{
-		delete s_Data;
+		HY_CORE_ASSERT(!m_Active, "Can't change scenes while rendering");
+		m_Scene = scene;
 	}
 
 	void SceneRenderer::SetViewportSize(uint32_t width, uint32_t height)
 	{
-		if (s_Data->ViewportWidth != width || s_Data->ViewportHeight != height)
+		if (m_ViewportWidth != width || m_ViewportHeight != height)
 		{
-			s_Data->ViewportWidth = width;
-			s_Data->ViewportHeight = height;
-			s_Data->NeedsResize = true;
+			m_ViewportWidth = width;
+			m_ViewportHeight = height;
+			m_NeedsResize = true;
 		}
 	}
 
-	struct FrustumBounds
+	void SceneRenderer::CalculateCascades(SceneRenderer::CascadeData* cascades, const SceneRendererCamera& sceneCamera, const glm::vec3& lightDirection)
 	{
-		float r, l, b, t, f, n;
-	};
+		struct FrustumBounds
+		{
+			float r, l, b, t, f, n;
+		};
 
-	struct CascadeData
-	{
-		glm::mat4 ViewProj;
-		glm::mat4 View;
-		float SplitDepth;
-	};
-
-	static void CalculateCascades(CascadeData* cascades, const SceneRendererCamera& sceneCamera, const glm::vec3& lightDirection)
-	{
 		FrustumBounds frustumBounds[3];
 
 		auto viewProjection = sceneCamera.Camera.GetProjectionMatrix() * sceneCamera.ViewMatrix;
@@ -356,7 +238,7 @@ bool NeedsResize = false;
 			float p = (i + 1) / static_cast<float>(SHADOW_MAP_CASCADE_COUNT);
 			float log = minZ * std::pow(ratio, p);
 			float uniform = minZ + range * p;
-			float d = s_Data->CascadeSplitLambda * (log - uniform) + uniform;
+			float d = CascadeSplitLambda * (log - uniform) + uniform;
 			cascadeSplits[i] = (d - nearClip) / clipRange;
 		}
 
@@ -423,7 +305,7 @@ bool NeedsResize = false;
 
 			glm::vec3 lightDir = -lightDirection;
 			glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 0.0f, 1.0f));
-			glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f + s_Data->CascadeNearPlaneOffset, maxExtents.z - minExtents.z + s_Data->CascadeFarPlaneOffset);
+			glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f + CascadeNearPlaneOffset, maxExtents.z - minExtents.z + CascadeFarPlaneOffset);
 
 			// Offset to texel space to avoid shimmering (from https://stackoverflow.com/questions/33499053/cascaded-shadow-map-shimmering)
 			glm::mat4 shadowMatrix = lightOrthoMatrix * lightViewMatrix;
@@ -446,34 +328,37 @@ bool NeedsResize = false;
 		}
 	}
 
-	void SceneRenderer::BeginScene(const Scene* scene, const SceneRendererCamera& camera)
+	void SceneRenderer::BeginScene(const SceneRendererCamera& camera)
 	{
-		HY_CORE_ASSERT(!s_Data->ActiveScene, "");
+		HY_CORE_ASSERT(m_Scene);
+		HY_CORE_ASSERT(!m_Active);
+		m_Active = true;
 
-		s_Data->ActiveScene = scene;
+		if (!m_ResourcesCreated)
+			return;
 
-		s_Data->SceneData.SceneCamera = camera;
-		s_Data->SceneData.SceneEnvironment = scene->m_Environment;
-		s_Data->SceneData.SceneEnvironmentIntensity = scene->m_EnvironmentIntensity;
-		s_Data->SceneData.ActiveLight = scene->m_Light;
-		s_Data->SceneData.SceneLightEnvironment = scene->m_LightEnvironment;
-		s_Data->SceneData.SkyboxLod = scene->m_SkyboxLod;
-		s_Data->SceneData.ActiveLight = scene->m_Light;
+		m_SceneData.SceneCamera = camera;
+		m_SceneData.SceneEnvironment = m_Scene->m_Environment;
+		m_SceneData.SceneEnvironmentIntensity = m_Scene->m_EnvironmentIntensity;
+		m_SceneData.ActiveLight = m_Scene->m_Light;
+		m_SceneData.SceneLightEnvironment = m_Scene->m_LightEnvironment;
+		m_SceneData.SkyboxLod = m_Scene->m_SkyboxLod;
+		m_SceneData.ActiveLight = m_Scene->m_Light;
 
-		if (s_Data->NeedsResize)
+		if (m_NeedsResize)
 		{
-			s_Data->GeometryPipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer->Resize(s_Data->ViewportWidth, s_Data->ViewportHeight);
-			s_Data->CompositePipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer->Resize(s_Data->ViewportWidth, s_Data->ViewportHeight);
-			s_Data->NeedsResize = false;
+			m_GeometryPipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer->Resize(m_ViewportWidth, m_ViewportHeight);
+			m_CompositePipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer->Resize(m_ViewportWidth, m_ViewportHeight);
+			m_NeedsResize = false;
 		}
 
 		// Update uniform buffers
-		SceneRendererData::UBCamera& cameraData = s_Data->CameraData;
-		SceneRendererData::UBScene& sceneData = s_Data->SceneDataUB;
-		SceneRendererData::UBShadow& shadowData = s_Data->ShadowData;
-		SceneRendererData::UBRendererData& rendererData = s_Data->RendererDataUB;
+		UBCamera& cameraData = CameraData;
+		UBScene& sceneData = SceneDataUB;
+		UBShadow& shadowData = ShadowData;
+		UBRendererData& rendererData = RendererDataUB;
 
-		auto& sceneCamera = s_Data->SceneData.SceneCamera;
+		auto& sceneCamera = m_SceneData.SceneCamera;
 		auto viewProjection = sceneCamera.Camera.GetProjectionMatrix() * sceneCamera.ViewMatrix;
 		glm::vec3 cameraPosition = glm::inverse(sceneCamera.ViewMatrix)[3];
 
@@ -481,22 +366,23 @@ bool NeedsResize = false;
 		cameraData.ViewProjection = viewProjection;
 		cameraData.InverseViewProjection = inverseVP;
 		cameraData.View = sceneCamera.ViewMatrix;
-		Renderer::Submit([cameraData]()
-		{
-			uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
-			s_Data->CameraUniformBuffer[bufferIndex]->RT_SetData(&cameraData, sizeof(cameraData));
-		});
+		Ref<SceneRenderer> instance = this;
+		Renderer::Submit([instance, cameraData]() mutable
+			{
+				uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
+				instance->m_UniformBufferSet->Get(0, 0, bufferIndex)->RT_SetData(&cameraData, sizeof(cameraData));
+			});
 
-		const auto& directionalLight = s_Data->SceneData.SceneLightEnvironment.DirectionalLights[0];
+		const auto& directionalLight = m_SceneData.SceneLightEnvironment.DirectionalLights[0];
 		sceneData.lights.Direction = directionalLight.Direction;
 		sceneData.lights.Radiance = directionalLight.Radiance;
 		sceneData.lights.Multiplier = directionalLight.Multiplier;
 		sceneData.u_CameraPosition = cameraPosition;
-		Renderer::Submit([sceneData]()
-		{
-			uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
-			s_Data->SceneUniformBuffer[bufferIndex]->RT_SetData(&sceneData, sizeof(sceneData));
-		});
+		Renderer::Submit([instance, sceneData]() mutable
+			{
+				uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
+				instance->m_UniformBufferSet->Get(2, 0, bufferIndex)->RT_SetData(&sceneData, sizeof(sceneData));
+			});
 
 		CascadeData cascades[4];
 		CalculateCascades(cascades, sceneCamera, directionalLight.Direction);
@@ -504,82 +390,76 @@ bool NeedsResize = false;
 		// TODO: four cascades for now
 		for (int i = 0; i < 4; i++)
 		{
-			s_Data->CascadeSplits[i] = cascades[i].SplitDepth;
+			CascadeSplits[i] = cascades[i].SplitDepth;
 			shadowData.ViewProjection[i] = cascades[i].ViewProj;
 		}
-		Renderer::Submit([shadowData]()
-		{
-			uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
-			s_Data->ShadowUniformBuffer[bufferIndex]->RT_SetData(&shadowData, sizeof(shadowData));
-		});
+		Renderer::Submit([instance, shadowData]() mutable
+			{
+				uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
+				instance->m_UniformBufferSet->Get(1, 0, bufferIndex)->RT_SetData(&shadowData, sizeof(shadowData));
+			});
 
-		Renderer::Submit([rendererData]()
-		{
-			uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
-			s_Data->RendererDataUniformBuffer[bufferIndex]->RT_SetData(&rendererData, sizeof(rendererData));
-		});
+		rendererData.u_CascadeSplits = CascadeSplits;
+		Renderer::Submit([instance, rendererData]() mutable
+			{
+				uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
+				instance->m_UniformBufferSet->Get(3, 0, bufferIndex)->RT_SetData(&rendererData, sizeof(rendererData));
+			});
 
-		Renderer::SetSceneEnvironment(s_Data->SceneData.SceneEnvironment, s_Data->ShadowPassPipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer->GetDepthImage());
+		Renderer::SetSceneEnvironment(this, m_SceneData.SceneEnvironment, m_ShadowPassPipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer->GetDepthImage());
 	}
 
 	void SceneRenderer::EndScene()
 	{
-		HY_CORE_ASSERT(s_Data->ActiveScene, "");
-
-		s_Data->ActiveScene = nullptr;
-
+		HY_CORE_ASSERT(m_Active);
 		FlushDrawList();
+		m_Active = false;
 	}
 
 	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<Material> overrideMaterial)
 	{
 		// TODO: Culling, sorting, etc.
-		s_Data->DrawList.push_back({ mesh, overrideMaterial, transform });
-		s_Data->ShadowPassDrawList.push_back({ mesh, overrideMaterial, transform });
+		m_DrawList.push_back({ mesh, overrideMaterial, transform });
+		m_ShadowPassDrawList.push_back({ mesh, overrideMaterial, transform });
 	}
 
 	void SceneRenderer::SubmitSelectedMesh(Ref<Mesh> mesh, const glm::mat4& transform)
 	{
-		s_Data->SelectedMeshDrawList.push_back({ mesh, nullptr, transform });
-		s_Data->ShadowPassDrawList.push_back({ mesh, nullptr, transform });
+		m_SelectedMeshDrawList.push_back({ mesh, nullptr, transform });
+		m_ShadowPassDrawList.push_back({ mesh, nullptr, transform });
 	}
 
 	void SceneRenderer::SubmitColliderMesh(const BoxColliderComponent& component, const glm::mat4& parentTransform)
 	{
-		s_Data->ColliderDrawList.push_back({ component.DebugMesh, nullptr, glm::translate(parentTransform, component.Offset) });
+		m_ColliderDrawList.push_back({ component.DebugMesh, nullptr, glm::translate(parentTransform, component.Offset) });
 	}
 
 	void SceneRenderer::SubmitColliderMesh(const SphereColliderComponent& component, const glm::mat4& parentTransform)
 	{
-		s_Data->ColliderDrawList.push_back({ component.DebugMesh, nullptr, parentTransform });
+		m_ColliderDrawList.push_back({ component.DebugMesh, nullptr, parentTransform });
 	}
 
 	void SceneRenderer::SubmitColliderMesh(const CapsuleColliderComponent& component, const glm::mat4& parentTransform)
 	{
-		s_Data->ColliderDrawList.push_back({ component.DebugMesh, nullptr, parentTransform });
+		m_ColliderDrawList.push_back({ component.DebugMesh, nullptr, parentTransform });
 	}
 
 	void SceneRenderer::SubmitColliderMesh(const MeshColliderComponent& component, const glm::mat4& parentTransform)
 	{
 		for (auto debugMesh : component.ProcessedMeshes)
-			s_Data->ColliderDrawList.push_back({ debugMesh, nullptr, parentTransform });
-	}
-
-	std::pair<Ref<TextureCube>, Ref<TextureCube>> SceneRenderer::CreateEnvironmentMap(const std::string& filepath)
-	{
-		return Renderer::CreateEnvironmentMap(filepath);
+			m_ColliderDrawList.push_back({ debugMesh, nullptr, parentTransform });
 	}
 
 	void SceneRenderer::ShadowMapPass()
 	{
-		auto& directionalLights = s_Data->SceneData.SceneLightEnvironment.DirectionalLights;
+		auto& directionalLights = m_SceneData.SceneLightEnvironment.DirectionalLights;
 		if (directionalLights[0].Multiplier == 0.0f || !directionalLights[0].CastShadows)
 		{
 			for (int i = 0; i < 4; i++)
 			{
 				// Clear shadow maps
-				Renderer::BeginRenderPass(s_Data->ShadowMapRenderPass[i]);
-				Renderer::EndRenderPass();
+				Renderer::BeginRenderPass(m_CommandBuffer, ShadowMapRenderPass[i]);
+				Renderer::EndRenderPass(m_CommandBuffer);
 			}
 			return;
 		}
@@ -587,146 +467,116 @@ bool NeedsResize = false;
 		// TODO: change to four cascades (or set number)
 		for (int i = 0; i < 4; i++)
 		{
-			Renderer::BeginRenderPass(s_Data->ShadowMapRenderPass[i]);
+			Renderer::BeginRenderPass(m_CommandBuffer, ShadowMapRenderPass[i]);
 
 			// static glm::mat4 scaleBiasMatrix = glm::scale(glm::mat4(1.0f), { 0.5f, 0.5f, 0.5f }) * glm::translate(glm::mat4(1.0f), { 1, 1, 1 });
 
 			// Render entities
 			Buffer cascade(&i, sizeof(uint32_t));
-			for (auto& dc : s_Data->ShadowPassDrawList)
+			for (auto& dc : m_ShadowPassDrawList)
 			{
-				Renderer::RenderMeshWithMaterial(s_Data->ShadowPassPipeline, dc.Mesh, s_Data->ShadowPassMaterial, dc.Transform, cascade);
+				Renderer::RenderMeshWithMaterial(m_CommandBuffer, m_ShadowPassPipeline, m_UniformBufferSet, dc.Mesh, dc.Transform, m_ShadowPassMaterial, cascade);
 			}
 
-			Renderer::EndRenderPass();
+			Renderer::EndRenderPass(m_CommandBuffer);
 		}
 	}
 
 	void SceneRenderer::GeometryPass()
 	{
-		Renderer::BeginRenderPass(s_Data->GeometryPipeline->GetSpecification().RenderPass);
+		Renderer::BeginRenderPass(m_CommandBuffer, m_GeometryPipeline->GetSpecification().RenderPass);
 		// Skybox
-		s_Data->SkyboxMaterial->Set("u_Uniforms.TextureLod", s_Data->SceneData.SkyboxLod);
+		m_SkyboxMaterial->Set("u_Uniforms.TextureLod", m_SceneData.SkyboxLod);
 
-		Ref<TextureCube> radianceMap = s_Data->SceneData.SceneEnvironment ? s_Data->SceneData.SceneEnvironment->RadianceMap : Renderer::GetBlackCubeTexture();
-		s_Data->SkyboxMaterial->Set("u_Texture", radianceMap);
-		Renderer::SubmitFullscreenQuad(s_Data->SkyboxPipeline, s_Data->SkyboxMaterial);
+		Ref<TextureCube> radianceMap = m_SceneData.SceneEnvironment ? m_SceneData.SceneEnvironment->RadianceMap : Renderer::GetBlackCubeTexture();
+		m_SkyboxMaterial->Set("u_Texture", radianceMap);
+		Renderer::SubmitFullscreenQuad(m_CommandBuffer, m_SkyboxPipeline, m_UniformBufferSet, m_SkyboxMaterial);
 
 		// Render entities
-		for (auto& dc : s_Data->DrawList)
-			Renderer::RenderMesh(s_Data->GeometryPipeline, dc.Mesh, dc.Transform);
+		for (auto& dc : m_DrawList)
+			Renderer::RenderMesh(m_CommandBuffer, m_GeometryPipeline, m_UniformBufferSet, dc.Mesh, dc.Transform);
 
-		for (auto& dc : s_Data->SelectedMeshDrawList)
-			Renderer::RenderMesh(s_Data->GeometryPipeline, dc.Mesh, dc.Transform);
+		for (auto& dc : m_SelectedMeshDrawList)
+			Renderer::RenderMesh(m_CommandBuffer, m_GeometryPipeline, m_UniformBufferSet, dc.Mesh, dc.Transform);
 
 		// Grid
 		if (GetOptions().ShowGrid)
 		{
 			const glm::mat4 transform = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(8.0f));
-			Renderer::RenderQuad(s_Data->GridPipeline, s_Data->GridMaterial, transform);
+			Renderer::RenderQuad(m_CommandBuffer, m_GridPipeline, m_UniformBufferSet, m_GridMaterial, transform);
 		}
 
-		Renderer::EndRenderPass();
+		if (GetOptions().ShowBoundingBoxes)
+		{
+#if 0
+			Renderer2D::BeginScene(viewProjection);
+			for (auto& dc : DrawList)
+				Renderer::DrawAABB(dc.Mesh, dc.Transform);
+			Renderer2D::EndScene();
+#endif
+		}
+
+		Renderer::EndRenderPass(m_CommandBuffer);
 	}
 
 	void SceneRenderer::CompositePass()
 	{
-		Renderer::BeginRenderPass(s_Data->CompositePipeline->GetSpecification().RenderPass);
+		Renderer::BeginRenderPass(m_CommandBuffer, m_CompositePipeline->GetSpecification().RenderPass);
 
-		auto framebuffer = s_Data->GeometryPipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer;
-		// float exposure = s_Data->SceneData.SceneCamera.Camera.GetExposure();
-		float exposure = s_Data->SceneData.SceneCamera.Camera.GetExposure();
+		auto framebuffer = m_GeometryPipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer;
+		// float exposure = SceneData.SceneCamera.Camera.GetExposure();
+		float exposure = m_SceneData.SceneCamera.Camera.GetExposure();
 		int textureSamples = framebuffer->GetSpecification().Samples;
 
-		s_Data->CompositeMaterial->Set("u_Uniforms.Exposure", exposure);
-		//s_Data->CompositeMaterial->Set("u_Uniforms.TextureSamples", textureSamples);
+		CompositeMaterial->Set("u_Uniforms.Exposure", exposure);
+		//CompositeMaterial->Set("u_Uniforms.TextureSamples", textureSamples);
 
-		s_Data->CompositeMaterial->Set("u_Texture", framebuffer->GetImage());
+		CompositeMaterial->Set("u_Texture", framebuffer->GetImage());
 
-		Renderer::SubmitFullscreenQuad(s_Data->CompositePipeline, s_Data->CompositeMaterial);
-		Renderer::EndRenderPass();
+		Renderer::SubmitFullscreenQuad(m_CommandBuffer, m_CompositePipeline, nullptr, CompositeMaterial);
+		Renderer::EndRenderPass(m_CommandBuffer);
 	}
 
 	void SceneRenderer::BloomBlurPass()
 	{
-#if 0
-		int amount = 10;
-		int index = 0;
-
-		int horizontalCounter = 0, verticalCounter = 0;
-		for (int i = 0; i < amount; i++)
-		{
-			index = i % 2;
-			Renderer::BeginRenderPass(s_Data->BloomBlurPass[index]);
-			s_Data->BloomBlurShader->Bind();
-			s_Data->BloomBlurShader->SetBool("u_Horizontal", index);
-			if (index)
-				horizontalCounter++;
-			else
-				verticalCounter++;
-			if (i > 0)
-			{
-				auto fb = s_Data->BloomBlurPass[1 - index]->GetSpecification().TargetFramebuffer;
-				fb->BindTexture();
-			}
-			else
-			{
-				auto fb = s_Data->CompositePass->GetSpecification().TargetFramebuffer;
-				auto id = fb->GetColorAttachmentRendererID(1);
-				Renderer::Submit([id]()
-					{
-						glBindTextureUnit(0, id);
-					});
-			}
-			Renderer::SubmitFullscreenQuad(nullptr);
-			Renderer::EndRenderPass();
-		}
-
-		// Composite bloom
-		{
-			Renderer::BeginRenderPass(s_Data->BloomBlendPass);
-			s_Data->BloomBlendShader->Bind();
-			s_Data->BloomBlendShader->SetFloat("u_Exposure", s_Data->SceneData.SceneCamera.Camera.GetExposure());
-			s_Data->BloomBlendShader->SetBool("u_EnableBloom", s_Data->EnableBloom);
-
-			s_Data->CompositePass->GetSpecification().TargetFramebuffer->BindTexture(0);
-			s_Data->BloomBlurPass[index]->GetSpecification().TargetFramebuffer->BindTexture(1);
-
-			Renderer::SubmitFullscreenQuad(nullptr);
-			Renderer::EndRenderPass();
-		}
-#endif
 	}
 
 	void SceneRenderer::FlushDrawList()
 	{
-		HY_CORE_ASSERT(!s_Data->ActiveScene, "");
+		if (m_ResourcesCreated)
+		{
+			m_CommandBuffer->Begin();
+			ShadowMapPass();
+			GeometryPass();
+			CompositePass();
+			m_CommandBuffer->End();
+			m_CommandBuffer->Submit();
+			//	BloomBlurPass();
+		}
 
-		ShadowMapPass();
-		GeometryPass();
-		CompositePass();
-		//	BloomBlurPass();
-
-		s_Data->DrawList.clear();
-		s_Data->SelectedMeshDrawList.clear();
-		s_Data->ShadowPassDrawList.clear();
-		s_Data->ColliderDrawList.clear();
-		s_Data->SceneData = {};
+		m_DrawList.clear();
+		m_SelectedMeshDrawList.clear();
+		m_ShadowPassDrawList.clear();
+		m_ColliderDrawList.clear();
+		m_SceneData = {};
 	}
 
 	Ref<RenderPass> SceneRenderer::GetFinalRenderPass()
 	{
-		return s_Data->CompositePipeline->GetSpecification().RenderPass;
+		return m_CompositePipeline->GetSpecification().RenderPass;
 	}
 
 	Ref<Image2D> SceneRenderer::GetFinalPassImage()
 	{
-		return s_Data->CompositePipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer->GetImage();
+		if (!m_ResourcesCreated)
+			return nullptr;
+
+		return m_CompositePipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer->GetImage();
 	}
 
 	SceneRendererOptions& SceneRenderer::GetOptions()
 	{
-		return s_Data->Options;
+		return m_Options;
 	}
 
 	void SceneRenderer::OnImGuiRender()
@@ -752,27 +602,27 @@ bool NeedsResize = false;
 		if (UI::BeginTreeNode("Shadows"))
 		{
 			UI::BeginPropertyGrid();
-			UI::Property("Soft Shadows", s_Data->RendererDataUB.SoftShadows);
-			UI::Property("Light Size", s_Data->RendererDataUB.LightSize, 0.01f);
-			UI::Property("Max Shadow Distance", s_Data->RendererDataUB.MaxShadowDistance, 1.0f);
-			UI::Property("Shadow Fade", s_Data->RendererDataUB.ShadowFade, 5.0f);
+			UI::Property("Soft Shadows", RendererDataUB.SoftShadows);
+			UI::Property("Light Size", RendererDataUB.LightSize, 0.01f);
+			UI::Property("Max Shadow Distance", RendererDataUB.MaxShadowDistance, 1.0f);
+			UI::Property("Shadow Fade", RendererDataUB.ShadowFade, 5.0f);
 			UI::EndPropertyGrid();
 			if (UI::BeginTreeNode("Cascade Settings"))
 			{
 				UI::BeginPropertyGrid();
-				UI::Property("Show Cascades", s_Data->RendererDataUB.ShowCascades);
-				UI::Property("Cascade Fading", s_Data->RendererDataUB.CascadeFading);
-				UI::Property("Cascade Transition Fade", s_Data->RendererDataUB.CascadeTransitionFade, 0.05f, 0.0f, FLT_MAX);
-				UI::Property("Cascade Split", s_Data->CascadeSplitLambda, 0.01f);
-				UI::Property("CascadeNearPlaneOffset", s_Data->CascadeNearPlaneOffset, 0.1f, -FLT_MAX, 0.0f);
-				UI::Property("CascadeFarPlaneOffset", s_Data->CascadeFarPlaneOffset, 0.1f, 0.0f, FLT_MAX);
+				UI::Property("Show Cascades", RendererDataUB.ShowCascades);
+				UI::Property("Cascade Fading", RendererDataUB.CascadeFading);
+				UI::Property("Cascade Transition Fade", RendererDataUB.CascadeTransitionFade, 0.05f, 0.0f, FLT_MAX);
+				UI::Property("Cascade Split", CascadeSplitLambda, 0.01f);
+				UI::Property("CascadeNearPlaneOffset", CascadeNearPlaneOffset, 0.1f, -FLT_MAX, 0.0f);
+				UI::Property("CascadeFarPlaneOffset", CascadeFarPlaneOffset, 0.1f, 0.0f, FLT_MAX);
 				UI::EndPropertyGrid();
 				UI::EndTreeNode();
 			}
 			if (UI::BeginTreeNode("Shadow Map", false))
 			{
 				static int cascadeIndex = 0;
-				auto fb = s_Data->ShadowMapRenderPass[cascadeIndex]->GetSpecification().TargetFramebuffer;
+				auto fb = ShadowMapRenderPass[cascadeIndex]->GetSpecification().TargetFramebuffer;
 				auto image = fb->GetDepthImage();
 
 				float size = ImGui::GetContentRegionAvailWidth(); // (float)fb->GetWidth() * 0.5f, (float)fb->GetHeight() * 0.5f

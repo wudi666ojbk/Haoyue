@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Haoyue/ImGui/ImGuiLayer.h"
+#include "Haoyue/Renderer/RenderCommandBuffer.h"
 
 namespace Haoyue {
 
@@ -18,6 +19,7 @@ namespace Haoyue {
 		virtual void OnDetach() override;
 		virtual void OnImGuiRender() override;
 	private:
+		Ref<RenderCommandBuffer> m_RenderCommandBuffer;
 		float m_Time = 0.0f;
 	};
 

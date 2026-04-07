@@ -5,7 +5,7 @@
 
 namespace Haoyue {
 
-	class VulkanUniformBuffer :	public UniformBuffer
+	class VulkanUniformBuffer : public UniformBuffer
 	{
 	public:
 		VulkanUniformBuffer(uint32_t size, uint32_t binding);
@@ -13,7 +13,7 @@ namespace Haoyue {
 
 		virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
 		virtual uint32_t GetBinding() const override { return m_Binding; }
-		void RT_SetData(const void* data, uint32_t size, uint32_t offset) override;
+		virtual void RT_SetData(const void* data, uint32_t size, uint32_t offset = 0) override;
 
 		const VkDescriptorBufferInfo& GetDescriptorBufferInfo() const { return m_DescriptorInfo; }
 	private:

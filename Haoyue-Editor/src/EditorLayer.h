@@ -77,6 +77,7 @@ namespace Haoyue {
 		Scope<ObjectsPanel> m_ObjectsPanel;
 
 		Ref<Scene> m_RuntimeScene, m_EditorScene, m_CurrentScene;
+		Ref<SceneRenderer> m_ViewportRenderer;
 		std::string m_SceneFilePath;
 		bool m_ReloadScriptOnPlay = true;
 
