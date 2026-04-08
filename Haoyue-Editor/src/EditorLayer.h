@@ -14,7 +14,7 @@
 
 #include <string>
 
-#include "Haoyue/Editor/SceneHierarchyPanel.h"
+#include "Panel/SceneHierarchyPanel.h"
 #include "Panel/ContentBrowserPanel.h"
 #include "Panel/ObjectsPanel.h"
 

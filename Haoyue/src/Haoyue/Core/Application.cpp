@@ -116,6 +116,9 @@ namespace Haoyue {
 				ImGui::Text(TR("Used VRAM: %s"), used.c_str());
 				ImGui::Text(TR("Free VRAM: %s"), free.c_str());
 			}
+			bool vsync = m_Window->IsVSync();
+            if(ImGui::Checkbox(TR("VSync"), &vsync))
+				m_Window->SetVSync(vsync);
 		}
 		ImGui::End();
 

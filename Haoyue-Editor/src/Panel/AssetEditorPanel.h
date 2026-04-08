@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Haoyue/ImGui/ImGui.h"
+#include "Haoyue/Core/TimeStep.h"
+#include "Haoyue/Core/Events/Event.h"
 
 namespace Haoyue {
 
@@ -10,9 +12,11 @@ namespace Haoyue {
 		AssetEditor(const char* title);
 
 	public:
-		virtual ~AssetEditor(){}
+		virtual ~AssetEditor() {}
 
-		void OnImGuiRender();
+		virtual void OnUpdate(Timestep ts) {}
+		virtual void OnEvent(Event& e) {}
+		virtual void OnImGuiRender();
 		void SetOpen(bool isOpen);
 		virtual void SetAsset(const Ref<Asset>& asset) = 0;
 
@@ -23,7 +27,6 @@ namespace Haoyue {
 	private:
 		virtual void OnClose() = 0;
 		virtual void Render() = 0;
-
 	private:
 		const char* m_Title;
 		bool m_IsOpen = false;
@@ -37,6 +40,8 @@ namespace Haoyue {
 	public:
 		static void RegisterDefaultEditors();
 		static void UnregisterAllEditors();
+		static void OnUpdate(Timestep ts);
+		static void OnEvent(Event& e);
 		static void OnImGuiRender();
 		static void OpenEditor(const Ref<Asset>& asset);
 

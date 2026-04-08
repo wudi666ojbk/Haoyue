@@ -216,6 +216,7 @@ namespace Haoyue {
 				break;
 			}
 		}
+		AssetEditorPanel::OnUpdate(ts);
 	}
 
 	void EditorLayer::ShowBoundingBoxes(bool show, bool onTop)
@@ -1047,6 +1048,8 @@ namespace Haoyue {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(HY_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
 		dispatcher.Dispatch<MouseButtonPressedEvent>(HY_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
+
+		AssetEditorPanel::OnEvent(e);
 	}
 
 	bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)

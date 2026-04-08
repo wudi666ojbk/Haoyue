@@ -195,6 +195,8 @@ project "Haoyue-Editor"
 		"%{prj.name}/src",
 		"Haoyue/src",
 		"Haoyue/vendor",
+		"%{IncludeDir.Assimp}",
+		"%{IncludeDir.PhysX}",
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.ImGui}",
