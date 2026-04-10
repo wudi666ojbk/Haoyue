@@ -21,7 +21,7 @@ namespace Haoyue {
 		virtual bool TryLoadData(Ref<Asset>& asset) const override;
 	};
 
-	class MeshSerializer : public AssetSerializer
+	class MeshAssetSerializer : public AssetSerializer
 	{
 	public:
 		virtual void Serialize(const Ref<Asset>& asset) const override{}

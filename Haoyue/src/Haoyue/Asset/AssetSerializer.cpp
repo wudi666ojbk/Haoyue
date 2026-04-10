@@ -28,7 +28,7 @@ namespace Haoyue {
 		return (asset.As<Texture2D>())->Loaded();
 	}
 
-	bool MeshSerializer::TryLoadData(Ref<Asset>& asset) const
+	bool MeshAssetSerializer::TryLoadData(Ref<Asset>& asset) const
 	{
 		Ref<Asset> temp = asset;
 		asset = Ref<Mesh>::Create(asset->FilePath);

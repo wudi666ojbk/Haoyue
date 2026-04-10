@@ -289,21 +289,6 @@ namespace Haoyue {
 		}
 	}
 
-	void SceneHierarchyPanel::DrawMeshNode(const Ref<Mesh>& mesh, uint32_t& imguiMeshID)
-	{
-		static char imguiName[128];
-		memset(imguiName, 0, 128);
-		sprintf(imguiName, "Mesh##%d", imguiMeshID++);
-
-		// Mesh Hierarchy
-		if (ImGui::TreeNode(imguiName))
-		{
-			auto rootNode = mesh->m_Scene->mRootNode;
-			MeshNodeHierarchy(mesh, rootNode);
-			ImGui::TreePop();
-		}
-	}
-
 	static std::tuple<glm::vec3, glm::quat, glm::vec3> GetTransformDecomposition(const glm::mat4& transform)
 	{
 		glm::vec3 scale, translation, skew;
@@ -312,34 +297,6 @@ namespace Haoyue {
 		glm::decompose(transform, scale, orientation, translation, skew, perspective);
 
 		return { translation, orientation, scale };
-	}
-
-	void SceneHierarchyPanel::MeshNodeHierarchy(const Ref<Mesh>& mesh, aiNode* node, const glm::mat4& parentTransform, uint32_t level)
-	{
-		glm::mat4 localTransform = Mat4FromAssimpMat4(node->mTransformation);
-		glm::mat4 transform = parentTransform * localTransform;
-
-		if (ImGui::TreeNode(node->mName.C_Str()))
-		{
-			{
-				auto [translation, rotation, scale] = GetTransformDecomposition(transform);
-				ImGui::Text("World Transform");
-				ImGui::Text("  Translation: %.2f, %.2f, %.2f", translation.x, translation.y, translation.z);
-				ImGui::Text("  Scale: %.2f, %.2f, %.2f", scale.x, scale.y, scale.z);
-			}
-			{
-				auto [translation, rotation, scale] = GetTransformDecomposition(localTransform);
-				ImGui::Text("Local Transform");
-				ImGui::Text("  Translation: %.2f, %.2f, %.2f", translation.x, translation.y, translation.z);
-				ImGui::Text("  Scale: %.2f, %.2f, %.2f", scale.x, scale.y, scale.z);
-			}
-
-			for (uint32_t i = 0; i < node->mNumChildren; i++)
-				MeshNodeHierarchy(mesh, node->mChildren[i], transform, level + 1);
-
-			ImGui::TreePop();
-		}
-
 	}
 
 	template<typename T, typename UIFunction>

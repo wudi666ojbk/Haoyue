@@ -6,7 +6,7 @@ namespace Haoyue {
 	void AssetImporter::Init()
 	{
 		s_Serializers[AssetType::Texture] = CreateScope<TextureSerializer>();
-		s_Serializers[AssetType::Mesh] = CreateScope<MeshSerializer>();
+		s_Serializers[AssetType::Mesh] = CreateScope<MeshAssetSerializer>();
 		s_Serializers[AssetType::EnvMap] = CreateScope<EnvironmentSerializer>();
 		s_Serializers[AssetType::PhysicsMat] = CreateScope<PhysicsMaterialSerializer>();
 	}
