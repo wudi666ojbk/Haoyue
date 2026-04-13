@@ -61,4 +61,14 @@ namespace Haoyue::Utils {
 		return SplitString(string, std::string(1, delimiter));
 	}
 
+	std::string ToLower(const std::string& string)
+	{
+		std::string result;
+		for (const auto& character : string)
+		{
+			result += std::tolower(character);
+		}
+
+		return result;
+	}
 }

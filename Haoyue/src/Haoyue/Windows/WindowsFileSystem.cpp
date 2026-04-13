@@ -88,6 +88,7 @@ namespace Haoyue {
 
 	void FileSystem::StartWatching()
 	{
+		s_Watching = true;
 		DWORD threadId;
 		s_WatcherThread = CreateThread(NULL, 0, Watch, 0, 0, &threadId);
 		HY_CORE_ASSERT(s_WatcherThread != NULL);
@@ -100,6 +101,16 @@ namespace Haoyue {
 		if (result == WAIT_TIMEOUT)
 			TerminateThread(s_WatcherThread, 0);
 		CloseHandle(s_WatcherThread);
+	}
+
+	bool FileSystem::IsDirectory(const std::string& filepath)
+	{
+		bool result = std::filesystem::is_directory(filepath);
+
+		if (!result)
+			result = Utils::GetExtension(filepath).empty();
+
+		return result;
 	}
 
 	static std::string wchar_to_string(wchar_t* input)
@@ -191,7 +202,7 @@ namespace Haoyue {
 				}
 				case FILE_ACTION_REMOVED:
 				{
-					e.IsDirectory = AssetManager::IsDirectory(e.FilePath);
+					e.IsDirectory = IsDirectory(e.FilePath);
 					e.Action = FileSystemAction::Delete;
 					s_Callback(e);
 					break;

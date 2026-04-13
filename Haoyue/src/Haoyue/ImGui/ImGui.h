@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Haoyue/Asset/Asset.h"
+#include "Haoyue/Asset/AssetMetaData.h"
 
 #include "imgui/imgui.h"
 
@@ -407,7 +407,7 @@ namespace Haoyue::UI {
 	}
 
 	template<typename T>
-	static bool PropertyAssetReference(const char* label, Ref<T>& object, AssetType supportedType)
+	static bool PropertyAssetReference(const char* label, Ref<T>& object)
 	{
 		bool modified = false;
 
@@ -417,9 +417,9 @@ namespace Haoyue::UI {
 
 		if (object)
 		{
-			if (object->Type != AssetType::Missing)
+			if (!object->IsFlagSet(AssetFlag::Missing))
 			{
-				char* assetName = ((Ref<Asset>&)object)->FileName.data();
+				char* assetName = AssetManager::GetMetadata(object->Handle).FileName.data();
 				ImGui::InputText("##assetRef", assetName, 256, ImGuiInputTextFlags_ReadOnly);
 			}
 			else
@@ -440,7 +440,7 @@ namespace Haoyue::UI {
 			{
 				AssetHandle assetHandle = *(AssetHandle*)data->Data;
 				Ref<Asset> asset = AssetManager::GetAsset<Asset>(assetHandle);
-				if (asset->Type == supportedType)
+				if (asset->GetAssetType() == T::GetStaticType())
 				{
 					object = asset.As<T>();
 					modified = true;

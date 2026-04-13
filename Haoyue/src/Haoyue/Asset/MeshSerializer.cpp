@@ -11,7 +11,7 @@ namespace Haoyue {
 	{
 	}
 
-	bool MeshSerializer::TryLoadData(Ref<Asset>& asset) const
+	bool MeshSerializer::TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const
 	{
 		// TODO: this needs to open up a Hazel Mesh file and make sure
 		//       the MeshAsset file is also loaded

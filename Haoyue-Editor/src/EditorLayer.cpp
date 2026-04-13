@@ -237,7 +237,7 @@ namespace Haoyue {
 		{
 			auto& meshComp = entity.GetComponent<MeshComponent>();
 
-			if (meshComp.Mesh && meshComp.Mesh->Type == AssetType::Mesh)
+			if (meshComp.Mesh && !meshComp.Mesh->IsFlagSet(AssetFlag::Missing))
 			{
 				selection.Mesh = &meshComp.Mesh->GetSubmeshes()[0];
 			}
@@ -558,7 +558,6 @@ namespace Haoyue {
 
 						glm::vec3 deltaRotation = rotation - entityTransform.Rotation;
 						entityTransform.Translation = translation;
-
 						entityTransform.Rotation += deltaRotation;
 						entityTransform.Scale = scale;
 					}
@@ -599,18 +598,20 @@ namespace Haoyue {
 				for (int i = 0; i < count; i++)
 				{
 					AssetHandle assetHandle = *(((AssetHandle*)data->Data) + i);
-					Ref<Asset> asset = AssetManager::GetAsset<Asset>(assetHandle);
+					const auto& assetData = AssetManager::GetMetadata(assetHandle);
 
-					// We can't really support dragging and dropping scenes when we're dropping multiple 
-					if (count == 1 && asset->Type == AssetType::Scene)
+					// We can't really support dragging and dropping scenes when we're dropping multiple assets
+					if (count == 1 && assetData.Type == AssetType::Scene)
 					{
-						OpenScene(asset->FilePath);
+						OpenScene(assetData.FilePath);
+						break;
 					}
 
-					if (asset->Type == AssetType::Mesh)
+					Ref<Asset> asset = AssetManager::GetAsset<Asset>(assetHandle);
+					if (asset->GetAssetType() == AssetType::Mesh)
 					{
-						Entity entity = m_EditorScene->CreateEntity(asset->FileName);
-						entity.AddComponent<MeshComponent>(Ref<Mesh>(asset));
+						Entity entity = m_EditorScene->CreateEntity(assetData.FileName);
+						entity.AddComponent<MeshComponent>(asset.As<Mesh>());
 						SelectEntity(entity);
 					}
 				}
@@ -685,7 +686,7 @@ namespace Haoyue {
 			if (selectedEntity.HasComponent<MeshComponent>())
 			{
 				Ref<Mesh> mesh = selectedEntity.GetComponent<MeshComponent>().Mesh;
-				if (mesh && mesh->Type == AssetType::Mesh)
+				if (mesh && mesh->GetAssetType() == AssetType::Mesh)
 				{
 					auto& materials = mesh->GetMaterials();
 					static uint32_t selectedMaterialIndex = 0;
@@ -738,7 +739,7 @@ namespace Haoyue {
 
 											AssetHandle assetHandle = *(((AssetHandle*)data->Data) + i);
 											Ref<Asset> asset = AssetManager::GetAsset<Asset>(assetHandle);
-											if (asset->Type != AssetType::Texture)
+											if (asset->GetAssetType() != AssetType::Texture)
 												break;
 
 											albedoMap = asset.As<Texture2D>();
@@ -812,7 +813,7 @@ namespace Haoyue {
 
 											AssetHandle assetHandle = *(((AssetHandle*)data->Data) + i);
 											Ref<Asset> asset = AssetManager::GetAsset<Asset>(assetHandle);
-											if (asset->Type != AssetType::Texture)
+											if (asset->GetAssetType() != AssetType::Texture)
 												break;
 
 											normalMap = asset.As<Texture2D>();
@@ -875,7 +876,7 @@ namespace Haoyue {
 
 											AssetHandle assetHandle = *(((AssetHandle*)data->Data) + i);
 											Ref<Asset> asset = AssetManager::GetAsset<Asset>(assetHandle);
-											if (asset->Type != AssetType::Texture)
+											if (asset->GetAssetType() != AssetType::Texture)
 												break;
 
 											metalnessMap = asset.As<Texture2D>();
@@ -940,7 +941,7 @@ namespace Haoyue {
 
 											AssetHandle assetHandle = *(((AssetHandle*)data->Data) + i);
 											Ref<Asset> asset = AssetManager::GetAsset<Asset>(assetHandle);
-											if (asset->Type != AssetType::Texture)
+											if (asset->GetAssetType() != AssetType::Texture)
 												break;
 
 											roughnessMap = asset.As<Texture2D>();
@@ -1168,7 +1169,7 @@ namespace Haoyue {
 				{
 					Entity entity = { e, m_EditorScene.Raw() };
 					auto mesh = entity.GetComponent<MeshComponent>().Mesh;
-					if (!mesh || mesh->Type == AssetType::Missing)
+					if (!mesh || mesh->IsFlagSet(AssetFlag::Missing))
 						continue;
 
 					auto& submeshes = mesh->GetSubmeshes();

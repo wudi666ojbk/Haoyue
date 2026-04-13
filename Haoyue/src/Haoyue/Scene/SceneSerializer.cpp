@@ -772,13 +772,18 @@ namespace Haoyue {
 					else
 					{
 						component.Mesh = Ref<Asset>::Create().As<Mesh>();
-						component.Mesh->Type = AssetType::Missing;
+						component.Mesh->SetFlag(AssetFlag::Missing, true);
 
 						std::string filepath = meshComponent["AssetPath"] ? meshComponent["AssetPath"].as<std::string>() : "";
 						if (filepath.empty())
+						{
 							HY_CORE_ERROR("Tried to load non-existent mesh in Entity: {0}", deserializedEntity.GetUUID());
+						}
 						else
+						{
 							HY_CORE_ERROR("Tried to load invalid mesh '{0}' in Entity {1}", filepath, deserializedEntity.GetUUID());
+							component.Mesh->SetFlag(AssetFlag::Invalid, true);
+						}
 					}
 				}
 
@@ -790,20 +795,24 @@ namespace Haoyue {
 
 					component.Camera = SceneCamera();
 					auto& camera = component.Camera;
-					if (cameraNode["ProjectionType"])
-						camera.SetProjectionType((SceneCamera::ProjectionType)cameraNode["ProjectionType"].as<int>());
-					if (cameraNode["PerspectiveFOV"])
-						camera.SetPerspectiveVerticalFOV(cameraNode["PerspectiveFOV"].as<float>());
-					if (cameraNode["PerspectiveNear"])
-						camera.SetPerspectiveNearClip(cameraNode["PerspectiveNear"].as<float>());
-					if (cameraNode["PerspectiveFar"])
-						camera.SetPerspectiveFarClip(cameraNode["PerspectiveFar"].as<float>());
-					if (cameraNode["OrthographicSize"])
-						camera.SetOrthographicSize(cameraNode["OrthographicSize"].as<float>());
-					if (cameraNode["OrthographicNear"])
-						camera.SetOrthographicNearClip(cameraNode["OrthographicNear"].as<float>());
-					if (cameraNode["OrthographicFar"])
-						camera.SetOrthographicFarClip(cameraNode["OrthographicFar"].as<float>());
+
+					if (cameraNode.IsMap())
+					{
+						if (cameraNode["ProjectionType"])
+							camera.SetProjectionType((SceneCamera::ProjectionType)cameraNode["ProjectionType"].as<int>());
+						if (cameraNode["PerspectiveFOV"])
+							camera.SetPerspectiveVerticalFOV(cameraNode["PerspectiveFOV"].as<float>());
+						if (cameraNode["PerspectiveNear"])
+							camera.SetPerspectiveNearClip(cameraNode["PerspectiveNear"].as<float>());
+						if (cameraNode["PerspectiveFar"])
+							camera.SetPerspectiveFarClip(cameraNode["PerspectiveFar"].as<float>());
+						if (cameraNode["OrthographicSize"])
+							camera.SetOrthographicSize(cameraNode["OrthographicSize"].as<float>());
+						if (cameraNode["OrthographicNear"])
+							camera.SetOrthographicNearClip(cameraNode["OrthographicNear"].as<float>());
+						if (cameraNode["OrthographicFar"])
+							camera.SetOrthographicFarClip(cameraNode["OrthographicFar"].as<float>());
+					}
 
 					component.Primary = cameraComponent["Primary"].as<bool>();
 				}
@@ -993,7 +1002,7 @@ namespace Haoyue {
 							overrideMesh = false;
 					}
 
-					if (component.CollisionMesh && component.CollisionMesh->Type == AssetType::Mesh)
+					if (component.CollisionMesh && !component.CollisionMesh->IsFlagSet(AssetFlag::Missing))
 					{
 						component.OverrideMesh = overrideMesh;
 

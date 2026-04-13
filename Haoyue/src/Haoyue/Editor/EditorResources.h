@@ -64,7 +64,7 @@ namespace Haoyue{
 			WavIcon				= Texture2D::Create("Resources/editor/wav.png");
 			CscIcon				= Texture2D::Create("Resources/editor/csc.png");
 			PngIcon				= Texture2D::Create("Resources/editor/png.png");
-			MoonIcon			= Texture2D::Create("Resources/editor/Moon.png");
+			MoonIcon			= Texture2D::Create("Resources/editor/Haoyue.png");
 			BackButtonIcon		= Texture2D::Create("Resources/editor/btn_back.png");
 			ForwardButtonIcon	= Texture2D::Create("Resources/editor/btn_fwrd.png");
 			AssetIcon			= Texture2D::Create("Resources/editor/asset.png");

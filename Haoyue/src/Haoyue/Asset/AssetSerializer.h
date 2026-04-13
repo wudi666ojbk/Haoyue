@@ -1,45 +1,42 @@
 #pragma once
 
-#include "Asset.h"
+#include "AssetMetaData.h"
 
 namespace Haoyue {
 
 	class AssetSerializer
 	{
 	public:
-		virtual void Serialize(const Ref<Asset>& asset) const = 0;
-		virtual bool TryLoadData(Ref<Asset>& asset) const = 0;
-
-	protected:
-		void CopyMetadata(const Ref<Asset>& from, Ref<Asset>& to) const;
+		virtual void Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const = 0;
+		virtual bool TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const = 0;
 	};
 
 	class TextureSerializer : public AssetSerializer
 	{
 	public:
-		virtual void Serialize(const Ref<Asset>& asset) const override{}
-		virtual bool TryLoadData(Ref<Asset>& asset) const override;
+		virtual void Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const override{}
+		virtual bool TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const override;
 	};
 
 	class MeshAssetSerializer : public AssetSerializer
 	{
 	public:
-		virtual void Serialize(const Ref<Asset>& asset) const override{}
-		virtual bool TryLoadData(Ref<Asset>& asset) const override;
+		virtual void Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const override{}
+		virtual bool TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const override;
 	};
 
 	class EnvironmentSerializer : public AssetSerializer
 	{
 	public:
-		virtual void Serialize(const Ref<Asset>& asset) const override{}
-		virtual bool TryLoadData(Ref<Asset>& asset) const override;
+		virtual void Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const override{}
+		virtual bool TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const override;
 	};
 
 	class PhysicsMaterialSerializer : public AssetSerializer
 	{
 	public:
-		virtual void Serialize(const Ref<Asset>& asset) const override;
-		virtual bool TryLoadData(Ref<Asset>& asset) const override;
+		virtual void Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const override;
+		virtual bool TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const override;
 	};
 
 }

@@ -14,13 +14,12 @@ namespace Haoyue {
 	{
 	public:
 		AssetHandle Handle;
-		AssetType Type = AssetType::None;
+		uint16_t Flags = (uint16_t)AssetFlag::None;
 
-		std::string FilePath;
-		std::string FileName;
-		std::string Extension;
-		AssetHandle ParentDirectory;
-		bool IsDataLoaded = false;
+		virtual ~Asset() {}
+
+		virtual AssetType GetAssetType() const { return AssetType::Other; }
+		static AssetType GetStaticType() { return AssetType::None; }
 
 		virtual bool operator==(const Asset& other) const
 		{
@@ -31,7 +30,15 @@ namespace Haoyue {
 		{
 			return !(*this == other);
 		}
-		virtual ~Asset() {}
+		
+		bool IsFlagSet(AssetFlag flag) const { return (uint16_t)flag & Flags; }
+		void SetFlag(AssetFlag flag, bool value)
+		{
+			if (value)
+				Flags |= (uint16_t)flag;
+			else
+				Flags &= ~(uint16_t)flag;
+		}
 	};
 
 	class PhysicsMaterial : public Asset
@@ -46,6 +53,9 @@ namespace Haoyue {
 			: StaticFriction(staticFriction), DynamicFriction(dynamicFriction), Bounciness(bounciness)
 		{
 		}
+
+		static AssetType GetStaticType() { return AssetType::PhysicsMat; }
+		virtual AssetType GetAssetType() const override { return GetStaticType(); }
 	};
 
 	// Treating directories as assets simplifies the asset manager window rendering by a lot
@@ -55,5 +65,8 @@ namespace Haoyue {
 		std::vector<AssetHandle> ChildDirectories;
 
 		Directory() = default;
+
+		static AssetType GetStaticType() { return AssetType::Directory; }
+		virtual AssetType GetAssetType() const override { return GetStaticType(); }
 	};
 }

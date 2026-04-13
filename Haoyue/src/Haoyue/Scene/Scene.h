@@ -46,7 +46,7 @@ namespace Haoyue {
 
 	struct TransformComponent;
 
-	class Scene : public RefCounted
+	class Scene : public Asset
 	{
 	public:
 		Scene(const std::string& debugName = "Scene", bool isEditorScene = false);
@@ -115,6 +115,9 @@ namespace Haoyue {
 
 		// Editor-specific
 		void SetSelectedEntity(entt::entity entity) { m_SelectedEntity = entity; }
+
+		static AssetType GetStaticType() { return AssetType::Scene; }
+		virtual AssetType GetAssetType() const override { return GetStaticType(); }
 	private:
 		UUID m_SceneID;
 		entt::entity m_SceneEntity;

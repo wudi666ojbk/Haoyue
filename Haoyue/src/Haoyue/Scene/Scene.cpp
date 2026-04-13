@@ -396,7 +396,7 @@ namespace Haoyue {
 		for (auto entity : group)
 		{
 			auto [transformComponent, meshComponent] = group.get<TransformComponent, MeshComponent>(entity);
-			if (meshComponent.Mesh && meshComponent.Mesh->Type == AssetType::Mesh)
+			if (meshComponent.Mesh && !meshComponent.Mesh->IsFlagSet(AssetFlag::Missing))
 			{
 				meshComponent.Mesh->OnUpdate(ts);
 				glm::mat4 transform = GetTransformRelativeToParent(Entity(entity, this));
@@ -460,7 +460,7 @@ namespace Haoyue {
 		for (auto entity : group)
 		{
 			auto [meshComponent, transformComponent] = group.get<MeshComponent, TransformComponent>(entity);
-			if (meshComponent.Mesh && meshComponent.Mesh->Type == AssetType::Mesh)
+			if (meshComponent.Mesh && !meshComponent.Mesh->IsFlagSet(AssetFlag::Missing))
 			{
 				meshComponent.Mesh->OnUpdate(ts);
 

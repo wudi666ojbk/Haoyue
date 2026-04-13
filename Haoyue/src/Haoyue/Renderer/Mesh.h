@@ -157,6 +157,9 @@ namespace Haoyue {
 		Ref<VertexBuffer> GetVertexBuffer() { return m_VertexBuffer; }
 		Ref<IndexBuffer> GetIndexBuffer() { return m_IndexBuffer; }
 		const VertexBufferLayout& GetVertexBufferLayout() const { return m_VertexBufferLayout; }
+
+		static AssetType GetStaticType() { return AssetType::Mesh; }
+		virtual AssetType GetAssetType() const override { return GetStaticType(); }
 	private:
 		void BoneTransform(float time);
 		void ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const glm::mat4& ParentTransform);

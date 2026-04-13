@@ -15,8 +15,8 @@ namespace Haoyue {
 		bool Deserialize(const std::string& filepath);
 		bool DeserializeRuntime(const std::string& filepath);
 
-		virtual void Serialize(const Ref<Asset>& asset) const override {}
-		virtual bool TryLoadData(Ref<Asset>& asset) const override;
+		virtual void Serialize(const AssetMetadata& metadata, const Ref<Asset>& asset) const override {}
+		virtual bool TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const override;
 	};
 }
 

@@ -220,7 +220,7 @@ namespace Haoyue {
 			flags |= ImGuiTreeNodeFlags_Leaf;
 
 		// TODO(Peter): This should probably be a function that checks that the entities components are valid
-		bool missingMesh = entity.HasComponent<MeshComponent>() && (entity.GetComponent<MeshComponent>().Mesh && entity.GetComponent<MeshComponent>().Mesh->Type == AssetType::Missing);
+		bool missingMesh = entity.HasComponent<MeshComponent>() && (entity.GetComponent<MeshComponent>().Mesh && entity.GetComponent<MeshComponent>().Mesh->IsFlagSet(AssetFlag::Missing));
 		if (missingMesh)
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.4f, 0.3f, 1.0f));
 
@@ -535,7 +535,7 @@ namespace Haoyue {
 		DrawComponent<MeshComponent>(EditorResources::ComponentIcon, "Mesh", entity, [&](MeshComponent& mc)
 		{
 			UI::BeginPropertyGrid();
-			if (UI::PropertyAssetReference(TR("Mesh"), mc.Mesh, AssetType::Mesh))
+			if (UI::PropertyAssetReference(TR("Mesh"), mc.Mesh))
 			{
 				if (entity.HasComponent<MeshColliderComponent>())
 				{
@@ -615,7 +615,7 @@ namespace Haoyue {
 		DrawComponent<SkyLightComponent>(EditorResources::ComponentIcon, "Sky Light", entity, [](SkyLightComponent& slc)
 		{
 			UI::BeginPropertyGrid();
-			UI::PropertyAssetReference(TR("Environment Map"), slc.SceneEnvironment, AssetType::EnvMap);
+			UI::PropertyAssetReference(TR("Environment Map"), slc.SceneEnvironment);
 			UI::Property(TR("Intensity"), slc.Intensity, 0.01f, 0.0f, 5.0f);
 			ImGui::Separator();
 			UI::Property(TR("Dynamic Sky"), slc.DynamicSky);
@@ -829,7 +829,7 @@ namespace Haoyue {
 
 			//Property("Offset", bcc.Offset);
 			UI::Property("Is Trigger", bcc.IsTrigger);
-			UI::PropertyAssetReference("Material", bcc.Material, AssetType::PhysicsMat);
+			UI::PropertyAssetReference("Material", bcc.Material);
 
 			UI::EndPropertyGrid();
 		});
@@ -844,7 +844,7 @@ namespace Haoyue {
 			}
 
 			UI::Property("Is Trigger", scc.IsTrigger);
-			UI::PropertyAssetReference("Material", scc.Material, AssetType::PhysicsMat);
+			UI::PropertyAssetReference("Material", scc.Material);
 
 			UI::EndPropertyGrid();
 		});
@@ -862,7 +862,7 @@ namespace Haoyue {
 				changed = true;
 
 			UI::Property("Is Trigger", ccc.IsTrigger);
-			UI::PropertyAssetReference("Material", ccc.Material, AssetType::PhysicsMat);
+			UI::PropertyAssetReference("Material", ccc.Material);
 
 			if (changed)
 			{
@@ -878,7 +878,7 @@ namespace Haoyue {
 
 			if (mcc.OverrideMesh)
 			{
-				if (UI::PropertyAssetReference("Mesh", mcc.CollisionMesh, AssetType::Mesh))
+				if (UI::PropertyAssetReference("Mesh", mcc.CollisionMesh))
 				{
 					if (mcc.IsConvex)
 						PXPhysicsWrappers::CreateConvexMesh(mcc, entity.Transform().Scale, true);
@@ -896,7 +896,7 @@ namespace Haoyue {
 			}
 
 			UI::Property("Is Trigger", mcc.IsTrigger);
-			UI::PropertyAssetReference("Material", mcc.Material, AssetType::PhysicsMat);
+			UI::PropertyAssetReference("Material", mcc.Material);
 
 			if (UI::Property("Override Mesh", mcc.OverrideMesh))
 			{
@@ -950,7 +950,7 @@ namespace Haoyue {
 			// otherwise there's a conflict with the next Property Grid.
 
 			bool bWasEmpty = soundConfig.FileAsset == nullptr;
-			if (UI::PropertyAssetReference("Sound", soundConfig.FileAsset, AssetType::Audio))
+			if (UI::PropertyAssetReference("Sound", soundConfig.FileAsset))
 			{
 				if (bWasEmpty)
 					soundConfig.FileAsset.Create();

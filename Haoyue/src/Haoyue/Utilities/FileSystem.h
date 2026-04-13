@@ -26,6 +26,7 @@ namespace Haoyue {
 		static std::string Rename(const std::string& filepath, const std::string& newName);
 		static bool DeleteFile(const std::string& filepath);
 		static bool MoveFile(const std::string& filepath, const std::string& dest);
+		static bool IsDirectory(const std::string& filepath);
 
 	public:
 		using FileSystemChangedCallbackFn = std::function<void(FileSystemChangedEvent)>;

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Sound.h"
 #include "AudioEngine.h"
+#include "Haoyue/Asset/AssetManager.h"
 
 namespace Audio
 {
@@ -72,8 +73,10 @@ namespace Audio
         // TODO: handle passing in different flags for decoding (from data source asset)
         // TODO: and handle decoding somewhere else, in some other way
 
+        auto& metadata = Haoyue::AssetManager::GetMetadata(config.FileAsset->Handle);
+
         ma_result result;
-        result = ma_sound_init_from_file(&audioEngine->m_Engine, config.FileAsset->FilePath.c_str(), MA_SOUND_FLAG_DECODE, nullptr, &m_Sound);
+        result = ma_sound_init_from_file(&audioEngine->m_Engine, metadata.FilePath.c_str(), MA_SOUND_FLAG_DECODE, nullptr, &m_Sound);
 
         if (result != MA_SUCCESS)
             return false;

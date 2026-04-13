@@ -6,6 +6,12 @@
 #include <cstring>
 
 namespace Haoyue {
+	enum class AssetFlag : int16_t
+	{
+		None = 0,
+		Missing = BIT(0),
+		Invalid = BIT(1)
+	};
 
 	enum class AssetType : int8_t
 	{

@@ -38,9 +38,8 @@ namespace Audio
 
         bool bAirAbsorptionEnabled{ true };                            // Enable Air Absorption filter (TODO)
 
-        // TODO
-        // float Spread;
-        // float Focus;
+        static Haoyue::AssetType GetStaticType() { return Haoyue::AssetType::Audio; }
+        virtual Haoyue::AssetType GetAssetType() const override { return GetStaticType(); }
     };
 
 
@@ -63,6 +62,9 @@ namespace Audio
         SpatializationConfig Spatialization;    // Configuration for 3D spatialization behavior
 
         glm::vec3 SpawnLocation{ 0.0f, 0.0f, 0.0f };
+
+        static Haoyue::AssetType GetStaticType() { return Haoyue::AssetType::Audio; }
+        virtual Haoyue::AssetType GetAssetType() const override { return GetStaticType(); }
     };
 
 

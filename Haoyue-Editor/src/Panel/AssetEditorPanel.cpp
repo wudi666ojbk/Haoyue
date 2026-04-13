@@ -85,14 +85,13 @@ namespace Haoyue {
 
 	void AssetEditorPanel::OpenEditor(const Ref<Asset>& asset)
 	{
-		if (s_Editors.find(asset->Type) == s_Editors.end())
+		if (s_Editors.find(asset->GetAssetType()) == s_Editors.end())
 		{
-			HY_CORE_WARN("No editor registered for {0} assets", asset->Extension);
 			return;
 		}
 
-		s_Editors[asset->Type]->SetOpen(true);
-		s_Editors[asset->Type]->SetAsset(AssetManager::GetAsset<Asset>(asset->Handle));
+		s_Editors[asset->GetAssetType()]->SetOpen(true);
+		s_Editors[asset->GetAssetType()]->SetAsset(AssetManager::GetAsset<Asset>(asset->Handle));
 	}
 
 	std::unordered_map<AssetType, Scope<AssetEditor>> AssetEditorPanel::s_Editors;

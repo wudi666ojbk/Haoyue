@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "DefaultAssetEditors.h"
 #include "Haoyue/Asset/AssetImporter.h"
+#include "Haoyue/Asset/AssetManager.h"
 
 namespace Haoyue {
 	
@@ -9,7 +10,7 @@ namespace Haoyue {
 
 	void PhysicsMaterialEditor::OnClose()
 	{
-		AssetImporter::Serialize(m_Asset);
+		AssetImporter::Serialize(AssetManager::GetMetadata(m_Asset->Handle), m_Asset);
 		m_Asset = nullptr;
 	}
 

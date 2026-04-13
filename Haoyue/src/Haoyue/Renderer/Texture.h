@@ -42,6 +42,9 @@ namespace Haoyue {
 		virtual const std::string& GetPath() const = 0;
 
 		virtual TextureType GetType() const override { return TextureType::Texture2D; }
+
+		static AssetType GetStaticType() { return AssetType::Texture; }
+		virtual AssetType GetAssetType() const override { return GetStaticType(); }
 	};
 
 	class TextureCube : public Texture
@@ -53,6 +56,9 @@ namespace Haoyue {
 		virtual const std::string& GetPath() const = 0;
 
 		virtual TextureType GetType() const override { return TextureType::TextureCube; }
+
+		static AssetType GetStaticType() { return AssetType::EnvMap; }
+		virtual AssetType GetAssetType() const override { return GetStaticType(); }
 	};
 
 }
