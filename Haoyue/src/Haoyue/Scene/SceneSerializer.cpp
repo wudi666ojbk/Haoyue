@@ -274,7 +274,18 @@ namespace Haoyue {
 
 			auto mesh = entity.GetComponent<MeshComponent>().Mesh;
 			if (mesh)
-				out << YAML::Key << "AssetID" << YAML::Value << mesh->Handle;
+			{
+				// TODO(Yan): temporary while mesh assets are floating
+				if (mesh->GetAssetType() == AssetType::Missing)
+				{
+					out << YAML::Key << "AssetID" << YAML::Value << mesh->Handle;
+				}
+				else
+				{
+					auto meshAsset = mesh->GetMeshAsset();
+					out << YAML::Key << "AssetID" << YAML::Value << meshAsset->Handle;
+				}
+			}
 			else
 				out << YAML::Key << "AssetID" << YAML::Value << 0;
 
@@ -767,7 +778,7 @@ namespace Haoyue {
 
 					if (AssetManager::IsAssetHandleValid(assetHandle))
 					{
-						component.Mesh = AssetManager::GetAsset<Mesh>(assetHandle);
+						component.Mesh = Ref<Mesh>::Create(AssetManager::GetAsset<MeshAsset>(assetHandle));
 					}
 					else
 					{

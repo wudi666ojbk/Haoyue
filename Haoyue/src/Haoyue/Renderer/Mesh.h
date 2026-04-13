@@ -101,7 +101,7 @@ namespace Haoyue {
 					return;
 				}
 			}
-			
+
 			// should never get here - more bones than we have space for
 			HY_CORE_ASSERT(false, "Too many bones!");
 		}
@@ -112,7 +112,8 @@ namespace Haoyue {
 		Vertex V0, V1, V2;
 
 		Triangle(const Vertex& v0, const Vertex& v1, const Vertex& v2)
-			: V0(v0), V1(v1), V2(v2) {}
+			: V0(v0), V1(v1), V2(v2) {
+		}
 	};
 
 	class Submesh
@@ -130,14 +131,17 @@ namespace Haoyue {
 		std::string NodeName, MeshName;
 	};
 
-	class Mesh : public Asset
+	//
+	// MeshAsset is a representation of an actual asset file on disk
+	// Meshes are created from MeshAssets
+	//
+	class MeshAsset : public Asset
 	{
 	public:
-		Mesh(const std::string& filename);
-		Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices, const glm::mat4& transform);
-		~Mesh();
+		MeshAsset(const std::string& filename);
+		MeshAsset(const std::vector<Vertex>& vertices, const std::vector<Index>& indices, const glm::mat4& transform);
+		virtual ~MeshAsset();
 
-		void OnUpdate(Timestep ts);
 		void DumpVertexBuffer();
 
 		std::vector<Submesh>& GetSubmeshes() { return m_Submeshes; }
@@ -158,7 +162,7 @@ namespace Haoyue {
 		Ref<IndexBuffer> GetIndexBuffer() { return m_IndexBuffer; }
 		const VertexBufferLayout& GetVertexBufferLayout() const { return m_VertexBufferLayout; }
 
-		static AssetType GetStaticType() { return AssetType::Mesh; }
+		static AssetType GetStaticType() { return AssetType::MeshAsset; }
 		virtual AssetType GetAssetType() const override { return GetStaticType(); }
 	private:
 		void BoneTransform(float time);
@@ -174,7 +178,7 @@ namespace Haoyue {
 		glm::vec3 InterpolateScale(float animationTime, const aiNodeAnim* nodeAnim);
 	private:
 		std::vector<Submesh> m_Submeshes;
-		
+
 		std::unique_ptr<Assimp::Importer> m_Importer;
 
 		glm::mat4 m_InverseTransform;
@@ -203,12 +207,56 @@ namespace Haoyue {
 
 		// Animation
 		bool m_IsAnimated = false;
-		float m_AnimationTime = 0.0f;
-		float m_WorldTime = 0.0f;
 		float m_TimeMultiplier = 1.0f;
 		bool m_AnimationPlaying = true;
 
 		std::string m_FilePath;
+
+		friend class Renderer;
+		friend class VulkanRenderer;
+		friend class OpenGLRenderer;
+		friend class SceneHierarchyPanel;
+		friend class MeshViewerPanel;
+	};
+
+	class Mesh : public Asset
+	{
+	public:
+		Mesh(Ref<MeshAsset> meshAsset);
+		Mesh(Ref<MeshAsset> meshAsset, const std::vector<uint32_t>& submeshes);
+		virtual ~Mesh();
+
+		void OnUpdate(Timestep ts);
+
+		const std::vector<uint32_t>& GetSubmeshes() const { return m_Submeshes; }
+		void SetSubmeshes(const std::vector<uint32_t>& submeshes) { m_Submeshes = submeshes; }
+
+		Ref<MeshAsset> GetMeshAsset() { return m_MeshAsset; }
+		void SetMeshAsset(Ref<MeshAsset> meshAsset) { m_MeshAsset = meshAsset; }
+
+		Ref<Shader> GetMeshShader() { return m_MeshShader; }
+		std::vector<Ref<Material>>& GetMaterials() { return m_Materials; }
+		const std::vector<Ref<Material>>& GetMaterials() const { return m_Materials; }
+
+		static AssetType GetStaticType() { return AssetType::Mesh; }
+		virtual AssetType GetAssetType() const override { return GetStaticType(); }
+	private:
+		Ref<MeshAsset> m_MeshAsset;
+		std::vector<uint32_t> m_Submeshes; // TODO(Yan): physics/render masks
+
+		uint32_t m_BoneCount = 0;
+		std::vector<BoneInfo> m_BoneInfo;
+
+		// Materials
+		Ref<Shader> m_MeshShader;
+		std::vector<Ref<Material>> m_Materials;
+
+		// Animation
+		bool m_IsAnimated = false;
+		float m_AnimationTime = 0.0f;
+		float m_WorldTime = 0.0f;
+		float m_TimeMultiplier = 1.0f;
+		bool m_AnimationPlaying = true;
 
 		friend class Renderer;
 		friend class VulkanRenderer;

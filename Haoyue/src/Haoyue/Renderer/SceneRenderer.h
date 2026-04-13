@@ -53,7 +53,15 @@ namespace Haoyue {
 
 		SceneRendererOptions& GetOptions();
 
+		void SetShadowSettings(float nearPlane, float farPlane, float lambda)
+		{
+			CascadeNearPlaneOffset = nearPlane;
+			CascadeFarPlaneOffset = farPlane;
+			CascadeSplitLambda = lambda;
+		}
+
 		void OnImGuiRender();
+		static void WaitForThreads();
 	private:
 		void FlushDrawList();
 		void ShadowMapPass();

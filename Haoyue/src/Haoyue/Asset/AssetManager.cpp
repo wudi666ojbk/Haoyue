@@ -79,6 +79,16 @@ namespace Haoyue {
 				return metadata;
 		}
 
+		// 添加调试输出
+		HY_CORE_WARN("GetMetadata: Handle {} not found in registry!", (uint64_t)handle);
+		HY_CORE_WARN("Registry contains {} entries:", s_AssetRegistry.size());
+		for (const auto& [path, meta] : s_AssetRegistry)
+		{
+			HY_CORE_WARN("  - Path: {}, Handle: {}, Type: {}", path, (uint64_t)meta.Handle, (int)meta.Type);
+		}
+
+		return s_NullMetadata;
+
 		return s_NullMetadata;
 	}
 
@@ -133,14 +143,15 @@ namespace Haoyue {
 	AssetType AssetManager::GetAssetTypeForFileType(const std::string& extension)
 	{
 		if (extension == "hsc") return AssetType::Scene;
-		if (extension == "fbx") return AssetType::Mesh;
-		if (extension == "obj") return AssetType::Mesh;
+		if (extension == "fbx") return AssetType::MeshAsset;
+		if (extension == "obj") return AssetType::MeshAsset;
+		if (extension == "hym") return AssetType::Mesh;
 		if (extension == "png") return AssetType::Texture;
 		if (extension == "hdr") return AssetType::EnvMap;
 		if (extension == "hpm") return AssetType::PhysicsMat;
 		if (extension == "wav") return AssetType::Audio;
 		if (extension == "ogg") return AssetType::Audio;
-		return AssetType::Other;
+		return AssetType::None;
 	}
 
 	void AssetManager::LoadAssetRegistry()
@@ -168,10 +179,10 @@ namespace Haoyue {
 			metadata.FilePath = entry["FilePath"].as<std::string>();
 			metadata.FileName = Utils::RemoveExtension(Utils::GetFilename(metadata.FilePath));
 			metadata.Extension = Utils::GetExtension(Utils::GetFilename(metadata.FilePath));
-			metadata.Type = (AssetType)entry["Type"].as<int>();
+			metadata.Type = (AssetType)Utils::AssetTypeFromString(entry["Type"].as<std::string>());
 
 			// TODO: Improve this
-			if (metadata.Type == AssetType::Other)
+			if (metadata.Type == AssetType::None)
 				continue;
 
 			if (!FileSystem::Exists(metadata.FilePath))
@@ -181,7 +192,7 @@ namespace Haoyue {
 				std::string mostLikelyCandiate;
 				uint32_t bestScore = 0;
 
-				for (auto& pathEntry : std::filesystem::recursive_directory_iterator("assets/"))
+				for (auto& pathEntry : std::filesystem::recursive_directory_iterator("Resources/"))
 				{
 					const std::filesystem::path& path = pathEntry.path();
 
@@ -247,7 +258,7 @@ namespace Haoyue {
 		AssetType type = GetAssetTypeForFileType(Utils::GetExtension(fixedFilePath));
 
 		// TODO: Improve this
-		if (type == AssetType::Other)
+		if (type == AssetType::None)
 			return 0;
 
 		AssetMetadata metadata;
@@ -289,7 +300,7 @@ namespace Haoyue {
 			out << YAML::BeginMap;
 			out << YAML::Key << "Handle" << YAML::Value << metadata.Handle;
 			out << YAML::Key << "FilePath" << YAML::Value << metadata.FilePath;
-			out << YAML::Key << "Type" << YAML::Value << (int)metadata.Type;
+			out << YAML::Key << "Type" << YAML::Value << Utils::AssetTypeToString(metadata.Type);
 			out << YAML::EndMap;
 		}
 		out << YAML::EndSeq;

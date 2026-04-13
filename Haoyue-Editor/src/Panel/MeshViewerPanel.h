@@ -21,7 +21,7 @@ namespace Haoyue {
 			Ref<SceneRenderer> m_SceneRenderer;
 			EditorCamera m_Camera;
 			std::string m_Name;
-			Ref<Mesh> m_Mesh;
+			Ref<MeshAsset> m_Mesh;
 			Entity m_MeshEntity;
 			Entity m_DirectionaLight;
 			bool m_ViewportPanelFocused = false;
@@ -46,8 +46,8 @@ namespace Haoyue {
 		void ResetCamera(EditorCamera& camera);
 	private:
 		void RenderMeshTab(ImGuiID dockspaceID, const std::shared_ptr<MeshScene>& sceneData);
-		void DrawMeshNode(const Ref<Mesh>& mesh);
-		void MeshNodeHierarchy(const Ref<Mesh>& mesh, aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32_t level = 0);
+		void DrawMeshNode(const Ref<MeshAsset>& mesh);
+		void MeshNodeHierarchy(const Ref<MeshAsset>& mesh, aiNode* node, const glm::mat4& parentTransform = glm::mat4(1.0f), uint32_t level = 0);
 	private:
 		bool m_ResetDockspace = true;
 

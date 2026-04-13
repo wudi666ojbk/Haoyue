@@ -651,7 +651,7 @@ namespace Haoyue { namespace Script {
 
 	Ref<Mesh>* Haoyue_Mesh_Constructor(MonoString* filepath)
 	{
-		return new Ref<Mesh>(new Mesh(mono_string_to_utf8(filepath)));
+		return new Ref<Mesh>(new Mesh(Ref<MeshAsset>::Create(mono_string_to_utf8(filepath))));
 	}
 
 	void Haoyue_Mesh_Destructor(Ref<Mesh>* _this)
@@ -767,7 +767,7 @@ namespace Haoyue { namespace Script {
 	void* Haoyue_MeshFactory_CreatePlane(float width, float height)
 	{
 		// TODO: Implement properly with MeshFactory class!
-		return new Ref<Mesh>(new Mesh("Resources/models/Plane1m.obj"));
+		return new Ref<Mesh>(new Mesh(Ref<MeshAsset>::Create("Resources/models/Plane1m.obj")));
 	}
 
 	////////////////////////////////////////////////////////////////

@@ -298,19 +298,24 @@ namespace Haoyue {
 		newParams.meshWeldTolerance = 0.01f;
 		s_CookingFactory->setParams(newParams);
 
-		if (invalidateOld)
-			PhysicsMeshSerializer::DeleteIfSerialized(collider.CollisionMesh->GetFilePath());
+		const auto& collisionMeshAsset = collider.CollisionMesh->GetMeshAsset();
 
-		if (!PhysicsMeshSerializer::IsSerialized(collider.CollisionMesh->GetFilePath()))
+		if (invalidateOld)
+			PhysicsMeshSerializer::DeleteIfSerialized(collisionMeshAsset->GetFilePath());
+
+		if (!PhysicsMeshSerializer::IsSerialized(collisionMeshAsset->GetFilePath()))
 		{
-			const std::vector<Vertex>& vertices = collider.CollisionMesh->GetStaticVertices();
-			const std::vector<Index>& indices = collider.CollisionMesh->GetIndices();
+			const std::vector<Vertex>& vertices = collisionMeshAsset->GetStaticVertices();
+			const std::vector<Index>& indices = collisionMeshAsset->GetIndices();
 
 			std::unordered_map<std::string, ColliderData> colliderData;
 			uint32_t bufferSize = 0;
 
-			for (const auto& submesh : collider.CollisionMesh->GetSubmeshes())
+			const auto& meshAssetSubmeshes = collisionMeshAsset->GetSubmeshes();
+			auto& submeshes = collider.CollisionMesh->GetSubmeshes();
+			for (uint32_t submeshIndex : submeshes)
 			{
+				const Submesh& submesh = meshAssetSubmeshes[submeshIndex];
 				physx::PxConvexMeshDesc convexDesc;
 				convexDesc.points.count = submesh.VertexCount;
 				convexDesc.points.stride = sizeof(Vertex);
@@ -366,16 +371,19 @@ namespace Haoyue {
 				delete[] data.Data;
 			}
 
-			PhysicsMeshSerializer::SerializeMesh(collider.CollisionMesh->GetFilePath(), colliderBuffer);
+			PhysicsMeshSerializer::SerializeMesh(collider.CollisionMesh->GetMeshAsset()->GetFilePath(), colliderBuffer);
 			colliderBuffer.Release();
 		}
 		else
 		{
-			Buffer colliderBuffer = PhysicsMeshSerializer::DeserializeMesh(collider.CollisionMesh->GetFilePath());
+			Buffer colliderBuffer = PhysicsMeshSerializer::DeserializeMesh(collider.CollisionMesh->GetMeshAsset()->GetFilePath());
 			uint32_t offset = 0;
 
-			for (const auto& submesh : collider.CollisionMesh->GetSubmeshes())
+			const auto& meshAssetSubmeshes = collisionMeshAsset->GetSubmeshes();
+			auto& submeshes = collider.CollisionMesh->GetSubmeshes();
+			for (uint32_t submeshIndex : submeshes)
 			{
+				const Submesh& submesh = meshAssetSubmeshes[submeshIndex];
 				// NOTE(Peter): This way of reading the data requires that the submeshes are always in the same order
 				uint32_t dataSize = colliderBuffer.Read<uint32_t>(offset);
 				offset += sizeof(uint32_t);
@@ -450,8 +458,8 @@ namespace Haoyue {
 						collisionIndices.push_back(index);
 						indexCounter++;
 					}
-
-					collider.ProcessedMeshes.push_back(Ref<Mesh>::Create(collisionVertices, collisionIndices, FromPhysXTransform(shape->getLocalPose())));
+					Ref<MeshAsset> meshAsset = Ref<MeshAsset>::Create(collisionVertices, collisionIndices, FromPhysXTransform(shape->getLocalPose()));
+					collider.ProcessedMeshes.push_back(Ref<Mesh>::Create(meshAsset));
 				}
 			}
 		}
@@ -466,19 +474,24 @@ namespace Haoyue {
 
 		collider.ProcessedMeshes.clear();
 
-		if (invalidateOld)
-			PhysicsMeshSerializer::DeleteIfSerialized(collider.CollisionMesh->GetFilePath());
+		const auto& collisionMeshAsset = collider.CollisionMesh->GetMeshAsset();
 
-		if (!PhysicsMeshSerializer::IsSerialized(collider.CollisionMesh->GetFilePath()))
+		if (invalidateOld)
+			PhysicsMeshSerializer::DeleteIfSerialized(collisionMeshAsset->GetFilePath());
+
+		if (!PhysicsMeshSerializer::IsSerialized(collisionMeshAsset->GetFilePath()))
 		{
-			const std::vector<Vertex>& vertices = collider.CollisionMesh->GetStaticVertices();
-			const std::vector<Index>& indices = collider.CollisionMesh->GetIndices();
+			const std::vector<Vertex>& vertices = collisionMeshAsset->GetStaticVertices();
+			const std::vector<Index>& indices = collisionMeshAsset->GetIndices();
 
 			std::unordered_map<std::string, ColliderData> colliderData;
 			uint32_t bufferSize = 0;
 
-			for (const auto& submesh : collider.CollisionMesh->GetSubmeshes())
+			const auto& meshAssetSubmeshes = collisionMeshAsset->GetSubmeshes();
+			auto& submeshes = collider.CollisionMesh->GetSubmeshes();
+			for (uint32_t submeshIndex : submeshes)
 			{
+				const Submesh& submesh = meshAssetSubmeshes[submeshIndex];
 				physx::PxTriangleMeshDesc triangleDesc;
 				triangleDesc.points.count = submesh.VertexCount;
 				triangleDesc.points.stride = sizeof(Vertex);
@@ -532,16 +545,19 @@ namespace Haoyue {
 				delete[] data.Data;
 			}
 
-			PhysicsMeshSerializer::SerializeMesh(collider.CollisionMesh->GetFilePath(), colliderBuffer);
+			PhysicsMeshSerializer::SerializeMesh(collider.CollisionMesh->GetMeshAsset()->GetFilePath(), colliderBuffer);
 			colliderBuffer.Release();
 		}
 		else
 		{
-			Buffer colliderBuffer = PhysicsMeshSerializer::DeserializeMesh(collider.CollisionMesh->GetFilePath());
+			Buffer colliderBuffer = PhysicsMeshSerializer::DeserializeMesh(collider.CollisionMesh->GetMeshAsset()->GetFilePath());
 			uint32_t offset = 0;
 
-			for (const auto& submesh : collider.CollisionMesh->GetSubmeshes())
+			const auto& meshAssetSubmeshes = collisionMeshAsset->GetSubmeshes();
+			auto& submeshes = collider.CollisionMesh->GetSubmeshes();
+			for (uint32_t submeshIndex : submeshes)
 			{
+				const Submesh& submesh = meshAssetSubmeshes[submeshIndex];
 				// NOTE(Peter): This way of reading the data requires that the submeshes are always in the same order
 				uint32_t dataSize = colliderBuffer.Read<uint32_t>(offset);
 				offset += sizeof(uint32_t);
@@ -602,7 +618,8 @@ namespace Haoyue {
 
 				glm::mat4 scale = glm::scale(glm::mat4(1.0f), FromPhysXVector(triangleGeometry.scale.scale));
 				glm::mat4 transform = FromPhysXTransform(shape->getLocalPose()) * scale;
-				collider.ProcessedMeshes.push_back(Ref<Mesh>::Create(vertices, indices, transform));
+				Ref<MeshAsset> meshAsset = Ref<MeshAsset>::Create(vertices, indices, transform);
+				collider.ProcessedMeshes.push_back(Ref<Mesh>::Create(meshAsset));
 			}
 		}
 

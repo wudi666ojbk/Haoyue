@@ -217,6 +217,7 @@ namespace Haoyue {
 			}
 		}
 		AssetEditorPanel::OnUpdate(ts);
+		SceneRenderer::WaitForThreads();
 	}
 
 	void EditorLayer::ShowBoundingBoxes(bool show, bool onTop)
@@ -239,7 +240,7 @@ namespace Haoyue {
 
 			if (meshComp.Mesh && !meshComp.Mesh->IsFlagSet(AssetFlag::Missing))
 			{
-				selection.Mesh = &meshComp.Mesh->GetSubmeshes()[0];
+				selection.Mesh = &meshComp.Mesh->GetMeshAsset()->GetSubmeshes()[0];
 			}
 		}
 		selection.Entity = entity;
@@ -606,8 +607,14 @@ namespace Haoyue {
 						OpenScene(assetData.FilePath);
 						break;
 					}
-
 					Ref<Asset> asset = AssetManager::GetAsset<Asset>(assetHandle);
+					if (asset->GetAssetType() == AssetType::MeshAsset)
+					{
+						Entity entity = m_EditorScene->CreateEntity(assetData.FileName);
+						entity.AddComponent<MeshComponent>(Ref<Mesh>::Create(asset.As<MeshAsset>()));
+						SelectEntity(entity);
+					}
+
 					if (asset->GetAssetType() == AssetType::Mesh)
 					{
 						Entity entity = m_EditorScene->CreateEntity(assetData.FileName);
@@ -686,7 +693,7 @@ namespace Haoyue {
 			if (selectedEntity.HasComponent<MeshComponent>())
 			{
 				Ref<Mesh> mesh = selectedEntity.GetComponent<MeshComponent>().Mesh;
-				if (mesh && mesh->GetAssetType() == AssetType::Mesh)
+				if (mesh && mesh->GetAssetType() == AssetType::MeshAsset)
 				{
 					auto& materials = mesh->GetMaterials();
 					static uint32_t selectedMaterialIndex = 0;
@@ -1172,7 +1179,7 @@ namespace Haoyue {
 					if (!mesh || mesh->IsFlagSet(AssetFlag::Missing))
 						continue;
 
-					auto& submeshes = mesh->GetSubmeshes();
+					auto& submeshes = mesh->GetMeshAsset()->GetSubmeshes();
 					float lastT = std::numeric_limits<float>::max();
 					for (uint32_t i = 0; i < submeshes.size(); i++)
 					{
@@ -1187,7 +1194,7 @@ namespace Haoyue {
 						bool intersects = ray.IntersectsAABB(submesh.BoundingBox, t);
 						if (intersects)
 						{
-							const auto& triangleCache = mesh->GetTriangleCache(i);
+							const auto& triangleCache = mesh->GetMeshAsset()->GetTriangleCache(i);
 							for (const auto& triangle : triangleCache)
 							{
 								if (ray.IntersectsTriangle(triangle.V0.Position, triangle.V1.Position, triangle.V2.Position, t))

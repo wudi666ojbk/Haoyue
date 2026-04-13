@@ -67,13 +67,13 @@ namespace Haoyue {
 		}
 	};
 
-	Mesh::Mesh(const std::string& filename)
+	MeshAsset::MeshAsset(const std::string& filename)
 		: m_FilePath(filename)
 	{
 		LogStream::Initialize();
 
 		HY_CORE_INFO("Loading mesh: {0}", filename.c_str());
-		
+
 		m_Importer = std::make_unique<Assimp::Importer>();
 
 		const aiScene* scene = m_Importer->ReadFile(filename, s_MeshImportFlags);
@@ -235,7 +235,7 @@ namespace Haoyue {
 				aiString aiTexPath;
 				uint32_t textureCount = aiMaterial->GetTextureCount(aiTextureType_DIFFUSE);
 				HY_MESH_LOG("    TextureCount = {0}", textureCount);
-				
+
 				glm::vec3 albedoColor(0.8f);
 				aiColor3D aiColor;
 				if (aiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, aiColor) == AI_SUCCESS)
@@ -271,6 +271,7 @@ namespace Haoyue {
 					{
 						m_Textures[i] = texture;
 						mi->Set("u_AlbedoTexture", texture);
+						mi->Set("u_MaterialUniforms.AlbedoColor", glm::vec3(1.0f));
 					}
 					else
 					{
@@ -286,7 +287,6 @@ namespace Haoyue {
 				}
 
 				// Normal maps
-				mi->Set("u_MaterialUniforms.UseNormalMap", (uint32_t)false);
 				bool hasNormalMap = aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiTexPath) == AI_SUCCESS;
 				fallback = !hasNormalMap;
 				if (hasNormalMap)
@@ -315,6 +315,7 @@ namespace Haoyue {
 				{
 					HY_MESH_LOG("    No normal map");
 					mi->Set("u_NormalTexture", whiteTexture);
+					mi->Set("u_MaterialUniforms.UseNormalMap", false);
 				}
 
 				// Roughness map
@@ -333,6 +334,7 @@ namespace Haoyue {
 					{
 						m_Textures.push_back(texture);
 						mi->Set("u_RoughnessTexture", texture);
+						mi->Set("u_MaterialUniforms.Roughness", 1.0f);
 					}
 					else
 					{
@@ -425,6 +427,7 @@ namespace Haoyue {
 								metalnessTextureFound = true;
 								m_Textures.push_back(texture);
 								mi->Set("u_MetalnessTexture", texture);
+								mi->Set("u_MaterialUniforms.Metalness", 1.0f);
 							}
 							else
 							{
@@ -459,7 +462,7 @@ namespace Haoyue {
 			m_Materials.push_back(mi);
 		}
 
-		
+
 		if (m_IsAnimated)
 		{
 			m_VertexBuffer = VertexBuffer::Create(m_AnimatedVertices.data(), m_AnimatedVertices.size() * sizeof(AnimatedVertex));
@@ -488,7 +491,7 @@ namespace Haoyue {
 		m_IndexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.size() * sizeof(Index));
 	}
 
-	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices, const glm::mat4& transform)
+	MeshAsset::MeshAsset(const std::vector<Vertex>& vertices, const std::vector<Index>& indices, const glm::mat4& transform)
 		: m_StaticVertices(vertices), m_Indices(indices), m_IsAnimated(false)
 	{
 		Submesh submesh;
@@ -509,26 +512,9 @@ namespace Haoyue {
 		};
 	}
 
-	Mesh::~Mesh()
+
+	MeshAsset::~MeshAsset()
 	{
-	}
-
-	void Mesh::OnUpdate(Timestep ts)
-	{
-		if (m_IsAnimated)
-		{
-			if (m_AnimationPlaying)
-			{
-				m_WorldTime += ts;
-
-				float ticksPerSecond = (float)(m_Scene->mAnimations[0]->mTicksPerSecond != 0 ? m_Scene->mAnimations[0]->mTicksPerSecond : 25.0f) * m_TimeMultiplier;
-				m_AnimationTime += ts * ticksPerSecond;
-				m_AnimationTime = fmod(m_AnimationTime, (float)m_Scene->mAnimations[0]->mDuration);
-			}
-
-			// TODO: We only need to recalc bones if rendering has been requested at the current animation frame
-			BoneTransform(m_AnimationTime);
-		}
 	}
 
 	static std::string LevelToSpaces(uint32_t level)
@@ -539,7 +525,7 @@ namespace Haoyue {
 		return result;
 	}
 
-	void Mesh::TraverseNodes(aiNode* node, const glm::mat4& parentTransform, uint32_t level)
+	void MeshAsset::TraverseNodes(aiNode* node, const glm::mat4& parentTransform, uint32_t level)
 	{
 		glm::mat4 transform = parentTransform * Mat4FromAssimpMat4(node->mTransformation);
 		for (uint32_t i = 0; i < node->mNumMeshes; i++)
@@ -556,7 +542,7 @@ namespace Haoyue {
 			TraverseNodes(node->mChildren[i], transform, level + 1);
 	}
 
-	uint32_t Mesh::FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
+	uint32_t MeshAsset::FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
 	{
 		for (uint32_t i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++)
 		{
@@ -567,8 +553,7 @@ namespace Haoyue {
 		return 0;
 	}
 
-
-	uint32_t Mesh::FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim)
+	uint32_t MeshAsset::FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim)
 	{
 		HY_CORE_ASSERT(pNodeAnim->mNumRotationKeys > 0);
 
@@ -581,8 +566,7 @@ namespace Haoyue {
 		return 0;
 	}
 
-
-	uint32_t Mesh::FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim)
+	uint32_t MeshAsset::FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim)
 	{
 		HY_CORE_ASSERT(pNodeAnim->mNumScalingKeys > 0);
 
@@ -595,8 +579,7 @@ namespace Haoyue {
 		return 0;
 	}
 
-
-	glm::vec3 Mesh::InterpolateTranslation(float animationTime, const aiNodeAnim* nodeAnim)
+	glm::vec3 MeshAsset::InterpolateTranslation(float animationTime, const aiNodeAnim* nodeAnim)
 	{
 		if (nodeAnim->mNumPositionKeys == 1)
 		{
@@ -619,8 +602,7 @@ namespace Haoyue {
 		return { aiVec.x, aiVec.y, aiVec.z };
 	}
 
-
-	glm::quat Mesh::InterpolateRotation(float animationTime, const aiNodeAnim* nodeAnim)
+	glm::quat MeshAsset::InterpolateRotation(float animationTime, const aiNodeAnim* nodeAnim)
 	{
 		if (nodeAnim->mNumRotationKeys == 1)
 		{
@@ -644,8 +626,7 @@ namespace Haoyue {
 		return glm::quat(q.w, q.x, q.y, q.z);
 	}
 
-
-	glm::vec3 Mesh::InterpolateScale(float animationTime, const aiNodeAnim* nodeAnim)
+	glm::vec3 MeshAsset::InterpolateScale(float animationTime, const aiNodeAnim* nodeAnim)
 	{
 		if (nodeAnim->mNumScalingKeys == 1)
 		{
@@ -668,7 +649,7 @@ namespace Haoyue {
 		return { aiVec.x, aiVec.y, aiVec.z };
 	}
 
-	void Mesh::ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const glm::mat4& parentTransform)
+	void MeshAsset::ReadNodeHierarchy(float AnimationTime, const aiNode* pNode, const glm::mat4& parentTransform)
 	{
 		std::string name(pNode->mName.data);
 		const aiAnimation* animation = m_Scene->mAnimations[0];
@@ -701,7 +682,7 @@ namespace Haoyue {
 			ReadNodeHierarchy(AnimationTime, pNode->mChildren[i], transform);
 	}
 
-	const aiNodeAnim* Mesh::FindNodeAnim(const aiAnimation* animation, const std::string& nodeName)
+	const aiNodeAnim* MeshAsset::FindNodeAnim(const aiAnimation* animation, const std::string& nodeName)
 	{
 		for (uint32_t i = 0; i < animation->mNumChannels; i++)
 		{
@@ -710,9 +691,9 @@ namespace Haoyue {
 				return nodeAnim;
 		}
 		return nullptr;
-	} 
+	}
 
-	void Mesh::BoneTransform(float time)
+	void MeshAsset::BoneTransform(float time)
 	{
 		ReadNodeHierarchy(time, m_Scene->mRootNode, glm::mat4(1.0f));
 		m_BoneTransforms.resize(m_BoneCount);
@@ -720,7 +701,7 @@ namespace Haoyue {
 			m_BoneTransforms[i] = m_BoneInfo[i].FinalTransformation;
 	}
 
-	void Mesh::DumpVertexBuffer()
+	void MeshAsset::DumpVertexBuffer()
 	{
 		// TODO: Convert to ImGui
 		HY_MESH_LOG("------------------------------------------------------");
@@ -755,6 +736,36 @@ namespace Haoyue {
 			}
 		}
 		HY_MESH_LOG("------------------------------------------------------");
+	}
+
+	Mesh::Mesh(Ref<MeshAsset> meshAsset)
+		: m_MeshAsset(meshAsset)
+	{
+		const auto& assetSubmeshes = m_MeshAsset->GetSubmeshes();
+		m_Submeshes.resize(assetSubmeshes.size());
+		for (size_t i = 0; i < assetSubmeshes.size(); i++)
+			m_Submeshes[i] = i;
+
+		// TODO(Yan): we should actually copy materials in most cases
+		for (const auto& material : meshAsset->GetMaterials())
+			m_Materials.push_back(material);
+
+	}
+
+	Mesh::Mesh(Ref<MeshAsset> meshAsset, const std::vector<uint32_t>& submeshes)
+		: m_MeshAsset(meshAsset), m_Submeshes(submeshes)
+	{
+		// TODO(Yan): we should actually copy materials in most cases
+		for (const auto& material : meshAsset->GetMaterials())
+			m_Materials.push_back(material);
+	}
+
+	Mesh::~Mesh()
+	{
+	}
+
+	void Mesh::OnUpdate(Timestep ts)
+	{
 	}
 
 }

@@ -18,7 +18,7 @@ namespace Haoyue {
 
 		virtual ~Asset() {}
 
-		virtual AssetType GetAssetType() const { return AssetType::Other; }
+		virtual AssetType GetAssetType() const { return AssetType::None; }
 		static AssetType GetStaticType() { return AssetType::None; }
 
 		virtual bool operator==(const Asset& other) const

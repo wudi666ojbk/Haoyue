@@ -25,8 +25,9 @@ namespace Haoyue {
 	bool MeshAssetSerializer::TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const
 	{
 		Ref<Asset> temp = asset;
-		asset = Ref<Mesh>::Create(metadata.FilePath);
-		return (asset.As<Mesh>())->GetStaticVertices().size() > 0; // Maybe?
+		asset = Ref<MeshAsset>::Create(metadata.FilePath);
+		asset->Handle = metadata.Handle;
+		return (asset.As<MeshAsset>())->GetStaticVertices().size() > 0; // Maybe?
 	}
 
 	bool EnvironmentSerializer::TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const

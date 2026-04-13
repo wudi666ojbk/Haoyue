@@ -17,6 +17,7 @@ namespace Haoyue {
 	{
 		Scene,
 		Mesh,
+		MeshAsset,
 		Texture,
 		EnvMap,
 		Audio,
