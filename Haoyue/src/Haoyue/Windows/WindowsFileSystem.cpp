@@ -103,6 +103,11 @@ namespace Haoyue {
 		CloseHandle(s_WatcherThread);
 	}
 
+	void FileSystem::SkipNextFileSystemChange()
+	{
+		s_IgnoreNextChange = true;
+	}
+
 	bool FileSystem::IsDirectory(const std::string& filepath)
 	{
 		bool result = std::filesystem::is_directory(filepath);
@@ -173,7 +178,10 @@ namespace Haoyue {
 				continue;
 
 			if (s_IgnoreNextChange)
+			{
+				s_IgnoreNextChange = false;
 				continue;
+			}
 
 			std::string oldName;
 			char fileName[MAX_PATH * 10] = "";

@@ -111,6 +111,24 @@ namespace Haoyue {
 		OnAssetRenamed(assetHandle, newFilePath);
 	}
 
+	bool AssetManager::MoveAsset(AssetHandle assetHandle, const std::string& destinationPath)
+	{
+		FileSystem::SkipNextFileSystemChange();
+
+		AssetMetadata assetInfo = GetMetadata(assetHandle);
+
+		bool result = FileSystem::MoveFile(assetInfo.FilePath, destinationPath);
+		if (!result)
+			return false;
+
+		s_AssetRegistry.erase(assetInfo.FilePath);
+		assetInfo.FilePath = destinationPath + "/" + assetInfo.FileName + "." + assetInfo.Extension;
+		s_AssetRegistry[assetInfo.FilePath] = assetInfo;
+
+		WriteRegistryToFile();
+		return true;
+	}
+
 	void AssetManager::OnAssetRenamed(AssetHandle assetHandle, const std::string& newFilePath)
 	{
 		AssetMetadata metadata = GetMetadata(assetHandle);
@@ -182,7 +200,7 @@ namespace Haoyue {
 				std::string mostLikelyCandiate;
 				uint32_t bestScore = 0;
 
-				for (auto& pathEntry : std::filesystem::recursive_directory_iterator("assets/"))
+				for (auto& pathEntry : std::filesystem::recursive_directory_iterator("Resources/"))
 				{
 					const std::filesystem::path& path = pathEntry.path();
 

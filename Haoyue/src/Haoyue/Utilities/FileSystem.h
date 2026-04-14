@@ -35,6 +35,7 @@ namespace Haoyue {
 		static void StartWatching();
 		static void StopWatching();
 
+		static void SkipNextFileSystemChange();
 	private:
 		static unsigned long Watch(void* param);
 

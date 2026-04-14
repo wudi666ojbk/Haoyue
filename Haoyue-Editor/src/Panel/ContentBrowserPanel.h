@@ -112,6 +112,8 @@ namespace Haoyue {
 		void RenderBreadCrumbs();
 		void RenderBottomBar();
 
+		void SelectAndStartRenaming(const AssetHandle handle, const std::string& currentName);
+
 		void HandleDirectoryRename(Ref<DirectoryInfo>& dirInfo);
 		void HandleAssetRename(AssetMetadata& asset);
 
@@ -123,9 +125,25 @@ namespace Haoyue {
 		void RemoveDirectory(Ref<DirectoryInfo>& dirInfo);
 		void OnDirectoryAdded(const std::string& directoryPath);
 
+		void MoveDirectory(AssetHandle directoryHandle, const std::string& destinationPath);
+
 		Ref<DirectoryInfo> GetDirectoryInfo(const std::string& filepath) const;
+		Ref<DirectoryInfo> GetDirectoryForAsset(AssetHandle asset) const;
 
 		SearchResults Search(const std::string& query, AssetHandle directoryHandle);
+
+		template<typename T, typename... Args>
+		Ref<T> CreateAsset(const std::string& filename, Args&&... args)
+		{
+			Ref<Asset> asset = AssetManager::CreateNewAsset<T>(filename, m_CurrentDirectory->FilePath, std::forward<Args>(args)...);
+
+			if (!asset)
+				return nullptr;
+
+			m_CurrentDirectory->Assets.push_back(asset->Handle);
+			UpdateCurrentDirectory(m_CurrentDirHandle);
+			return asset.As<T>();
+		}
 
 	private:
 		bool m_IsDragging = false;

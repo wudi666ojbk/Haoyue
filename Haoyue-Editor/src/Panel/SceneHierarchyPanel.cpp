@@ -559,8 +559,12 @@ namespace Haoyue {
 		DrawComponent<MeshComponent>(EditorResources::ComponentIcon, "Mesh", entity, [&](MeshComponent& mc)
 		{
 			UI::BeginPropertyGrid();
-			if (UI::PropertyAssetReference(TR("Mesh"), mc.Mesh))
+			Ref<MeshAsset> meshAsset;
+			if (mc.Mesh)
+				meshAsset = mc.Mesh->GetMeshAsset();
+			if (UI::PropertyAssetReference("Mesh", meshAsset))
 			{
+				mc.Mesh = Ref<Mesh>::Create(meshAsset);
 				if (entity.HasComponent<MeshColliderComponent>())
 				{
 					auto& mcc = entity.GetComponent<MeshColliderComponent>();

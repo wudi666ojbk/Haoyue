@@ -25,7 +25,7 @@ namespace Haoyue {
 		static bool IsAssetHandleValid(AssetHandle assetHandle) { return GetMetadata(assetHandle).IsValid(); }
 
 		static void Rename(AssetHandle assetHandle, const std::string& newName);
-		//static void MoveAsset(AssetHandle assetHandle, const std::string& filepath);
+		static bool MoveAsset(AssetHandle assetHandle, const std::string& destinationPath);
 		static void RemoveAsset(AssetHandle assetHandle);
 
 		static AssetType GetAssetTypeForFileType(const std::string& extension);
@@ -37,6 +37,8 @@ namespace Haoyue {
 		{
 			static_assert(std::is_base_of<Asset, T>::value, "CreateNewAsset only works for types derived from Asset");
 
+			FileSystem::SkipNextFileSystemChange();
+
 			AssetMetadata metadata;
 			metadata.Handle = AssetHandle();
 			metadata.FilePath = directoryPath + "/" + filename;
@@ -44,6 +46,33 @@ namespace Haoyue {
 			metadata.Extension = Utils::GetExtension(filename);
 			metadata.IsDataLoaded = true;
 			metadata.Type = T::GetStaticType();
+
+			if (FileSystem::Exists(metadata.FilePath))
+			{
+				bool foundAvailableFileName = false;
+				int current = 1;
+
+				while (!foundAvailableFileName)
+				{
+					std::string nextFilePath = directoryPath + "/" + metadata.FileName;
+					if (current < 10)
+						nextFilePath += " (0" + std::to_string(current) + ")";
+					else
+						nextFilePath += " (" + std::to_string(current) + ")";
+					nextFilePath += "." + metadata.Extension;
+
+					if (!FileSystem::Exists(nextFilePath))
+					{
+						foundAvailableFileName = true;
+						metadata.FilePath = nextFilePath;
+						metadata.FileName = Utils::RemoveExtension(Utils::GetFilename(metadata.FilePath));
+						break;
+					}
+
+					current++;
+				}
+			}
+
 			s_AssetRegistry[metadata.FilePath] = metadata;
 
 			WriteRegistryToFile();

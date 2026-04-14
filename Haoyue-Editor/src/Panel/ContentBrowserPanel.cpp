@@ -134,20 +134,32 @@ namespace Haoyue {
 								{
 									UpdateCurrentDirectory(m_CurrentDirHandle);
 									auto& createdDirectory = GetDirectoryInfo(m_CurrentDirectory->FilePath + "/New Folder");
-									m_SelectedAssets.Select(createdDirectory->Handle);
-									memset(m_RenameBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
-									memcpy(m_RenameBuffer, createdDirectory->Name.c_str(), createdDirectory->Name.size());
-									m_RenamingSelected = true;
+									SelectAndStartRenaming(createdDirectory->Handle, createdDirectory->Name);
 								}
 							}
 
 							if (ImGui::MenuItem("Physics Material"))
 							{
-								AssetManager::CreateNewAsset<PhysicsMaterial>("New Physics Material.hpm", m_CurrentDirectory->FilePath, 0.6f, 0.6f, 0.0f);
-								UpdateCurrentDirectory(m_CurrentDirHandle);
+								auto asset = CreateAsset<PhysicsMaterial>("New Physics Material.hpm", 0.6f, 0.6f, 0.0f);
+								const auto& metadata = AssetManager::GetMetadata(asset->Handle);
+								SelectAndStartRenaming(metadata.Handle, metadata.FileName);
 							}
 
 							ImGui::EndMenu();
+						}
+
+						if (ImGui::MenuItem("Import"))
+						{
+							std::string filepath = Application::Get().OpenFile();
+							if (!filepath.empty())
+							{
+								AssetHandle handle = AssetManager::ImportAsset(filepath);
+								if (handle != 0)
+								{
+									m_CurrentDirectory->Assets.push_back(handle);
+									UpdateCurrentDirectory(m_CurrentDirHandle);
+								}
+							}
 						}
 
 						if (ImGui::MenuItem("Refresh"))
@@ -282,6 +294,17 @@ namespace Haoyue {
 			ImGui::NextColumn();
 			if (ImGui::Button("Yes", ImVec2(columnWidth, 0)))
 			{
+				AssetHandle handle = directory->Handle;
+				std::string filepath = directory->FilePath;
+				deleted = FileSystem::DeleteFile(filepath);
+
+				if (deleted)
+				{
+					m_Directories.erase(handle);
+					m_CurrentDirectory->SubDirectories.erase(std::remove(m_CurrentDirectory->SubDirectories.begin(), m_CurrentDirectory->SubDirectories.end(), handle), m_CurrentDirectory->SubDirectories.end());
+					m_UpdateDirectoryNextFrame = true;
+				}
+
 				ImGui::CloseCurrentPopup();
 			}
 
@@ -409,6 +432,7 @@ namespace Haoyue {
 				deleted = FileSystem::DeleteFile(assetInfo.FilePath);
 				if (deleted)
 				{
+					m_CurrentDirectory->Assets.erase(std::remove(m_CurrentDirectory->Assets.begin(), m_CurrentDirectory->Assets.end(), assetInfo.Handle), m_CurrentDirectory->Assets.end());
 					AssetManager::RemoveAsset(assetInfo.Handle);
 					m_UpdateDirectoryNextFrame = true;
 				}
@@ -442,6 +466,43 @@ namespace Haoyue {
 
 	void ContentBrowserPanel::HandleDragDrop(Ref<Image2D> icon, AssetHandle assetHandle)
 	{
+		if (m_Directories.find(assetHandle) != m_Directories.end() && m_IsDragging)
+		{
+			if (ImGui::BeginDragDropTarget())
+			{
+				auto payload = ImGui::AcceptDragDropPayload("asset_payload");
+				if (payload)
+				{
+					int count = payload->DataSize / sizeof(AssetHandle);
+
+					for (int i = 0; i < count; i++)
+					{
+						AssetHandle handle = *(((AssetHandle*)payload->Data) + i);
+						auto& directory = m_Directories[assetHandle];
+
+						if (m_Directories.find(handle) == m_Directories.end())
+						{
+							bool wasMoved = AssetManager::MoveAsset(handle, directory->FilePath);
+							if (!wasMoved)
+								continue;
+
+							auto previousDirectory = GetDirectoryForAsset(handle);
+							previousDirectory->Assets.erase(std::remove(previousDirectory->Assets.begin(), previousDirectory->Assets.end(), handle), previousDirectory->Assets.end());
+							directory->Assets.push_back(handle);
+						}
+						else
+						{
+							MoveDirectory(handle, directory->FilePath);
+						}
+					}
+
+					m_UpdateDirectoryNextFrame = true;
+				}
+
+				ImGui::EndDragDropTarget();
+			}
+		}
+
 		if (!m_SelectedAssets.IsSelected(assetHandle) || m_IsDragging)
 			return;
 
@@ -452,13 +513,23 @@ namespace Haoyue {
 		{
 			UI::Image(icon, ImVec2(20, 20));
 			ImGui::SameLine();
-			ImGui::Text("Moving");
+			if (m_SelectedAssets.SelectionCount() == 1)
+			{
+				if (AssetManager::IsAssetHandleValid(m_SelectedAssets[0]))
+					ImGui::Text(AssetManager::GetMetadata(m_SelectedAssets[0]).FileName.c_str());
+				else
+					ImGui::Text(m_Directories[m_SelectedAssets[0]]->Name.c_str());
+			}
+			else
+			{
+				ImGui::Text("Dragging %d items", m_SelectedAssets.SelectionCount());
+			}
+
 			ImGui::SetDragDropPayload("asset_payload", m_SelectedAssets.GetSelectionData(), m_SelectedAssets.SelectionCount() * sizeof(AssetHandle));
 			m_IsDragging = true;
 			ImGui::EndDragDropSource();
 		}
 	}
-
 	void ContentBrowserPanel::RenderBreadCrumbs()
 	{
 		if (UI::ImageButton(EditorResources::BackButtonIcon->GetImage(), ImVec2(20, 18)))
@@ -560,6 +631,14 @@ namespace Haoyue {
 			ImGui::SliderInt("##column_count", &s_ColumnCount, 2, 15);
 		}
 		ImGui::EndChild();
+	}
+
+	void ContentBrowserPanel::SelectAndStartRenaming(AssetHandle handle, const std::string& currentName)
+	{
+		m_SelectedAssets.Select(handle);
+		memset(m_RenameBuffer, 0, MAX_INPUT_BUFFER_LENGTH);
+		memcpy(m_RenameBuffer, currentName.c_str(), currentName.size());
+		m_RenamingSelected = true;
 	}
 
 	void ContentBrowserPanel::HandleDirectoryRename(Ref<DirectoryInfo>& dirInfo)
@@ -757,6 +836,21 @@ namespace Haoyue {
 			});
 	}
 
+	void ContentBrowserPanel::MoveDirectory(AssetHandle directoryHandle, const std::string& destinationPath)
+	{
+		auto& directoryInfo = m_Directories[directoryHandle];
+		bool wasMoved = FileSystem::MoveFile(directoryInfo->FilePath, destinationPath);
+		if (!wasMoved)
+			return;
+
+		auto& parentDirectory = m_Directories[directoryInfo->Parent];
+		parentDirectory->SubDirectories.erase(std::remove(parentDirectory->SubDirectories.begin(), parentDirectory->SubDirectories.end(), directoryHandle), parentDirectory->SubDirectories.end());
+
+		auto& newParent = GetDirectoryInfo(destinationPath);
+		newParent->SubDirectories.push_back(directoryHandle);
+		directoryInfo->Parent = newParent->Handle;
+	}
+
 	Ref<DirectoryInfo> ContentBrowserPanel::GetDirectoryInfo(const std::string& filepath) const
 	{
 		std::string fixedFilepath = filepath;
@@ -766,6 +860,20 @@ namespace Haoyue {
 		{
 			if (directoryInfo->FilePath == fixedFilepath)
 				return directoryInfo;
+		}
+
+		return nullptr;
+	}
+
+	Ref<DirectoryInfo> ContentBrowserPanel::GetDirectoryForAsset(AssetHandle asset) const
+	{
+		for (const auto& [directoryHandle, directoryInfo] : m_Directories)
+		{
+			for (const auto& assetHandle : directoryInfo->Assets)
+			{
+				if (asset == assetHandle)
+					return directoryInfo;
+			}
 		}
 
 		return nullptr;
