@@ -106,37 +106,60 @@ namespace Haoyue {
 						newEntity.AddComponent<CameraComponent>();
 						SetSelected(newEntity);
 					}
-					if (ImGui::BeginMenu(TR("Mesh")))
+					if (ImGui::BeginMenu("3D"))
 					{
-						if (ImGui::MenuItem(TR("Empty Mesh")))
-						{
-							auto newEntity = m_Context->CreateEntity(TR("Empty Mesh"));
-							newEntity.AddComponent<MeshComponent>();
-							SetSelected(newEntity);
-						}
 						if (ImGui::MenuItem(TR("Cube")))
 						{
-							auto newEntity = m_Context->CreateEntity(TR("Cube"));
+							auto newEntity = m_Context->CreateEntity("Cube");
 							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("Resources/meshes/Default/Cube.fbx");
 							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
+							SetSelected(newEntity);
 						}
 						if (ImGui::MenuItem(TR("Sphere")))
 						{
-							auto newEntity = m_Context->CreateEntity(TR("Sphere"));
+							auto newEntity = m_Context->CreateEntity("Sphere");
 							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("Resources/meshes/Default/Sphere.fbx");
 							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
+							SetSelected(newEntity);
 						}
 						if (ImGui::MenuItem(TR("Capsule")))
 						{
-							auto newEntity = m_Context->CreateEntity(TR("Capsule"));
+							auto newEntity = m_Context->CreateEntity("Capsule");
 							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("Resources/meshes/Default/Capsule.fbx");
 							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
+							newEntity.AddComponent<CapsuleColliderComponent>();
+							SetSelected(newEntity);
+						}
+						if (ImGui::MenuItem(TR("Cylinder")))
+						{
+							auto newEntity = m_Context->CreateEntity("Cylinder");
+							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("Resources/meshes/Default/Cylinder.fbx");
+							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
+							newEntity.AddComponent<MeshColliderComponent>();
+							SetSelected(newEntity);
+						}
+						if (ImGui::MenuItem(TR("Torus")))
+						{
+							auto newEntity = m_Context->CreateEntity("Torus");
+							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("Resources/meshes/Default/Torus.fbx");
+							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
+							newEntity.AddComponent<MeshColliderComponent>();
+							SetSelected(newEntity);
 						}
 						if (ImGui::MenuItem(TR("Plane")))
 						{
-							auto newEntity = m_Context->CreateEntity(TR("Plane"));
+							auto newEntity = m_Context->CreateEntity("Plane");
 							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("Resources/meshes/Default/Plane.fbx");
 							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
+							newEntity.AddComponent<MeshColliderComponent>();
+							SetSelected(newEntity);
+						}
+						if (ImGui::MenuItem(TR("Cone")))
+						{
+							auto newEntity = m_Context->CreateEntity("Cone");
+							Ref<MeshAsset> meshAsset = AssetManager::GetAsset<MeshAsset>("Resources/meshes/Default/Cone.fbx");
+							newEntity.AddComponent<MeshComponent>(Ref<Mesh>::Create(meshAsset));
+							newEntity.AddComponent<MeshColliderComponent>();
 							SetSelected(newEntity);
 						}
 						ImGui::EndMenu();

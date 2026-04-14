@@ -13,8 +13,9 @@ namespace Haoyue {
 		Invalid = BIT(1)
 	};
 
-	enum class AssetType : int8_t
+	enum class AssetType : uint16_t
 	{
+		None = 0,
 		Scene,
 		Mesh,
 		MeshAsset,
@@ -24,9 +25,6 @@ namespace Haoyue {
 		Script,
 		PhysicsMat,
 		Directory,
-		Other,
-		None,
-		Missing
 	};
 
 	inline static std::unordered_map<std::string, AssetType> s_AssetExtensionMap =
@@ -56,15 +54,14 @@ namespace Haoyue {
 		{
 			if (assetType == "None")        return AssetType::None;
 			if (assetType == "Scene")       return AssetType::Scene;
-			if (assetType == "Mesh")        return AssetType::Mesh;
+			if (assetType == "MeshAsset")	return AssetType::MeshAsset;
+			if (assetType == "Mesh")		return AssetType::Mesh;
 			if (assetType == "Texture")     return AssetType::Texture;
 			if (assetType == "EnvMap")      return AssetType::EnvMap;
 			if (assetType == "Audio")       return AssetType::Audio;
 			if (assetType == "Script")      return AssetType::Script;
 			if (assetType == "PhysicsMat")  return AssetType::PhysicsMat;
 			if (assetType == "Directory")   return AssetType::Directory;
-			if (assetType == "Other")       return AssetType::Other;
-			if (assetType == "Missing")     return AssetType::Missing;
 
 			return AssetType::None;
 		}
@@ -75,6 +72,7 @@ namespace Haoyue {
 			{
 			case AssetType::None:        return "None";
 			case AssetType::Scene:       return "Scene";
+			case AssetType::MeshAsset:	 return "MeshAsset";
 			case AssetType::Mesh:        return "Mesh";
 			case AssetType::Texture:     return "Texture";
 			case AssetType::EnvMap:      return "EnvMap";
@@ -82,8 +80,6 @@ namespace Haoyue {
 			case AssetType::Script:      return "Script";
 			case AssetType::PhysicsMat:  return "PhysicsMat";
 			case AssetType::Directory:   return "Directory";
-			case AssetType::Other:       return "Other";
-			case AssetType::Missing:     return "Missing";
 			}
 
 			return "None";

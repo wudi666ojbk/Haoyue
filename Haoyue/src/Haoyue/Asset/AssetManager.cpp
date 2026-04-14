@@ -79,16 +79,6 @@ namespace Haoyue {
 				return metadata;
 		}
 
-		// 添加调试输出
-		HY_CORE_WARN("GetMetadata: Handle {} not found in registry!", (uint64_t)handle);
-		HY_CORE_WARN("Registry contains {} entries:", s_AssetRegistry.size());
-		for (const auto& [path, meta] : s_AssetRegistry)
-		{
-			HY_CORE_WARN("  - Path: {}, Handle: {}, Type: {}", path, (uint64_t)meta.Handle, (int)meta.Type);
-		}
-
-		return s_NullMetadata;
-
 		return s_NullMetadata;
 	}
 
@@ -145,7 +135,7 @@ namespace Haoyue {
 		if (extension == "hsc") return AssetType::Scene;
 		if (extension == "fbx") return AssetType::MeshAsset;
 		if (extension == "obj") return AssetType::MeshAsset;
-		if (extension == "hym") return AssetType::Mesh;
+		if (extension == "hzm") return AssetType::Mesh;
 		if (extension == "png") return AssetType::Texture;
 		if (extension == "hdr") return AssetType::EnvMap;
 		if (extension == "hpm") return AssetType::PhysicsMat;
@@ -165,7 +155,7 @@ namespace Haoyue {
 		strStream << stream.rdbuf();
 
 		YAML::Node data = YAML::Load(strStream.str());
-		auto handles = data["Assets"];
+		auto handles = data["Resources"];
 		if (!handles)
 		{
 			HY_CORE_ERROR("AssetRegistry appears to be corrupted!");
@@ -192,7 +182,7 @@ namespace Haoyue {
 				std::string mostLikelyCandiate;
 				uint32_t bestScore = 0;
 
-				for (auto& pathEntry : std::filesystem::recursive_directory_iterator("Resources/"))
+				for (auto& pathEntry : std::filesystem::recursive_directory_iterator("assets/"))
 				{
 					const std::filesystem::path& path = pathEntry.path();
 
@@ -294,7 +284,7 @@ namespace Haoyue {
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 
-		out << YAML::Key << "Assets" << YAML::BeginSeq;
+		out << YAML::Key << "Resources" << YAML::BeginSeq;
 		for (auto& [filepath, metadata] : s_AssetRegistry)
 		{
 			out << YAML::BeginMap;

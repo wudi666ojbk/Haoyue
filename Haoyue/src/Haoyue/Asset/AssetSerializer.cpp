@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "AssetSerializer.h"
+
 #include "Haoyue/Utilities/StringUtils.h"
 #include "Haoyue/Utilities/FileSystem.h"
+
 #include "Haoyue/Renderer/Mesh.h"
 #include "Haoyue/Renderer/Renderer.h"
 
@@ -37,7 +39,6 @@ namespace Haoyue {
 		if (!radiance || !irradiance)
 			return false;
 
-		Ref<Asset> temp = asset;
 		asset = Ref<Environment>::Create(radiance, irradiance);
 		asset->Handle = metadata.Handle;
 		return true;
@@ -59,7 +60,7 @@ namespace Haoyue {
 		fout << out.c_str();
 	}
 
-	bool PhysicsMaterialSerializer::TryLoadData(const AssetMetadata& metadata,Ref<Asset>& asset) const
+	bool PhysicsMaterialSerializer::TryLoadData(const AssetMetadata& metadata, Ref<Asset>& asset) const
 	{
 		std::ifstream stream(metadata.FilePath);
 		if (!stream.is_open())
