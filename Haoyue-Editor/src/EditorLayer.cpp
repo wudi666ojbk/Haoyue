@@ -51,12 +51,15 @@ namespace Haoyue {
 		m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
 		m_ObjectsPanel = CreateScope<ObjectsPanel>();
 
-		NewScene();
+		Renderer2D::SetLineWidth(m_LineWidth);
 
+		NewScene();
 		m_ViewportRenderer = Ref<SceneRenderer>::Create(m_CurrentScene);
 
 		AssetEditorPanel::RegisterDefaultEditors();
 		FileSystem::StartWatching();
+
+		UpdateSceneRendererSettings();
 	}
 
 	void EditorLayer::OnDetach()
@@ -125,6 +128,18 @@ namespace Haoyue {
         m_EditorScene->DestroyEntity(entity);
 	}
 
+	void EditorLayer::UpdateSceneRendererSettings()
+	{
+		std::array<Ref<SceneRenderer>, 1> renderers = { m_ViewportRenderer };
+
+		for (Ref<SceneRenderer> renderer : renderers)
+		{
+			SceneRendererOptions& options = renderer->GetOptions();
+			options.ShowSelectedInWireframe = m_ShowSelectedWireframe;
+			options.ShowCollidersWireframe = m_ShowPhysicsCollidersWireframe;
+		}
+	}
+
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		auto [x, y] = GetMouseViewportSpace();
@@ -137,7 +152,63 @@ namespace Haoyue {
 
 				m_EditorScene->OnRenderEditor(m_ViewportRenderer, ts, m_EditorCamera);
 
-#ifdef RENDERER_2D
+				Renderer2D::SetTargetRenderPass(m_ViewportRenderer->GetExternalCompositeRenderPass());
+
+				if (m_ShowBoundingBoxes)
+				{
+					Renderer2D::BeginScene(m_EditorCamera.GetViewProjection());
+					if (m_ShowBoundingBoxSelectedMeshOnly)
+					{
+						if (m_SelectionContext.size())
+						{
+							auto& selection = m_SelectionContext[0];
+							if (selection.Entity.HasComponent<MeshComponent>())
+							{
+								if (m_ShowBoundingBoxSubmeshes)
+								{
+									auto& mesh = selection.Entity.GetComponent<MeshComponent>().Mesh;
+									if (mesh)
+									{
+										auto& submeshIndices = mesh->GetSubmeshes();
+										auto meshAsset = mesh->GetMeshAsset();
+										auto& submeshes = meshAsset->GetSubmeshes();
+										for (uint32_t submeshIndex : submeshIndices)
+										{
+											glm::mat4 transform = selection.Entity.GetComponent<TransformComponent>().GetTransform();
+											const AABB& aabb = submeshes[submeshIndex].BoundingBox;
+											Renderer2D::DrawAABB(aabb, transform * submeshes[submeshIndex].Transform, glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f });
+										}
+									}
+								}
+								else
+								{
+									auto& mesh = selection.Entity.GetComponent<MeshComponent>().Mesh;
+									if (mesh)
+									{
+										glm::mat4 transform = selection.Entity.GetComponent<TransformComponent>().GetTransform();
+										const AABB& aabb = mesh->GetMeshAsset()->GetBoundingBox();
+										Renderer2D::DrawAABB(aabb, transform, glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f });
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						auto entities = m_CurrentScene->GetAllEntitiesWith<MeshComponent>();
+						for (auto e : entities)
+						{
+							Entity entity = { e, m_CurrentScene.Raw() };
+							glm::mat4 transform = entity.GetComponent<TransformComponent>().GetTransform();
+							const AABB& aabb = entity.GetComponent<MeshComponent>().Mesh->GetMeshAsset()->GetBoundingBox();
+							Renderer2D::DrawAABB(aabb, transform, glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f });
+						}
+					}
+					Renderer2D::EndScene();
+				}
+
+
+#if RENDERER_2D
 				if (m_DrawOnTopBoundingBoxes)
 				{
 					Renderer::BeginRenderPass(m_ViewportRenderer->GetFinalRenderPass(), false);
@@ -403,18 +474,29 @@ namespace Haoyue {
 				}
 			}
 
-			if (UI::Property("Show Bounding Boxes", m_UIShowBoundingBoxes))
-				ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
-			if (m_UIShowBoundingBoxes && UI::Property("On Top", m_UIShowBoundingBoxesOnTop))
-				ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
+			if (UI::Property("Line Width", m_LineWidth, 0.25f, 0.5f, 5.0f))
+				Renderer2D::SetLineWidth(m_LineWidth);
+
+			UI::Property("Show Bounding Boxes", m_ShowBoundingBoxes);
+			if (m_ShowBoundingBoxes)
+				UI::Property("Selected Entity", m_ShowBoundingBoxSelectedMeshOnly);
+			if (m_ShowBoundingBoxes && m_ShowBoundingBoxSelectedMeshOnly)
+				UI::Property("Submeshes", m_ShowBoundingBoxSubmeshes);
+
+			if (UI::Property("Show Selected Wireframe", m_ShowSelectedWireframe))
+				UpdateSceneRendererSettings();
+
+			if (UI::Property("Show Physics Colliders", m_ShowPhysicsCollidersWireframe))
+				UpdateSceneRendererSettings();
+
+
+			UI::EndPropertyGrid();
 
 			char* label = m_SelectionMode == SelectionMode::Entity ? "Entity" : "Mesh";
 			if (ImGui::Button(label))
 			{
 				m_SelectionMode = m_SelectionMode == SelectionMode::Entity ? SelectionMode::SubMesh : SelectionMode::Entity;
 			}
-
-			UI::EndPropertyGrid();
 
 			ImGui::Separator();
 			ImGui::PushFont(boldFont);
@@ -443,10 +525,9 @@ namespace Haoyue {
 			UI::EndPropertyGrid();
 		}
 		ImGui::End();
-		
+
 		m_ContentBrowserPanel->OnImGuiRender();
 		m_ObjectsPanel->OnImGuiRender();
-		AssetEditorPanel::OnImGuiRender();
 
 		// ImGui::ShowDemoWindow();
 
@@ -614,13 +695,6 @@ namespace Haoyue {
 						entity.AddComponent<MeshComponent>(Ref<Mesh>::Create(asset.As<MeshAsset>()));
 						SelectEntity(entity);
 					}
-
-					if (asset->GetAssetType() == AssetType::Mesh)
-					{
-						Entity entity = m_EditorScene->CreateEntity(assetData.FileName);
-						entity.AddComponent<MeshComponent>(asset.As<Mesh>());
-						SelectEntity(entity);
-					}
 				}
 			}
 			ImGui::EndDragDropTarget();
@@ -642,6 +716,15 @@ namespace Haoyue {
 					SaveScene();
 				if (ImGui::MenuItem(TR("Save Scene As..."), "Ctrl+Shift+S"))
 					SaveSceneAs();
+
+				ImGui::Separator();
+				std::string otherRenderer = RendererAPI::Current() == RendererAPIType::Vulkan ? "OpenGL" : "Vulkan";
+				std::string label = std::string("Restart with ") + otherRenderer;
+				if (ImGui::MenuItem(label.c_str()))
+				{
+					RendererAPI::SetAPI(RendererAPI::Current() == RendererAPIType::Vulkan ? RendererAPIType::OpenGL : RendererAPIType::Vulkan);
+					Application::Get().Close();
+				}
 				ImGui::Separator();
 				if (ImGui::MenuItem(TR("Exit")))
 					p_open = false;
@@ -693,7 +776,7 @@ namespace Haoyue {
 			if (selectedEntity.HasComponent<MeshComponent>())
 			{
 				Ref<Mesh> mesh = selectedEntity.GetComponent<MeshComponent>().Mesh;
-				if (mesh && mesh->GetAssetType() == AssetType::MeshAsset)
+				if (mesh && mesh->GetAssetType() == AssetType::Mesh)
 				{
 					auto& materials = mesh->GetMaterials();
 					static uint32_t selectedMaterialIndex = 0;
@@ -1001,42 +1084,7 @@ namespace Haoyue {
 
 		ImGui::End();
 
-		if (m_ShowWelcomePopup)
-		{
-			m_ShowWelcomePopup = false;
-		}
-
-		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-		ImGui::SetNextWindowSize(ImVec2{ 400,0 });
-
-		if (m_ShowAboutPopup)
-		{
-			ImGui::OpenPopup("About##AboutPopup");
-			m_ShowAboutPopup = false;
-		}
-
-		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-		ImGui::SetNextWindowSize(ImVec2{ 600,0 });
-		if (ImGui::BeginPopupModal("About##AboutPopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-		{
-			ImGui::PushFont(largeFont);
-			ImGui::Text("Haoyue Engine");
-			ImGui::PopFont();
-
-			ImGui::Separator();
-			ImGui::TextWrapped(TR("Haoyue is an early-stage interactive application and rendering engine for Windows."));
-			ImGui::Separator();
-			ImGui::PushFont(boldFont);
-			ImGui::PopFont();
-			ImGui::Separator();
-			ImGui::TextColored(ImVec4{ 0.7f, 0.7f, 0.7f, 1.0f }, TR("This software contains source code provided by NVIDIA Corporation."));
-
-			if (ImGui::Button("OK"))
-				ImGui::CloseCurrentPopup();
-
-			ImGui::EndPopup();
-		}
+		AssetEditorPanel::OnImGuiRender();
 	}
 
 	void EditorLayer::OnEvent(Event& e)
@@ -1118,31 +1166,30 @@ namespace Haoyue {
 		{
 			switch (e.GetKeyCode())
 			{
-				case KeyCode::B:
-					// Toggle bounding boxes 
-					m_UIShowBoundingBoxes = !m_UIShowBoundingBoxes;
-					ShowBoundingBoxes(m_UIShowBoundingBoxes, m_UIShowBoundingBoxesOnTop);
-					break;
-				case KeyCode::D:
-					if (m_SelectionContext.size())
-					{
-						Entity selectedEntity = m_SelectionContext[0].Entity;
-						m_EditorScene->DuplicateEntity(selectedEntity);
-					}
-					break;
-				case KeyCode::G:
-					// Toggle grid
-					m_ViewportRenderer->GetOptions().ShowGrid = !m_ViewportRenderer->GetOptions().ShowGrid;
-					break;
-				case KeyCode::N:
-					NewScene();
-					break;
-				case KeyCode::O:
-					OpenScene();
-					break;
-				case KeyCode::S:
-					SaveScene();
-					break;
+			case KeyCode::B:
+				// Toggle bounding boxes 
+				m_ShowBoundingBoxes = !m_ShowBoundingBoxes;
+				break;
+			case KeyCode::D:
+				if (m_SelectionContext.size())
+				{
+					Entity selectedEntity = m_SelectionContext[0].Entity;
+					m_EditorScene->DuplicateEntity(selectedEntity);
+				}
+				break;
+			case KeyCode::G:
+				// Toggle grid
+				m_ViewportRenderer->GetOptions().ShowGrid = !m_ViewportRenderer->GetOptions().ShowGrid;
+				break;
+			case KeyCode::N:
+				NewScene();
+				break;
+			case KeyCode::O:
+				OpenScene();
+				break;
+			case KeyCode::S:
+				SaveScene();
+				break;
 			}
 
 			if (Input::IsKeyPressed(HY_KEY_LEFT_SHIFT))
@@ -1258,12 +1305,6 @@ namespace Haoyue {
 
 	Ray EditorLayer::CastMouseRay()
 	{
-		auto [mouseX, mouseY] = GetMouseViewportSpace();
-		if (mouseX > -1.0f && mouseX < 1.0f && mouseY > -1.0f && mouseY < 1.0f)
-		{
-			auto [origin, direction] = CastRay(mouseX, mouseY);
-			return Ray(origin, direction);
-		}
 		return Ray::Zero();
 	}
 

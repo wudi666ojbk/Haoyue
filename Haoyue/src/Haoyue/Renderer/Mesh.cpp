@@ -89,6 +89,9 @@ namespace Haoyue {
 		uint32_t vertexCount = 0;
 		uint32_t indexCount = 0;
 
+		m_BoundingBox.Min = { FLT_MAX, FLT_MAX, FLT_MAX };
+		m_BoundingBox.Max = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+
 		m_Submeshes.reserve(scene->mNumMeshes);
 		for (size_t m = 0; m < scene->mNumMeshes; m++)
 		{
@@ -172,6 +175,20 @@ namespace Haoyue {
 		}
 
 		TraverseNodes(scene->mRootNode);
+
+		for (const auto& submesh : m_Submeshes)
+		{
+			AABB transformedSubmeshAABB = submesh.BoundingBox;
+			glm::vec3 min = glm::vec3(submesh.Transform * glm::vec4(transformedSubmeshAABB.Min, 1.0f));
+			glm::vec3 max = glm::vec3(submesh.Transform * glm::vec4(transformedSubmeshAABB.Max, 1.0f));
+
+			m_BoundingBox.Min.x = glm::min(m_BoundingBox.Min.x, min.x);
+			m_BoundingBox.Min.y = glm::min(m_BoundingBox.Min.y, min.y);
+			m_BoundingBox.Min.z = glm::min(m_BoundingBox.Min.z, min.z);
+			m_BoundingBox.Max.x = glm::max(m_BoundingBox.Max.x, max.x);
+			m_BoundingBox.Max.y = glm::max(m_BoundingBox.Max.y, max.y);
+			m_BoundingBox.Max.z = glm::max(m_BoundingBox.Max.z, max.z);
+		}
 
 		// Bones
 		if (m_IsAnimated)

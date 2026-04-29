@@ -10,6 +10,20 @@ namespace Haoyue {
 	VulkanVertexBuffer::VulkanVertexBuffer(uint32_t size, VertexBufferUsage usage)
 		: m_Size(size)
 	{
+		Ref<VulkanVertexBuffer> instance = this;
+		Renderer::Submit([instance]() mutable
+			{
+				auto device = VulkanContext::GetCurrentDevice();
+				VulkanAllocator allocator("VertexBuffer");
+
+				VkBufferCreateInfo vertexBufferCreateInfo = {};
+				vertexBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+				vertexBufferCreateInfo.size = instance->m_Size;
+				vertexBufferCreateInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+
+				instance->m_MemoryAllocation = allocator.AllocateBuffer(vertexBufferCreateInfo, VMA_MEMORY_USAGE_CPU_TO_GPU, instance->m_VulkanBuffer);
+				instance->m_LocalData.Allocate(instance->m_Size);
+			});
 	}
 
 	VulkanVertexBuffer::VulkanVertexBuffer(void* data, uint32_t size, VertexBufferUsage usage)
@@ -86,4 +100,22 @@ namespace Haoyue {
 		});
 	}
 
+	void VulkanVertexBuffer::SetData(void* buffer, uint32_t size, uint32_t offset)
+	{
+		HY_CORE_ASSERT(size <= m_LocalData.Size);
+		memcpy(m_LocalData.Data, (uint8_t*)buffer + offset, size);;
+		Ref<VulkanVertexBuffer> instance = this;
+		Renderer::Submit([instance, size, offset]() mutable
+		{
+			instance->RT_SetData(instance->m_LocalData.Data, size, offset);
+		});
+	}
+
+	void VulkanVertexBuffer::RT_SetData(void* buffer, uint32_t size, uint32_t offset)
+	{
+		VulkanAllocator allocator("VulkanVertexBuffer");
+		uint8_t* pData = allocator.MapMemory<uint8_t>(m_MemoryAllocation);
+		memcpy(pData, (uint8_t*)buffer + offset, size);
+		allocator.UnmapMemory(m_MemoryAllocation);
+	}
 }

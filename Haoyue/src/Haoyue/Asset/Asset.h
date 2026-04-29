@@ -21,6 +21,8 @@ namespace Haoyue {
 		virtual AssetType GetAssetType() const { return AssetType::None; }
 		static AssetType GetStaticType() { return AssetType::None; }
 
+		bool IsValid() const { return ((Flags & (uint16_t)AssetFlag::Missing) | (Flags & (uint16_t)AssetFlag::Invalid)) == 0; }
+
 		virtual bool operator==(const Asset& other) const
 		{
 			return Handle == other.Handle;

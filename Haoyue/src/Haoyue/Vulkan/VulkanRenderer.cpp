@@ -266,6 +266,9 @@ namespace Haoyue {
 
 	void VulkanRenderer::RenderMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, Ref<Material> material, const glm::mat4& transform, Buffer additionalUniforms)
 	{
+		HY_CORE_ASSERT(mesh);
+		HY_CORE_ASSERT(mesh->GetMeshAsset());
+
 		Buffer pushConstantBuffer;
 		pushConstantBuffer.Allocate(sizeof(glm::mat4) + additionalUniforms.Size);
 		if (additionalUniforms.Size)
@@ -273,34 +276,42 @@ namespace Haoyue {
 
 		Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
 		Renderer::Submit([renderCommandBuffer, pipeline, uniformBufferSet, mesh, vulkanMaterial, transform, pushConstantBuffer]() mutable
-		{
-			HY_SCOPE_PERF("VulkanRenderer::RenderMeshWithMaterial");
+			{
+				HY_SCOPE_PERF("VulkanRenderer::RenderMeshWithMaterial");
 
-			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
-			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+				uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+				VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
 
-			Ref<MeshAsset> meshAsset = mesh->GetMeshAsset();
-			auto vulkanMeshVB = meshAsset->GetVertexBuffer().As<VulkanVertexBuffer>();
-			VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
-			VkDeviceSize offsets[1] = { 0 };
-			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
+				Ref<MeshAsset> meshAsset = mesh->GetMeshAsset();
+				auto vulkanMeshVB = meshAsset->GetVertexBuffer().As<VulkanVertexBuffer>();
+				VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
+				VkDeviceSize offsets[1] = { 0 };
+				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
 
-			auto vulkanMeshIB = Ref<VulkanIndexBuffer>(meshAsset->GetIndexBuffer());
-			VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
-			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
+				auto vulkanMeshIB = Ref<VulkanIndexBuffer>(meshAsset->GetIndexBuffer());
+				VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
+				vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-			const auto& writeDescriptors = RT_RetrieveOrCreateWriteDescriptors(uniformBufferSet, vulkanMaterial);
-			vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
+				const auto& writeDescriptors = RT_RetrieveOrCreateWriteDescriptors(uniformBufferSet, vulkanMaterial);
+				vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
 
-			Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
-			VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
-			VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
-			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+				Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
+				VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
+				VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-			// Bind descriptor sets describing shader binding points
-			VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet(frameIndex);
-			if (descriptorSet)
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
+				float lineWidth = vulkanPipeline->GetSpecification().LineWidth;
+				if (lineWidth != 1.0f)
+					vkCmdSetLineWidth(commandBuffer, lineWidth);
+
+				// Bind descriptor sets describing shader binding points
+				VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet(frameIndex);
+				if (descriptorSet)
+					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
+
+				Buffer uniformStorageBuffer = vulkanMaterial->GetUniformStorageBuffer();
+				if (uniformStorageBuffer)
+					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantBuffer.Size, uniformStorageBuffer.Size, uniformStorageBuffer.Data);
 
 			auto& submeshes = meshAsset->GetSubmeshes();
 			for (Submesh& submesh : submeshes)
@@ -351,6 +362,50 @@ namespace Haoyue {
 			vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
 			vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), uniformStorageBuffer.Size, uniformStorageBuffer.Data);
 			vkCmdDrawIndexed(commandBuffer, s_Data->QuadIndexBuffer->GetCount(), 1, 0, 0, 0);
+		});
+	}
+
+	void VulkanRenderer::RenderGeometry(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Material> material, Ref<VertexBuffer> vertexBuffer, Ref<IndexBuffer> indexBuffer, const glm::mat4& transform, uint32_t indexCount /*= 0*/)
+	{
+		Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
+		if (indexCount == 0)
+			indexCount = indexBuffer->GetCount();
+
+		Renderer::Submit([renderCommandBuffer, pipeline, uniformBufferSet, vulkanMaterial, vertexBuffer, indexBuffer, transform, indexCount]() mutable
+		{
+			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+
+			Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
+
+			VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
+
+			auto vulkanMeshVB = vertexBuffer.As<VulkanVertexBuffer>();
+			VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
+			VkDeviceSize offsets[1] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
+
+			auto vulkanMeshIB = indexBuffer.As<VulkanIndexBuffer>();
+			VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
+			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+			VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+			const auto& writeDescriptors = RT_RetrieveOrCreateWriteDescriptors(uniformBufferSet, vulkanMaterial);
+			vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
+
+			uint32_t bufferIndex = Renderer::GetCurrentFrameIndex();
+			VkDescriptorSet descriptorSet = vulkanMaterial->GetDescriptorSet(bufferIndex);
+			if (descriptorSet)
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptorSet, 0, nullptr);
+
+			vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &transform);
+			Buffer uniformStorageBuffer = vulkanMaterial->GetUniformStorageBuffer();
+			if (uniformStorageBuffer)
+				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(glm::mat4), uniformStorageBuffer.Size, uniformStorageBuffer.Data);
+
+			vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
 		});
 	}
 
@@ -484,9 +539,9 @@ namespace Haoyue {
 	{
 	}
 
-	void VulkanRenderer::BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, const Ref<RenderPass>& renderPass)
+	void VulkanRenderer::BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, const Ref<RenderPass>& renderPass, bool explicitClear)
 	{
-		Renderer::Submit([renderCommandBuffer, renderPass]()
+		Renderer::Submit([renderCommandBuffer, renderPass, explicitClear]()
 		{
 			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
 			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
@@ -516,6 +571,39 @@ namespace Haoyue {
 			renderPassBeginInfo.framebuffer = framebuffer->GetVulkanFramebuffer();
 
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+			if (explicitClear)
+			{
+				uint32_t colorAttachmentCount = (uint32_t)framebuffer->GetColorAttachmentCount();
+				uint32_t totalAttachmentCount = colorAttachmentCount + (framebuffer->HasDepthAttachment() ? 1 : 0);
+				HY_CORE_ASSERT(clearValues.size() == totalAttachmentCount);
+
+				std::vector<VkClearAttachment> attachments(totalAttachmentCount);
+				std::vector<VkClearRect> clearRects(totalAttachmentCount);
+				for (uint32_t i = 0; i < colorAttachmentCount; i++)
+				{
+					attachments[i].aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+					attachments[i].colorAttachment = i;
+					attachments[i].clearValue = clearValues[i];
+
+					clearRects[i].rect.offset = { (int32_t)0, (int32_t)0 };
+					clearRects[i].rect.extent = { width, height };
+					clearRects[i].baseArrayLayer = 0;
+					clearRects[i].layerCount = 1;
+				}
+
+				if (framebuffer->HasDepthAttachment())
+				{
+					attachments[colorAttachmentCount].aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+					attachments[colorAttachmentCount].clearValue = clearValues[colorAttachmentCount];
+					clearRects[colorAttachmentCount].rect.offset = { (int32_t)0, (int32_t)0 };
+					clearRects[colorAttachmentCount].rect.extent = { width, height };
+					clearRects[colorAttachmentCount].baseArrayLayer = 0;
+					clearRects[colorAttachmentCount].layerCount = 1;
+				}
+
+				vkCmdClearAttachments(commandBuffer, totalAttachmentCount, attachments.data(), totalAttachmentCount, clearRects.data());
+			}
 
 			// Update dynamic viewport state
 			VkViewport viewport = {};

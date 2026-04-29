@@ -7,7 +7,7 @@
 
 namespace Haoyue {
 
-	Ref<RenderCommandBuffer> RenderCommandBuffer::Create(uint32_t count)
+	Ref<RenderCommandBuffer> RenderCommandBuffer::Create(uint32_t count, const std::string& debugName)
 	{
 		switch (RendererAPI::Current())
 		{

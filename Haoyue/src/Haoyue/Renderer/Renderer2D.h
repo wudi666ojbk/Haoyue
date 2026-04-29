@@ -1,7 +1,10 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include "Haoyue/Core/Math/AABB.h"
 
+#include "Haoyue/Renderer/Mesh.h"
+#include "Haoyue/Renderer/RenderPass.h"
 #include "Haoyue/Renderer/Texture.h"
 
 namespace Haoyue {
@@ -14,7 +17,9 @@ namespace Haoyue {
 
 		static void BeginScene(const glm::mat4& viewProj, bool depthTest = true);
 		static void EndScene();
-		static void Flush();
+
+		static Ref<RenderPass> GetTargetRenderPass();
+		static void SetTargetRenderPass(Ref<RenderPass> renderPass);
 
 		// Primitives
 		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color);
@@ -32,12 +37,18 @@ namespace Haoyue {
 
 		static void DrawRotatedRect(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
 		static void DrawRotatedRect(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-		
+
 		// Thickness is between 0 and 1
 		static void DrawCircle(const glm::vec2& p0, float radius, const glm::vec4& color, float thickness = 0.05f);
 		static void DrawCircle(const glm::vec3& p0, float radius, const glm::vec4& color, float thickness = 0.05f);
 
 		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color = glm::vec4(1.0f));
+
+		static void DrawAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
+		static void DrawAABB(Ref<Mesh> mesh, const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
+
+		static void SetLineWidth(float lineWidth);
+
 		// Stats
 		struct Statistics
 		{

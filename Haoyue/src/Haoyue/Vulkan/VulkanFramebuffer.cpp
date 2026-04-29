@@ -78,17 +78,21 @@ namespace Haoyue {
 				auto device = VulkanContext::GetCurrentDevice()->GetVulkanDevice();
 				vkDestroyFramebuffer(device, framebuffer, nullptr);
 			});
-			for (auto image : m_AttachmentImages)
-				image->Release();
 
-			if (m_DepthAttachmentImage)
-				m_DepthAttachmentImage->Release();
+			// Don't free the images if we don't own them
+			if (!m_Specification.ExistingFramebuffer)
+			{
+				for (auto image : m_AttachmentImages)
+					image->Release();
+
+				if (m_DepthAttachmentImage)
+					m_DepthAttachmentImage->Release();
+			}
 		}
 
 		VulkanAllocator allocator("Framebuffer");
 
 		std::vector<VkAttachmentDescription> attachmentDescriptions;
-		attachmentDescriptions.reserve(m_AttachmentImages.size());
 
 		std::vector<VkAttachmentReference> colorAttachmentReferences;
 		VkAttachmentReference depthAttachmentReference;
@@ -97,46 +101,57 @@ namespace Haoyue {
 
 		bool createImages = m_AttachmentImages.empty();
 
+		if (m_Specification.ExistingFramebuffer)
+			m_AttachmentImages.clear();
+
 		uint32_t attachmentIndex = 0;
 		for (auto attachmentSpec : m_Specification.Attachments.Attachments)
 		{
 			if (Utils::IsDepthFormat(attachmentSpec.Format))
 			{
-				if (!m_Specification.ExistingImage)
+				if (!m_Specification.ExistingFramebuffer)
 				{
-					if (createImages)
+					if (!m_Specification.ExistingImage)
 					{
-						ImageSpecification spec;
-						spec.Format = attachmentSpec.Format;
-						spec.Usage = ImageUsage::Attachment;
-						spec.Width = m_Width;
-						spec.Height = m_Height;
-						m_DepthAttachmentImage = Image2D::Create(spec);
+						if (createImages)
+						{
+							ImageSpecification spec;
+							spec.Format = attachmentSpec.Format;
+							spec.Usage = ImageUsage::Attachment;
+							spec.Width = m_Width;
+							spec.Height = m_Height;
+							m_DepthAttachmentImage = Image2D::Create(spec);
+						}
+						else
+						{
+							ImageSpecification& spec = m_DepthAttachmentImage->GetSpecification();
+							spec.Width = m_Width;
+							spec.Height = m_Height;
+						}
+
+						Ref<VulkanImage2D> depthAttachmentImage = m_DepthAttachmentImage.As<VulkanImage2D>();
+						depthAttachmentImage->RT_Invalidate(); // Create immediately
 					}
 					else
 					{
-						ImageSpecification& spec = m_DepthAttachmentImage->GetSpecification();
-						spec.Width = m_Width;
-						spec.Height = m_Height;
+						m_DepthAttachmentImage = m_Specification.ExistingImage;
 					}
-
-					Ref<VulkanImage2D> depthAttachmentImage = m_DepthAttachmentImage.As<VulkanImage2D>();
-					depthAttachmentImage->RT_Invalidate(); // Create immediately
 				}
 				else
 				{
-					m_DepthAttachmentImage = m_Specification.ExistingImage;
+					Ref<VulkanFramebuffer> existingFramebuffer = m_Specification.ExistingFramebuffer.As<VulkanFramebuffer>();
+					m_DepthAttachmentImage = existingFramebuffer->GetDepthImage();
 				}
 
 				VkAttachmentDescription& attachmentDescription = attachmentDescriptions.emplace_back();
 				attachmentDescription.flags = 0;
 				attachmentDescription.format = Utils::VulkanImageFormat(attachmentSpec.Format);
 				attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-				attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+				attachmentDescription.loadOp = m_Specification.ClearOnLoad ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 				attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store (otherwise DONT_CARE is fine)
 				attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-				attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				attachmentDescription.initialLayout = m_Specification.ClearOnLoad ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 				if (attachmentSpec.Format == ImageFormat::DEPTH24STENCIL8 || true) // Separate layouts requires a "separate layouts" flag to be enabled
 				{
 					attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // TODO: if not sampling
@@ -156,35 +171,45 @@ namespace Haoyue {
 				HY_CORE_ASSERT(!m_Specification.ExistingImage, "Not supported for color attachments");
 
 				Ref<VulkanImage2D> colorAttachment;
-				if (createImages)
+				if (!m_Specification.ExistingFramebuffer)
 				{
-					ImageSpecification spec;
-					spec.Format = attachmentSpec.Format;
-					spec.Usage = ImageUsage::Attachment;
-					spec.Width = m_Width;
-					spec.Height = m_Height;
-					colorAttachment = m_AttachmentImages.emplace_back(Image2D::Create(spec)).As<VulkanImage2D>();
+					if (createImages)
+					{
+						ImageSpecification spec;
+						spec.Format = attachmentSpec.Format;
+						spec.Usage = ImageUsage::Attachment;
+						spec.Width = m_Width;
+						spec.Height = m_Height;
+						colorAttachment = m_AttachmentImages.emplace_back(Image2D::Create(spec)).As<VulkanImage2D>();
+					}
+					else
+					{
+						Ref<Image2D> image = m_AttachmentImages[attachmentIndex];
+						ImageSpecification& spec = image->GetSpecification();
+						spec.Width = m_Width;
+						spec.Height = m_Height;
+						colorAttachment = image.As<VulkanImage2D>();
+					}
+
+					colorAttachment->RT_Invalidate(); // Create immediately
 				}
 				else
 				{
-					Ref<Image2D> image = m_AttachmentImages[attachmentIndex];
-					ImageSpecification& spec = image->GetSpecification();
-					spec.Width = m_Width;
-					spec.Height = m_Height;
-					colorAttachment = image.As<VulkanImage2D>();
+					Ref<VulkanFramebuffer> existingFramebuffer = m_Specification.ExistingFramebuffer.As<VulkanFramebuffer>();
+					Ref<Image2D> existingImage = existingFramebuffer->GetImage(attachmentIndex);
+					colorAttachment = m_AttachmentImages.emplace_back(existingImage).As<VulkanImage2D>();
 				}
 
-				colorAttachment->RT_Invalidate(); // Create immediately
 
 				VkAttachmentDescription& attachmentDescription = attachmentDescriptions.emplace_back();
 				attachmentDescription.flags = 0;
 				attachmentDescription.format = Utils::VulkanImageFormat(attachmentSpec.Format);
 				attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-				attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+				attachmentDescription.loadOp = m_Specification.ClearOnLoad ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 				attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store (otherwise DONT_CARE is fine)
 				attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-				attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				attachmentDescription.initialLayout = m_Specification.ClearOnLoad ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 				attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 				const auto& clearColor = m_Specification.ClearColor;
@@ -202,45 +227,58 @@ namespace Haoyue {
 		if (m_DepthAttachmentImage)
 			subpassDescription.pDepthStencilAttachment = &depthAttachmentReference;
 
-#if 1
 		// TODO: do we need these?
 		// Use subpass dependencies for layout transitions
-		std::array<VkSubpassDependency, 2> dependencies;
+		std::vector<VkSubpassDependency> dependencies;
 
-#if 0
-		dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependencies[0].dstSubpass = 0;
-		dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+		if (m_AttachmentImages.size())
+		{
+			{
+				VkSubpassDependency& depedency = dependencies.emplace_back();
+				depedency.srcSubpass = VK_SUBPASS_EXTERNAL;
+				depedency.dstSubpass = 0;
+				depedency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+				depedency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+				depedency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+				depedency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+				depedency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+			}
+			{
+				VkSubpassDependency& depedency = dependencies.emplace_back();
+				depedency.srcSubpass = 0;
+				depedency.dstSubpass = VK_SUBPASS_EXTERNAL;
+				depedency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+				depedency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+				depedency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+				depedency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+				depedency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+			}
+		}
 
-		dependencies[1].srcSubpass = 0;
-		dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-		dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-#endif
+		if (m_DepthAttachmentImage)
+		{
+			{
+				VkSubpassDependency& depedency = dependencies.emplace_back();
+				depedency.srcSubpass = VK_SUBPASS_EXTERNAL;
+				depedency.dstSubpass = 0;
+				depedency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+				depedency.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+				depedency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+				depedency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+				depedency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+			}
 
-		dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependencies[0].dstSubpass = 0;
-		dependencies[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		dependencies[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-		dependencies[1].srcSubpass = 0;
-		dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-		dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-		dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-#endif
+			{
+				VkSubpassDependency& depedency = dependencies.emplace_back();
+				depedency.srcSubpass = 0;
+				depedency.dstSubpass = VK_SUBPASS_EXTERNAL;
+				depedency.srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+				depedency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+				depedency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+				depedency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+				depedency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+			}
+		}
 
 		// Create the actual renderpass
 		VkRenderPassCreateInfo renderPassInfo = {};
@@ -249,8 +287,6 @@ namespace Haoyue {
 		renderPassInfo.pAttachments = attachmentDescriptions.data();
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpassDescription;
-		renderPassInfo.dependencyCount = 0; ;// static_cast<uint32_t>(dependencies.size());
-		renderPassInfo.pDependencies = nullptr;// dependencies.data();
 		renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
 		renderPassInfo.pDependencies = dependencies.data();
 

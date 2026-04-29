@@ -8,7 +8,7 @@ namespace Haoyue {
 	class VulkanRenderCommandBuffer : public RenderCommandBuffer
 	{
 	public:
-		VulkanRenderCommandBuffer(uint32_t count = 0);
+		VulkanRenderCommandBuffer(uint32_t count = 0, const std::string& debugName = "");
 		~VulkanRenderCommandBuffer();
 
 		virtual void Begin() override;
@@ -24,6 +24,8 @@ namespace Haoyue {
 		VkCommandPool m_CommandPool = nullptr;
 		std::vector<VkCommandBuffer> m_CommandBuffers;
 		std::vector<VkFence> m_WaitFences;
+
+        std::string m_DebugName;
 
 		int m_ActiveBufferIndex = -1;
 	};

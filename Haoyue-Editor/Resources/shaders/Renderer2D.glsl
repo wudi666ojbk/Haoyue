@@ -14,6 +14,11 @@ layout (std140, binding = 0) uniform Camera
 	mat4 u_ViewProjection;
 };
 
+layout (push_constant) uniform Transform
+{
+	mat4 Transform;
+} u_Renderer;
+
 struct VertexOutput
 {
 	vec4 Color;
@@ -30,7 +35,7 @@ void main()
 	Output.TexCoord = a_TexCoord;
 	Output.TexIndex = a_TexIndex;
 	Output.TilingFactor = a_TilingFactor;
-	gl_Position = u_ViewProjection * vec4(a_Position, 1.0);
+	gl_Position = u_ViewProjection * u_Renderer.Transform * vec4(a_Position, 1.0);
 }
 
 #type fragment
@@ -48,9 +53,10 @@ struct VertexOutput
 
 layout (location = 0) in VertexOutput Input;
 
-layout (binding = 0) uniform sampler2D u_Textures[32];
+layout (binding = 1) uniform sampler2D u_Textures[32];
 
 void main()
 {
-	color = texture(u_Textures[int(Input.TexIndex)], Input.TexCoord * Input.TilingFactor) * Input.Color;
+	//color = texture(u_Textures[int(Input.TexIndex)], Input.TexCoord * Input.TilingFactor) * Input.Color;
+	color = Input.Color;
 }

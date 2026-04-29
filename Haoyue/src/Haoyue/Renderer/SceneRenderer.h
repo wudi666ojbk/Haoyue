@@ -16,6 +16,8 @@ namespace Haoyue {
 	{
 		bool ShowGrid = true;
 		bool ShowBoundingBoxes = false;
+		bool ShowSelectedInWireframe = false;
+		bool ShowCollidersWireframe = false;
 	};
 
 	struct SceneRendererCamera
@@ -49,6 +51,7 @@ namespace Haoyue {
 		void SubmitColliderMesh(const MeshColliderComponent& component, const glm::mat4& parentTransform = glm::mat4(1.0F));
 
 		Ref<RenderPass> GetFinalRenderPass();
+		Ref<RenderPass> GetExternalCompositeRenderPass() { return m_ExternalCompositeRenderPass; }
 		Ref<Image2D> GetFinalPassImage();
 
 		SceneRendererOptions& GetOptions();
@@ -156,10 +159,13 @@ namespace Haoyue {
 
 		Ref<Pipeline> m_GeometryPipeline;
 		Ref<Pipeline> m_CompositePipeline;
+		Ref<Pipeline> m_GeometryWireframePipeline;
 		Ref<Pipeline> m_ShadowPassPipeline;
 		Ref<Material> m_ShadowPassMaterial;
 		Ref<Pipeline> m_SkyboxPipeline;
 		Ref<Material> m_SkyboxMaterial;
+
+		Ref<RenderPass> m_ExternalCompositeRenderPass;
 
 		struct DrawCommand
 		{
@@ -178,6 +184,7 @@ namespace Haoyue {
 		Ref<Material> m_GridMaterial;
 		Ref<Material> m_OutlineMaterial, OutlineAnimMaterial;
 		Ref<Material> m_ColliderMaterial;
+		Ref<Material> m_WireframeMaterial;
 
 		SceneRendererOptions m_Options;
 

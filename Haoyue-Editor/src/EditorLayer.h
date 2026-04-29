@@ -71,6 +71,8 @@ namespace Haoyue {
 		float GetSnapValue();
 
 		void DeleteEntity(Entity entity);
+
+		void UpdateSceneRendererSettings();
 	private:
 		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		Scope<ContentBrowserPanel> m_ContentBrowserPanel;
@@ -85,6 +87,8 @@ namespace Haoyue {
 
 		Ref<Shader> m_BrushShader;
 		Ref<Material> m_SphereBaseMaterial;
+
+		float m_LineWidth = 1.0f;
 
 		struct AlbedoInput
 		{
@@ -133,8 +137,11 @@ namespace Haoyue {
 		bool m_AllowViewportCameraEvents = false;
 		bool m_DrawOnTopBoundingBoxes = false;
 
-		bool m_UIShowBoundingBoxes = false;
-		bool m_UIShowBoundingBoxesOnTop = false;
+		bool m_ShowBoundingBoxes = false;
+		bool m_ShowBoundingBoxSelectedMeshOnly = true;
+		bool m_ShowBoundingBoxSubmeshes = false;
+		bool m_ShowSelectedWireframe = true;
+		bool m_ShowPhysicsCollidersWireframe = false;
 
 		bool m_ViewportPanelMouseOver = false;
 		bool m_ViewportPanelFocused = false;

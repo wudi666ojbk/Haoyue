@@ -5,7 +5,8 @@
 
 namespace Haoyue {
 
-	VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(uint32_t count)
+	VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(uint32_t count, const std::string& debugName)
+		: m_DebugName(debugName)
 	{
 		auto device = VulkanContext::GetCurrentDevice();
 
@@ -35,11 +36,11 @@ namespace Haoyue {
 
 	VulkanRenderCommandBuffer::~VulkanRenderCommandBuffer()
 	{
-		Renderer::SubmitResourceFree([=]()
+		VkCommandPool commandPool = m_CommandPool;
+		Renderer::SubmitResourceFree([commandPool]()
 		{
 			auto device = VulkanContext::GetCurrentDevice();
-			vkFreeCommandBuffers(device->GetVulkanDevice(), m_CommandPool, m_CommandBuffers.size(), m_CommandBuffers.data());
-			vkDestroyCommandPool(device->GetVulkanDevice(), m_CommandPool, nullptr);
+			vkDestroyCommandPool(device->GetVulkanDevice(), commandPool, nullptr);
 		});
 	}
 
@@ -47,23 +48,23 @@ namespace Haoyue {
 	{
 		Ref<VulkanRenderCommandBuffer> instance = this;
 		Renderer::Submit([instance]()
-		{
-			VkCommandBufferBeginInfo cmdBufInfo = {};
-			cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-			cmdBufInfo.pNext = nullptr;
-			
-			VK_CHECK_RESULT(vkBeginCommandBuffer(instance->m_CommandBuffers[Renderer::GetCurrentFrameIndex()], &cmdBufInfo));
-		});
+			{
+				VkCommandBufferBeginInfo cmdBufInfo = {};
+				cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+				cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+				cmdBufInfo.pNext = nullptr;
+
+				VK_CHECK_RESULT(vkBeginCommandBuffer(instance->m_CommandBuffers[Renderer::GetCurrentFrameIndex()], &cmdBufInfo));
+			});
 	}
 
 	void VulkanRenderCommandBuffer::End()
 	{
 		Ref<VulkanRenderCommandBuffer> instance = this;
 		Renderer::Submit([instance]()
-		{
-			VK_CHECK_RESULT(vkEndCommandBuffer(instance->m_CommandBuffers[Renderer::GetCurrentFrameIndex()]));
-		});
+			{
+				VK_CHECK_RESULT(vkEndCommandBuffer(instance->m_CommandBuffers[Renderer::GetCurrentFrameIndex()]));
+			});
 	}
 
 	void VulkanRenderCommandBuffer::Submit()

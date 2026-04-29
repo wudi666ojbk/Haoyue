@@ -6,6 +6,7 @@
 #include "Image.h"
 
 namespace Haoyue {
+	class Framebuffer;
 
 	struct FramebufferTextureSpecification
 	{
@@ -33,14 +34,14 @@ namespace Haoyue {
 		glm::vec4 ClearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
 		FramebufferAttachmentSpecification Attachments;
 		uint32_t Samples = 1; // multisampling
-
 		// TODO: Temp, needs scale
 		bool NoResize = false;
-
+		bool ClearOnLoad = true;
 		// SwapChainTarget = screen buffer (i.e. no framebuffer)
 		bool SwapChainTarget = false;
 
 		Ref<Image2D> ExistingImage;
+		Ref<Framebuffer> ExistingFramebuffer;
 		uint32_t ExistingImageLayer;
 
 		std::string DebugName;

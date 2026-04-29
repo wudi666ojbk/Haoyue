@@ -31,6 +31,7 @@ namespace Haoyue {
 		virtual Ref<Image2D> GetImage(uint32_t attachmentIndex = 0) const override { HY_CORE_ASSERT(attachmentIndex < m_AttachmentImages.size()); return m_AttachmentImages[attachmentIndex]; }
 		virtual Ref<Image2D> GetDepthImage() const override { return m_DepthAttachmentImage; }
 		size_t GetColorAttachmentCount() const { return m_AttachmentImages.size(); }
+		bool HasDepthAttachment() const { return (bool)m_DepthAttachmentImage; }
 		VkRenderPass GetRenderPass() const { return m_RenderPass; }
 		VkFramebuffer GetVulkanFramebuffer() const { return m_Framebuffer; }
 		const std::vector<VkClearValue>& GetVulkanClearValues() const { return m_ClearValues; }

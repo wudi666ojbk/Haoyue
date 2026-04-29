@@ -108,8 +108,14 @@ namespace Haoyue {
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/Grid.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/SceneComposite.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/PBR_Static.glsl");
+		Renderer::GetShaderLibrary()->Load("Resources/shaders/Wireframe.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/Skybox.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/ShadowMap.glsl");
+
+		// Renderer2D Shaders
+		Renderer::GetShaderLibrary()->Load("Resources/shaders/Renderer2D.glsl");
+		Renderer::GetShaderLibrary()->Load("Resources/shaders/Renderer2D_Line.glsl");
+		Renderer::GetShaderLibrary()->Load("Resources/shaders/Renderer2D_Circle.glsl");
 
 		// Compile shaders
 		Renderer::WaitAndRender();
@@ -123,11 +129,14 @@ namespace Haoyue {
 		s_Data->EmptyEnvironment = Ref<Environment>::Create(s_Data->BlackCubeTexture, s_Data->BlackCubeTexture);
 
 		s_RendererAPI->Init();
+		Renderer2D::Init();
 	}
 
 	void Renderer::Shutdown()
 	{
 		s_ShaderDependencies.clear();
+
+		Renderer2D::Shutdown();
 		s_RendererAPI->Shutdown();
 
 		delete s_Data;
@@ -150,11 +159,11 @@ namespace Haoyue {
 		s_CommandQueue->Execute();
 	}
 
-	void Renderer::BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<RenderPass> renderPass, bool clear)
+	void Renderer::BeginRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<RenderPass> renderPass, bool explicitClear)
 	{
 		HY_CORE_ASSERT(renderPass, "Render pass cannot be null!");
 
-		s_RendererAPI->BeginRenderPass(renderCommandBuffer, renderPass);
+		s_RendererAPI->BeginRenderPass(renderCommandBuffer, renderPass, explicitClear);
 	}
 
 	void Renderer::EndRenderPass(Ref<RenderCommandBuffer> renderCommandBuffer)
@@ -202,6 +211,11 @@ namespace Haoyue {
 		s_RendererAPI->RenderQuad(renderCommandBuffer, pipeline, uniformBufferSet, material, transform);
 	}
 
+	void Renderer::RenderGeometry(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Material> material, Ref<VertexBuffer> vertexBuffer, Ref<IndexBuffer> indexBuffer, const glm::mat4& transform, uint32_t indexCount /*= 0*/)
+	{
+		s_RendererAPI->RenderGeometry(renderCommandBuffer, pipeline, uniformBufferSet, material, vertexBuffer, indexBuffer, transform, indexCount);
+	}
+
 	void Renderer::SubmitQuad(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Material> material, const glm::mat4& transform)
 	{
 		/*bool depthTest = true;
@@ -224,47 +238,6 @@ namespace Haoyue {
 	void Renderer::SubmitFullscreenQuad(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Material> material)
 	{
 		s_RendererAPI->SubmitFullscreenQuad(renderCommandBuffer, pipeline, uniformBufferSet, material);
-	}
-
-	void Renderer::DrawAABB(Ref<Mesh> mesh, const glm::mat4& transform, const glm::vec4& color)
-	{
-		const auto& meshAssetSubmeshes = mesh->GetMeshAsset()->GetSubmeshes();
-		auto& submeshes = mesh->GetSubmeshes();
-		for (uint32_t submeshIndex : submeshes)
-		{
-			const Submesh& submesh = meshAssetSubmeshes[submeshIndex];
-			auto& aabb = submesh.BoundingBox;
-			auto aabbTransform = transform * submesh.Transform;
-			DrawAABB(aabb, aabbTransform);
-		}
-	}
-
-	void Renderer::DrawAABB(const AABB& aabb, const glm::mat4& transform, const glm::vec4& color /*= glm::vec4(1.0f)*/)
-	{
-		glm::vec4 min = { aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f };
-		glm::vec4 max = { aabb.Max.x, aabb.Max.y, aabb.Max.z, 1.0f };
-
-		glm::vec4 corners[8] =
-		{
-			transform * glm::vec4 { aabb.Min.x, aabb.Min.y, aabb.Max.z, 1.0f },
-			transform * glm::vec4 { aabb.Min.x, aabb.Max.y, aabb.Max.z, 1.0f },
-			transform * glm::vec4 { aabb.Max.x, aabb.Max.y, aabb.Max.z, 1.0f },
-			transform * glm::vec4 { aabb.Max.x, aabb.Min.y, aabb.Max.z, 1.0f },
-
-			transform * glm::vec4 { aabb.Min.x, aabb.Min.y, aabb.Min.z, 1.0f },
-			transform * glm::vec4 { aabb.Min.x, aabb.Max.y, aabb.Min.z, 1.0f },
-			transform * glm::vec4 { aabb.Max.x, aabb.Max.y, aabb.Min.z, 1.0f },
-			transform * glm::vec4 { aabb.Max.x, aabb.Min.y, aabb.Min.z, 1.0f }
-		};
-
-		for (uint32_t i = 0; i < 4; i++)
-			Renderer2D::DrawLine(corners[i], corners[(i + 1) % 4], color);
-
-		for (uint32_t i = 0; i < 4; i++)
-			Renderer2D::DrawLine(corners[i + 4], corners[((i + 1) % 4) + 4], color);
-
-		for (uint32_t i = 0; i < 4; i++)
-			Renderer2D::DrawLine(corners[i], corners[i + 4], color);
 	}
 
 	Ref<Texture2D> Renderer::GetWhiteTexture()

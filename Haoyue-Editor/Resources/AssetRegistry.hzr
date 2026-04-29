@@ -2,12 +2,6 @@ Resources:
   - Handle: 7963767822729140883
     FilePath: Resources/audio/bgm.wav
     Type: Audio
-  - Handle: 7285941656512918798
-    FilePath: Resources/editor/file.png
-    Type: Texture
-  - Handle: 3815590619688061244
-    FilePath: Resources/audio/bigbgm.wav
-    Type: Audio
   - Handle: 12468442531943010185
     FilePath: Resources/meshes/Default/Torus.fbx
     Type: MeshAsset
@@ -16,6 +10,9 @@ Resources:
     Type: MeshAsset
   - Handle: 13136350024696602121
     FilePath: Resources/editor/asset.png
+    Type: Texture
+  - Handle: 7285941656512918798
+    FilePath: Resources/editor/file.png
     Type: Texture
   - Handle: 8745966073998781724
     FilePath: Resources/editor/Components/Transform.png
@@ -29,15 +26,15 @@ Resources:
   - Handle: 5891990053668752917
     FilePath: Resources/editor/btn_back.png
     Type: Texture
-  - Handle: 11733075552403157509
-    FilePath: Resources/editor/btn_fwrd.png
-    Type: Texture
-  - Handle: 16906701966027794085
-    FilePath: Resources/editor/favourites.png
-    Type: Texture
   - Handle: 11348601108740666114
     FilePath: Resources/meshes/cerberus/CerberusMaterials.fbx
     Type: MeshAsset
+  - Handle: 16906701966027794085
+    FilePath: Resources/editor/favourites.png
+    Type: Texture
+  - Handle: 11733075552403157509
+    FilePath: Resources/editor/btn_fwrd.png
+    Type: Texture
   - Handle: 6138380801177971991
     FilePath: Resources/editor/Components/Animation.png
     Type: Texture
@@ -47,77 +44,77 @@ Resources:
   - Handle: 15454378809416427107
     FilePath: Resources/editor/Components/BoxCollider.png
     Type: Texture
-  - Handle: 8672731829766348772
-    FilePath: Resources/editor/Components/Camera.png
-    Type: Texture
-  - Handle: 3669650349327579136
-    FilePath: Resources/editor/resource.png
+  - Handle: 14098989675957342602
+    FilePath: Resources/meshes/pilot/Material.002_Metallic.png
     Type: Texture
   - Handle: 17818584712999996128
     FilePath: Resources/meshes/Default/Capsule.fbx
     Type: MeshAsset
-  - Handle: 14098989675957342602
-    FilePath: Resources/meshes/pilot/Material.002_Metallic.png
+  - Handle: 3669650349327579136
+    FilePath: Resources/editor/resource.png
     Type: Texture
-  - Handle: 14804908800824572482
-    FilePath: Resources/editor/Components/CircleCollider.png
+  - Handle: 8672731829766348772
+    FilePath: Resources/editor/Components/Camera.png
     Type: Texture
   - Handle: 9459912525265553964
     FilePath: Resources/editor/obj.png
     Type: Texture
-  - Handle: 18080048179251468566
-    FilePath: Resources/editor/Components/Component.png
+  - Handle: 14804908800824572482
+    FilePath: Resources/editor/Components/CircleCollider.png
     Type: Texture
   - Handle: 6434434071687384682
     FilePath: Resources/meshes/Cube1m.fbx
     Type: MeshAsset
+  - Handle: 18080048179251468566
+    FilePath: Resources/editor/Components/Component.png
+    Type: Texture
+  - Handle: 2881020329118824215
+    FilePath: Resources/meshes/cerberus/Textures/Cerberus_R.png
+    Type: Texture
   - Handle: 17758451540519930181
     FilePath: Resources/scenes/levels/Physics2D-Game.hsc
     Type: Scene
   - Handle: 18134379950233122781
     FilePath: Resources/editor/Components/Listener.png
     Type: Texture
-  - Handle: 2881020329118824215
-    FilePath: Resources/meshes/cerberus/Textures/Cerberus_R.png
-    Type: Texture
-  - Handle: 13802849434660751547
-    FilePath: Resources/editor/Components/Renderer.png
+  - Handle: 17013582742491036461
+    FilePath: Resources/editor/folder.png
     Type: Texture
   - Handle: 2854645355400539458
     FilePath: Resources/editor/Components/Text.png
     Type: Texture
-  - Handle: 17013582742491036461
-    FilePath: Resources/editor/folder.png
+  - Handle: 13802849434660751547
+    FilePath: Resources/editor/Components/Renderer.png
     Type: Texture
   - Handle: 1347964945871129439
     FilePath: Resources/editor/Components/RigidBody.png
     Type: Texture
-  - Handle: 13658574391154390448
-    FilePath: Resources/editor/Components/Script.png
-    Type: Texture
+  - Handle: 15260708486223893973
+    FilePath: Resources/meshes/Default/Cube.fbx
+    Type: MeshAsset
   - Handle: 15045328059388141875
     FilePath: Resources/scenes/PhysicsTest2.hsc
     Type: Scene
   - Handle: 2658229062252946191
     FilePath: Resources/editor/StopButton.png
     Type: Texture
-  - Handle: 15260708486223893973
-    FilePath: Resources/meshes/Default/Cube.fbx
-    Type: MeshAsset
-  - Handle: 10394822252869868764
-    FilePath: Resources/editor/csc.png
-    Type: Texture
-  - Handle: 4168538892377185129
-    FilePath: Resources/editor/tags.png
+  - Handle: 13658574391154390448
+    FilePath: Resources/editor/Components/Script.png
     Type: Texture
   - Handle: 2535977035296731129
     FilePath: Resources/env/rooitou_park_4k.hdr
     Type: EnvMap
-  - Handle: 3447422550100718538
-    FilePath: Resources/editor/fbx.png
+  - Handle: 4168538892377185129
+    FilePath: Resources/editor/tags.png
+    Type: Texture
+  - Handle: 10394822252869868764
+    FilePath: Resources/editor/csc.png
     Type: Texture
   - Handle: 12493648256133719773
     FilePath: Resources/editor/PlayButton.png
+    Type: Texture
+  - Handle: 3447422550100718538
+    FilePath: Resources/editor/fbx.png
     Type: Texture
   - Handle: 3392080771573918228
     FilePath: Resources/editor/grid.png
@@ -131,8 +128,8 @@ Resources:
   - Handle: 8594591103623593465
     FilePath: Resources/editor/list.png
     Type: Texture
-  - Handle: 12395420375992382456
-    FilePath: Resources/editor/PauseButton.png
+  - Handle: 11371646806062098610
+    FilePath: Resources/meshes/pilot/Material.002_Base_Color.png
     Type: Texture
   - Handle: 9847751497051117992
     FilePath: Resources/editor/search.png
@@ -140,8 +137,8 @@ Resources:
   - Handle: 10276776400442336710
     FilePath: Resources/meshes/Default/Sphere.fbx
     Type: MeshAsset
-  - Handle: 11371646806062098610
-    FilePath: Resources/meshes/pilot/Material.002_Base_Color.png
+  - Handle: 12395420375992382456
+    FilePath: Resources/editor/PauseButton.png
     Type: Texture
   - Handle: 10610772442222887467
     FilePath: Resources/editor/png.png
@@ -152,12 +149,12 @@ Resources:
   - Handle: 6950997419335599372
     FilePath: Resources/editor/script.png
     Type: Texture
-  - Handle: 9689117222550026726
-    FilePath: Resources/editor/wav.png
-    Type: Texture
   - Handle: 10202821567777153862
     FilePath: Resources/env/venice_dawn_1_4k.hdr
     Type: EnvMap
+  - Handle: 9689117222550026726
+    FilePath: Resources/editor/wav.png
+    Type: Texture
   - Handle: 10630502304886459287
     FilePath: Resources/env/birchwood_4k.hdr
     Type: EnvMap
@@ -167,20 +164,20 @@ Resources:
   - Handle: 14684363460685290405
     FilePath: Resources/env/pink_sunrise_4k.hdr
     Type: EnvMap
-  - Handle: 3408714538860372849
-    FilePath: Resources/meshes/cerberus/cerberus.fbx
-    Type: MeshAsset
   - Handle: 11926306974835336917
     FilePath: Resources/meshes/CubeScene.fbx
+    Type: MeshAsset
+  - Handle: 3408714538860372849
+    FilePath: Resources/meshes/cerberus/cerberus.fbx
     Type: MeshAsset
   - Handle: 3361989127016941214
     FilePath: Resources/meshes/cerberus/Textures/Cerberus_A.png
     Type: Texture
-  - Handle: 3550469859866585184
-    FilePath: Resources/meshes/cerberus/Textures/Cerberus_M.png
-    Type: Texture
   - Handle: 1303358671263272405
     FilePath: Resources/meshes/pilot/Material.002_Normal_OpenGL.png
+    Type: Texture
+  - Handle: 3550469859866585184
+    FilePath: Resources/meshes/cerberus/Textures/Cerberus_M.png
     Type: Texture
   - Handle: 4371910417766208822
     FilePath: Resources/meshes/cerberus/Textures/Cerberus_N.png
@@ -203,11 +200,11 @@ Resources:
   - Handle: 16338549918000005956
     FilePath: Resources/meshes/pilot/Pilot_LP_Animated.fbx
     Type: MeshAsset
-  - Handle: 5185243671910828670
-    FilePath: Resources/meshes/Sphere1m.fbx
-    Type: MeshAsset
   - Handle: 16076602774542946158
     FilePath: Resources/meshes/stormtrooper/silly_dancing.fbx
+    Type: MeshAsset
+  - Handle: 5185243671910828670
+    FilePath: Resources/meshes/Sphere1m.fbx
     Type: MeshAsset
   - Handle: 13396604069054975275
     FilePath: Resources/meshes/sponza/sponza.obj
@@ -218,11 +215,11 @@ Resources:
   - Handle: 17448802799087839514
     FilePath: Resources/meshes/Tests/TransformTest.fbx
     Type: MeshAsset
-  - Handle: 14627941782967138282
-    FilePath: Resources/meshes/TestScene.fbx
-    Type: MeshAsset
   - Handle: 610645151352087933
     FilePath: Resources/models/m1911/M1911Materials.fbx
+    Type: MeshAsset
+  - Handle: 14627941782967138282
+    FilePath: Resources/meshes/TestScene.fbx
     Type: MeshAsset
   - Handle: 14193975198321011355
     FilePath: Resources/models/m1911/m1911.fbx
@@ -274,7 +271,4 @@ Resources:
     Type: Scene
   - Handle: 14600989230487181958
     FilePath: Resources/scenes/StreamTestScene.hsc
-    Type: Scene
-  - Handle: 11491807334818732436
-    FilePath: Resources/scenes/test.hsc
     Type: Scene

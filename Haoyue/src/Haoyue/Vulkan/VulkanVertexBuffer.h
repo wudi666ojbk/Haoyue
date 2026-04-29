@@ -16,6 +16,8 @@ namespace Haoyue {
 
 		virtual ~VulkanVertexBuffer();
 
+		virtual void SetData(void* buffer, uint32_t size, uint32_t offset = 0) override;
+		virtual void RT_SetData(void* buffer, uint32_t size, uint32_t offset = 0) override;
 		virtual const VertexBufferLayout& GetLayout() const override { return {}; }
 		virtual void SetLayout(const VertexBufferLayout& layout) override {}
 
