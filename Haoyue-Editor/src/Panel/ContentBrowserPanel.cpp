@@ -219,7 +219,7 @@ namespace Haoyue {
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.25f, 0.25f, 0.25f, 0.75f));
 
 		float buttonWidth = ImGui::GetColumnWidth() - 15.0f;
-		UI::ImageButton(EditorResources::FolderIcon->GetImage(), { buttonWidth, buttonWidth });
+		UI::ImageButton(directory->FilePath.c_str(), EditorResources::FolderIcon->GetImage(), {buttonWidth, buttonWidth});
 
 		if (selected)
 			ImGui::PopStyleColor();
@@ -344,8 +344,7 @@ namespace Haoyue {
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.25f, 0.25f, 0.25f, 0.75f));
 
 		float buttonWidth = ImGui::GetColumnWidth() - 15.0f;
-		UI::ImageButton(iconRef, { buttonWidth, buttonWidth });
-
+		UI::ImageButton(assetInfo.FilePath.c_str(), iconRef, { buttonWidth, buttonWidth });
 		if (selected)
 			ImGui::PopStyleColor();
 
@@ -840,8 +839,10 @@ namespace Haoyue {
 	{
 		auto& directoryInfo = m_Directories[directoryHandle];
 		bool wasMoved = FileSystem::MoveFile(directoryInfo->FilePath, destinationPath);
-		if (!wasMoved)
-			return;
+
+		if (!wasMoved) return;
+
+		UpdateDirectoryPath(directoryInfo, destinationPath);
 
 		auto& parentDirectory = m_Directories[directoryInfo->Parent];
 		parentDirectory->SubDirectories.erase(std::remove(parentDirectory->SubDirectories.begin(), parentDirectory->SubDirectories.end(), directoryHandle), parentDirectory->SubDirectories.end());
@@ -849,6 +850,14 @@ namespace Haoyue {
 		auto& newParent = GetDirectoryInfo(destinationPath);
 		newParent->SubDirectories.push_back(directoryHandle);
 		directoryInfo->Parent = newParent->Handle;
+	}
+
+	void ContentBrowserPanel::UpdateDirectoryPath(Ref<DirectoryInfo>& directoryInfo, const std::string& newParentPath)
+	{
+		directoryInfo->FilePath = newParentPath + "/" + directoryInfo->Name;
+
+		for (auto& subdir : directoryInfo->SubDirectories)
+			UpdateDirectoryPath(m_Directories[subdir], directoryInfo->FilePath);
 	}
 
 	Ref<DirectoryInfo> ContentBrowserPanel::GetDirectoryInfo(const std::string& filepath) const

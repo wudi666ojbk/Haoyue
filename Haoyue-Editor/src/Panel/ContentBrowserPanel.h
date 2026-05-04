@@ -126,6 +126,7 @@ namespace Haoyue {
 		void OnDirectoryAdded(const std::string& directoryPath);
 
 		void MoveDirectory(AssetHandle directoryHandle, const std::string& destinationPath);
+		void UpdateDirectoryPath(Ref<DirectoryInfo>& directoryInfo, const std::string& newParentPath);
 
 		Ref<DirectoryInfo> GetDirectoryInfo(const std::string& filepath) const;
 		Ref<DirectoryInfo> GetDirectoryForAsset(AssetHandle asset) const;

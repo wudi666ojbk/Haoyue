@@ -23,7 +23,9 @@ project "Haoyue"
 		"vendor/yaml-cpp/src/**.h",
 		"vendor/yaml-cpp/include/**.h",
 		"vendor/VulkanMemoryAllocator/**.h",
-		"vendor/VulkanMemoryAllocator/**.cpp"
+		"vendor/VulkanMemoryAllocator/**.cpp",
+
+		"vendor/tracy/tracy/public/TracyClient.cpp",
 	}
 
 	includedirs
@@ -47,6 +49,7 @@ project "Haoyue"
 		"%{IncludeDir.VulkanSDK}",
 		"%{IncludeDir.NvidiaAftermath}",
 		"%{IncludeDir.miniaudio}",
+		"%{IncludeDir.Tracy}",
 	}
 	
 	links
@@ -74,7 +77,8 @@ project "Haoyue"
 	{
 		"PX_PHYSX_STATIC_LIB",
 		"_CRT_SECURE_NO_WARNINGS",
-		"_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING"
+		"_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING",
+		"TRACY_ENABLE",
 	}
 	
 	filter "files:vendor/FastNoise/**.cpp or files:vendor/yaml-cpp/src/**.cpp"
@@ -88,6 +92,12 @@ project "Haoyue"
 		{ 
 			"HY_PLATFORM_WINDOWS",
 			"HY_BUILD_DLL"
+		}
+
+		links
+		{
+			"ws2_32",
+			"dbghelp",
 		}
 
 	filter "configurations:Debug"

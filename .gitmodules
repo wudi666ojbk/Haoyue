@@ -33,3 +33,6 @@
 [submodule "Haoyue/vendor/ozz-animation"]
 	path = Haoyue/vendor/ozz-animation
 	url = https://github.com/wudi666ojbk/ozz-animation.git
+[submodule "Haoyue/vendor/tracy/tracy"]
+	path = Haoyue/vendor/tracy/tracy
+	url = https://github.com/wolfpld/tracy

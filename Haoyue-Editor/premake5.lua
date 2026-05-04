@@ -32,6 +32,7 @@ project "Haoyue-Editor"
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.Vulkan}",
 		"%{IncludeDir.miniaudio}",
+		"%{IncludeDir.Tracy}",
 	}
 
 	postbuildcommands 

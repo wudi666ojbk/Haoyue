@@ -165,8 +165,8 @@ namespace Haoyue {
 		// Grid
 		{
 			m_GridShader = Renderer::GetShaderLibrary()->Get("Grid");
-			const float gridScale = 16.025f;
-			const float gridSize = 0.025f;
+			const float gridScale = 4.0f;    // 减小scale让网格变大（更稀疏）
+			const float gridSize = 0.001f;   // 进一步减小size让线变得更细
 			m_GridMaterial = Material::Create(m_GridShader);
 			m_GridMaterial->Set("u_Settings.Scale", gridScale);
 			m_GridMaterial->Set("u_Settings.Size", gridSize);
@@ -551,7 +551,14 @@ namespace Haoyue {
 		// Grid
 		if (GetOptions().ShowGrid)
 		{
-			const glm::mat4 transform = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(8.0f));
+			// Extract camera position from view matrix
+			glm::vec3 cameraPos = glm::inverse(m_SceneData.SceneCamera.ViewMatrix)[3];
+			
+			// Create a very large grid that follows the camera on XZ plane
+			const glm::mat4 transform = 
+				glm::translate(glm::mat4(1.0f), glm::vec3(cameraPos.x, 0.0f, cameraPos.z)) *
+				glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * 
+				glm::scale(glm::mat4(1.0f), glm::vec3(500.0f));
 			Renderer::RenderQuad(m_CommandBuffer, m_GridPipeline, m_UniformBufferSet, m_GridMaterial, transform);
 		}
 
