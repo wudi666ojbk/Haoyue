@@ -25,6 +25,8 @@
 
 #include "Haoyue/Editor/TranslationManager.h"
 
+#include "Haoyue/Debug/Profiler.h"
+
 extern bool g_ApplicationRunning;
 extern ImGuiContext* GImGui;
 
