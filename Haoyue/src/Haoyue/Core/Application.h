@@ -45,6 +45,7 @@ namespace Haoyue {
 		static inline Application& Get() { return *s_Instance; }
 
 		float GetTime() const; // TODO: This should be in "Platform"
+		Timestep GetTimestep() const { return m_TimeStep; }
 
 		static const char* GetConfigurationName();
 		static const char* GetPlatformName();

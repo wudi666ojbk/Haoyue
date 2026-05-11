@@ -11,6 +11,9 @@
 #include "UniformBuffer.h"
 
 #include "Haoyue/ImGui/ImGui.h"
+#include "Haoyue/Editor/TranslationManager.h"
+#include "Haoyue/Core/Application.h"
+#include <Haoyue/Vulkan/VulkanAllocator.h>
 
 namespace Haoyue {
 
@@ -654,7 +657,23 @@ namespace Haoyue {
 			}
 			ImGui::TreePop();
 		}
+		if (UI::BeginTreeNode(TR("Performance")))
+		{
+			ImGui::Text(TR("Frame Time: %.2fms"), Application::Get().GetTimestep().GetMilliseconds());
+			const auto& perFrameData = Application::Get().GetPerformanceProfiler()->GetPerFrameData();
+			for (auto&& [name, time] : perFrameData)
+			{
+				ImGui::Text("%s: %.3fms", name, time);
+			}
 
+			GPUMemoryStats memoryStats = VulkanAllocator::GetStats();
+			std::string used = Utils::BytesToString(memoryStats.Used);
+			std::string free = Utils::BytesToString(memoryStats.Free);
+			ImGui::Text(TR("Used VRAM: %s"), used.c_str());
+			ImGui::Text(TR("Free VRAM: %s"), free.c_str());
+
+			UI::EndTreeNode();
+		}
 		if (UI::BeginTreeNode("Shadows"))
 		{
 			UI::BeginPropertyGrid();

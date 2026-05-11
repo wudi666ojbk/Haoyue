@@ -101,28 +101,6 @@ namespace Haoyue {
 	void Application::RenderImGui()
 	{
 		m_ImGuiLayer->Begin();
-		ImGui::Begin(TR("Renderer"));
-		{
-			auto& caps = Renderer::GetCapabilities();
-			ImGui::Text(TR("Vendor: %s"), caps.Vendor.c_str());
-			ImGui::Text(TR("Renderer: %s"), caps.Device.c_str());
-			ImGui::Text(TR("Version: %s"), caps.Version.c_str());
-			ImGui::Separator();
-			ImGui::Text(TR("Frame Time: %.2fms"), m_TimeStep.GetMilliseconds());
-
-			if (RendererAPI::Current() == RendererAPIType::Vulkan)
-			{
-				GPUMemoryStats memoryStats = VulkanAllocator::GetStats();
-				std::string used = Utils::BytesToString(memoryStats.Used);
-				std::string free = Utils::BytesToString(memoryStats.Free);
-				ImGui::Text(TR("Used VRAM: %s"), used.c_str());
-				ImGui::Text(TR("Free VRAM: %s"), free.c_str());
-			}
-			bool vsync = m_Window->IsVSync();
-            if(ImGui::Checkbox(TR("VSync"), &vsync))
-				m_Window->SetVSync(vsync);
-		}
-		ImGui::End();
 
 		ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f));
 		ImGui::Begin(TR("Audio Stats"));
@@ -142,20 +120,9 @@ namespace Haoyue {
 		ImGui::Text(TR("Used RAM (Resource Manager): %s"), ramRM.c_str());
 		ImGui::End();
 
-		ImGui::Begin(TR("Performance"));
-		{
-			ImGui::Text(TR("Frame Time: %.2fms"), m_TimeStep.GetMilliseconds());
-			const auto& perFrameData = m_Profiler->GetPerFrameData();
-			for (auto&& [name, time] : perFrameData)
-			{
-				ImGui::Text("%s: %.3fms", name, time);
-			}
-		}
-		ImGui::End();
-		m_Profiler->Clear();
-
 		for (Layer* layer : m_LayerStack)
 			layer->OnImGuiRender();
+		m_Profiler->Clear();
 	}
 
 	void Application::Run()
