@@ -14,6 +14,7 @@
 ## 🎯 项目简介
 
 Haoyue 是一个功能丰富的现代 C++ 游戏引擎，采用 Vulkan 作为底层图形 API，提供高性能的渲染能力和完整的工具链。引擎包含可视化编辑器、物理系统、音频系统、资源管理系统等核心模块，适合开发 3D 游戏和交互式应用。
+![Haoyue Engine](Haoyue-Editor/Resources/picture/1.png)
 
 ## ✨ 主要特性
 
