@@ -108,6 +108,7 @@ namespace Haoyue {
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/Grid.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/SceneComposite.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/PBR_Static.glsl");
+		Renderer::GetShaderLibrary()->Load("Resources/shaders/Cartoon.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/Wireframe.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/Skybox.glsl");
 		Renderer::GetShaderLibrary()->Load("Resources/shaders/ShadowMap.glsl");
@@ -204,6 +205,11 @@ namespace Haoyue {
 	void Renderer::RenderMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, const glm::mat4& transform, Ref<Material> material, Buffer additionalUniforms)
 	{
 		s_RendererAPI->RenderMeshWithMaterial(renderCommandBuffer, pipeline, uniformBufferSet, mesh, material, transform, additionalUniforms);
+	}
+
+	void Renderer::RenderMeshWithPushConstants(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, const glm::mat4& transform, Buffer pushConstants)
+	{
+		s_RendererAPI->RenderMeshWithPushConstants(renderCommandBuffer, pipeline, uniformBufferSet, mesh, transform, pushConstants);
 	}
 
 	void Renderer::RenderQuad(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Material> material, const glm::mat4& transform)

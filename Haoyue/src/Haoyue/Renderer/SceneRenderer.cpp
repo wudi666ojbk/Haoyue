@@ -219,6 +219,27 @@ namespace Haoyue {
 			m_SkyboxMaterial->SetFlag(MaterialFlag::DepthTest, false);
 		}
 
+		// Cartoon Rendering
+		{
+			m_CartoonShader = Renderer::GetShaderLibrary()->Get("Cartoon");
+
+			PipelineSpecification pipelineSpec;
+			pipelineSpec.DebugName = "Cartoon";
+			pipelineSpec.Shader = m_CartoonShader;
+			pipelineSpec.Layout = {
+				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float3, "a_Normal" },
+				{ ShaderDataType::Float3, "a_Tangent" },
+				{ ShaderDataType::Float3, "a_Binormal" },
+				{ ShaderDataType::Float2, "a_TexCoord" },
+			};
+			pipelineSpec.RenderPass = m_GeometryPipeline->GetSpecification().RenderPass;
+			m_CartoonPipeline = Pipeline::Create(pipelineSpec);
+			
+			// Create cartoon material
+			m_CartoonMaterial = Material::Create(m_CartoonShader);
+		}
+
 		Ref<SceneRenderer> instance = this;
 		Renderer::Submit([instance]() mutable
 			{
@@ -543,15 +564,51 @@ namespace Haoyue {
 		m_SkyboxMaterial->Set("u_Texture", radianceMap);
 		Renderer::SubmitFullscreenQuad(m_CommandBuffer, m_SkyboxPipeline, m_UniformBufferSet, m_SkyboxMaterial);
 
-		// Render entities
-		for (auto& dc : m_DrawList)
-			Renderer::RenderMesh(m_CommandBuffer, m_GeometryPipeline, m_UniformBufferSet, dc.Mesh, dc.Transform);
-
-		for (auto& dc : m_SelectedMeshDrawList)
+		// Render entities - choose between PBR and Cartoon rendering
+		if (m_Options.EnableCartoonRendering)
 		{
-			Renderer::RenderMesh(m_CommandBuffer, m_GeometryPipeline, m_UniformBufferSet, dc.Mesh, dc.Transform);
-			if (m_Options.ShowSelectedInWireframe)
-				Renderer::RenderMeshWithMaterial(m_CommandBuffer, m_GeometryWireframePipeline, m_UniformBufferSet, dc.Mesh, dc.Transform, m_WireframeMaterial);
+			// Build cartoon push constants
+			CartoonPushConstants cartoonPC;
+			cartoonPC.AlbedoColor = glm::vec3(1.0f);
+			cartoonPC.Metalness = 0.0f;
+			cartoonPC.Roughness = 0.5f;
+			cartoonPC.EnvMapRotation = 0.0f;
+			cartoonPC.UseNormalMap = false;
+			
+			// Set cartoon-specific parameters
+			cartoonPC.ToonLevels = m_Options.CartoonToonLevels;
+			cartoonPC.SpecularIntensity = m_Options.CartoonSpecularIntensity;
+			cartoonPC.RimLightIntensity = m_Options.CartoonRimLightIntensity;
+			cartoonPC.OutlineColor = m_Options.CartoonOutlineColor;
+			
+			Buffer cartoonPushConstantBuffer(&cartoonPC, sizeof(CartoonPushConstants));
+			
+			// Use cartoon pipeline but keep mesh's original materials for textures
+			for (auto& dc : m_DrawList)
+			{
+				// Render with cartoon pipeline and push constants, but use mesh's materials
+				Renderer::RenderMeshWithPushConstants(m_CommandBuffer, m_CartoonPipeline, m_UniformBufferSet, dc.Mesh, dc.Transform, cartoonPushConstantBuffer);
+			}
+
+			for (auto& dc : m_SelectedMeshDrawList)
+			{
+				Renderer::RenderMeshWithPushConstants(m_CommandBuffer, m_CartoonPipeline, m_UniformBufferSet, dc.Mesh, dc.Transform, cartoonPushConstantBuffer);
+				if (m_Options.ShowSelectedInWireframe)
+					Renderer::RenderMeshWithMaterial(m_CommandBuffer, m_GeometryWireframePipeline, m_UniformBufferSet, dc.Mesh, dc.Transform, m_WireframeMaterial);
+			}
+		}
+		else
+		{
+			// Use standard PBR rendering pipeline
+			for (auto& dc : m_DrawList)
+				Renderer::RenderMesh(m_CommandBuffer, m_GeometryPipeline, m_UniformBufferSet, dc.Mesh, dc.Transform);
+
+			for (auto& dc : m_SelectedMeshDrawList)
+			{
+				Renderer::RenderMesh(m_CommandBuffer, m_GeometryPipeline, m_UniformBufferSet, dc.Mesh, dc.Transform);
+				if (m_Options.ShowSelectedInWireframe)
+					Renderer::RenderMeshWithMaterial(m_CommandBuffer, m_GeometryWireframePipeline, m_UniformBufferSet, dc.Mesh, dc.Transform, m_WireframeMaterial);
+			}
 		}
 
 		if (m_Options.ShowCollidersWireframe)
@@ -681,6 +738,24 @@ namespace Haoyue {
 			}
 			ImGui::TreePop();
 		}
+
+		// Cartoon Rendering Options
+		if (UI::BeginTreeNode(TR("Cartoon Rendering")))
+		{
+			UI::BeginPropertyGrid();
+			UI::Property("Enable Cartoon", m_Options.EnableCartoonRendering);
+			
+			if (m_Options.EnableCartoonRendering)
+			{
+				UI::PropertySlider("Toon Levels", m_Options.CartoonToonLevels, 2, 8);
+				UI::Property("Specular Intensity", m_Options.CartoonSpecularIntensity, 0.01f, 0.0f, 2.0f);
+				UI::Property("Rim Light Intensity", m_Options.CartoonRimLightIntensity, 0.01f, 0.0f, 2.0f);
+				UI::PropertyColor("Outline Color", m_Options.CartoonOutlineColor);
+			}
+			UI::EndPropertyGrid();
+			UI::EndTreeNode();
+		}
+
 		if (UI::BeginTreeNode(TR("Performance")))
 		{
 			ImGui::Text(TR("Frame Time: %.2fms"), Application::Get().GetTimestep().GetMilliseconds());

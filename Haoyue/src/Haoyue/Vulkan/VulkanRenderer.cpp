@@ -264,6 +264,72 @@ namespace Haoyue {
 		});
 	}
 
+	void VulkanRenderer::RenderMeshWithPushConstants(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, const glm::mat4& transform, Buffer pushConstants)
+	{
+		HY_CORE_ASSERT(mesh);
+		HY_CORE_ASSERT(mesh->GetMeshAsset());
+
+		// Combine transform matrix with additional push constants
+		Buffer combinedPushConstants;
+		combinedPushConstants.Allocate(sizeof(glm::mat4) + pushConstants.Size);
+		combinedPushConstants.Write(pushConstants.Data, pushConstants.Size, sizeof(glm::mat4));
+
+		Renderer::Submit([renderCommandBuffer, pipeline, uniformBufferSet, mesh, transform, combinedPushConstants]() mutable
+		{
+			HY_SCOPE_PERF("VulkanRenderer::RenderMeshWithPushConstants");
+
+			uint32_t frameIndex = Renderer::GetCurrentFrameIndex();
+			VkCommandBuffer commandBuffer = renderCommandBuffer.As<VulkanRenderCommandBuffer>()->GetCommandBuffer(frameIndex);
+
+			Ref<MeshAsset> meshAsset = mesh->GetMeshAsset();
+			auto vulkanMeshVB = meshAsset->GetVertexBuffer().As<VulkanVertexBuffer>();
+			VkBuffer vbMeshBuffer = vulkanMeshVB->GetVulkanBuffer();
+			VkDeviceSize offsets[1] = { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vbMeshBuffer, offsets);
+
+			auto vulkanMeshIB = Ref<VulkanIndexBuffer>(meshAsset->GetIndexBuffer());
+			VkBuffer ibBuffer = vulkanMeshIB->GetVulkanBuffer();
+			vkCmdBindIndexBuffer(commandBuffer, ibBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+			Ref<VulkanPipeline> vulkanPipeline = pipeline.As<VulkanPipeline>();
+			VkPipeline pipeline = vulkanPipeline->GetVulkanPipeline();
+			VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+			// Use mesh's own materials for textures
+			std::vector<std::vector<VkWriteDescriptorSet>> writeDescriptors;
+			auto& materials = mesh->GetMaterials();
+			for (auto& material : materials)
+			{
+				Ref<VulkanMaterial> vulkanMaterial = material.As<VulkanMaterial>();
+				writeDescriptors = RT_RetrieveOrCreateWriteDescriptors(uniformBufferSet, vulkanMaterial);
+				vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
+			}
+
+			auto& submeshes = meshAsset->GetSubmeshes();
+			for (Submesh& submesh : submeshes)
+			{
+				auto& material = mesh->GetMaterials()[submesh.MaterialIndex].As<VulkanMaterial>();
+				VkDescriptorSet descriptorSet = material->GetDescriptorSet(frameIndex);
+
+				// Bind descriptor sets: set 0 = material textures, set 1 = renderer uniforms
+				std::array<VkDescriptorSet, 2> descriptorSets = {
+					descriptorSet,
+					s_Data->ActiveRendererDescriptorSet
+				};
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, (uint32_t)descriptorSets.size(), descriptorSets.data(), 0, nullptr);
+
+				glm::mat4 worldTransform = transform * submesh.Transform;
+				combinedPushConstants.Write(&worldTransform, sizeof(glm::mat4));
+				
+				// Push both transform and cartoon parameters
+				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, combinedPushConstants.Size, combinedPushConstants.Data);
+				vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, 1, submesh.BaseIndex, submesh.BaseVertex, 0);
+			}
+			combinedPushConstants.Release();
+		});
+	}
+
 	void VulkanRenderer::RenderMeshWithMaterial(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Mesh> mesh, Ref<Material> material, const glm::mat4& transform, Buffer additionalUniforms)
 	{
 		HY_CORE_ASSERT(mesh);

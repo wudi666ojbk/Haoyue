@@ -12,12 +12,39 @@
 
 namespace Haoyue {
 
+	// Cartoon rendering push constant structure (must match Cartoon.glsl layout)
+	struct CartoonPushConstants
+	{
+		glm::vec3 AlbedoColor = { 1.0f, 1.0f, 1.0f };
+		float Metalness = 0.0f;
+		float Roughness = 0.5f;
+		float EnvMapRotation = 0.0f;
+		bool UseNormalMap = false;
+		
+		// Cartoon specific parameters
+		int ToonLevels = 3;
+		float SpecularIntensity = 0.5f;
+		float RimLightIntensity = 0.8f;
+		glm::vec3 OutlineColor = { 0.0f, 0.0f, 0.0f };
+		
+		// Padding to match std140 alignment (offset 64 starts after Transform matrix)
+		float Padding[3] = { 0.0f, 0.0f, 0.0f };
+	};
+
 	struct SceneRendererOptions
 	{
 		bool ShowGrid = true;
 		bool ShowBoundingBoxes = false;
 		bool ShowSelectedInWireframe = false;
 		bool ShowCollidersWireframe = false;
+		
+		// Cartoon rendering options
+		bool EnableCartoonRendering = false;
+		int CartoonToonLevels = 3;
+		float CartoonOutlineWidth = 0.02f;
+		glm::vec3 CartoonOutlineColor = { 0.0f, 0.0f, 0.0f };
+		float CartoonSpecularIntensity = 0.5f;
+		float CartoonRimLightIntensity = 0.8f;
 	};
 
 	struct SceneRendererCamera
@@ -171,6 +198,13 @@ namespace Haoyue {
 		Ref<Material> m_ShadowPassMaterial;
 		Ref<Pipeline> m_SkyboxPipeline;
 		Ref<Material> m_SkyboxMaterial;
+
+		// Cartoon rendering pipelines
+		Ref<Pipeline> m_CartoonPipeline;
+		Ref<Pipeline> m_CartoonOutlinePipeline;
+		Ref<Shader> m_CartoonShader;
+		Ref<Shader> m_CartoonOutlineShader;
+		Ref<Material> m_CartoonMaterial;
 
 		Ref<RenderPass> m_ExternalCompositeRenderPass;
 
