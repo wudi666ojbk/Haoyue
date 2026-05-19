@@ -12,7 +12,18 @@ namespace Haoyue {
 		switch (RendererAPI::Current())
 		{
 			case RendererAPIType::None:    return nullptr;
-			case RendererAPIType::Vulkan:  return Ref<VulkanRenderCommandBuffer>::Create(count);
+			case RendererAPIType::Vulkan:  return Ref<VulkanRenderCommandBuffer>::Create(count, debugName);
+		}
+		HY_CORE_ASSERT(false, "Unknown RendererAPI");
+		return nullptr;
+	}
+
+	Ref<RenderCommandBuffer> RenderCommandBuffer::CreateFromSwapChain(const std::string& debugName)
+	{
+		switch (RendererAPI::Current())
+		{
+			case RendererAPIType::None:    return nullptr;
+			case RendererAPIType::Vulkan:  return Ref<VulkanRenderCommandBuffer>::Create(debugName, true);
 		}
 		HY_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;

@@ -28,10 +28,15 @@ namespace Haoyue {
 		float FOV;
 	};
 
+	struct SceneRendererSpecification
+	{
+		bool SwapChainTarget = false;
+	};
+
 	class SceneRenderer : public RefCounted
 	{
 	public:
-		SceneRenderer(Ref<Scene> scene);
+		SceneRenderer(Ref<Scene> scene, SceneRendererSpecification specification = SceneRendererSpecification());
 		~SceneRenderer();
 
 		void Init();
@@ -67,6 +72,7 @@ namespace Haoyue {
 		static void WaitForThreads();
 	private:
 		void FlushDrawList();
+		void ClearPass();
 		void ShadowMapPass();
 		void GeometryPass();
 		void CompositePass();
@@ -81,6 +87,7 @@ namespace Haoyue {
 		void CalculateCascades(CascadeData* cascades, const SceneRendererCamera& sceneCamera, const glm::vec3& lightDirection);
 	private:
 		Ref<Scene> m_Scene;
+		SceneRendererSpecification m_Specification;
 		Ref<RenderCommandBuffer> m_CommandBuffer;
 
 		struct SceneInfo

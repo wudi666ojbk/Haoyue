@@ -19,8 +19,8 @@ namespace Haoyue {
 
 	static std::vector<std::thread> s_ThreadPool;
 
-	SceneRenderer::SceneRenderer(Ref<Scene> scene)
-		: m_Scene(scene)
+	SceneRenderer::SceneRenderer(Ref<Scene> scene, SceneRendererSpecification specification)
+		: m_Scene(scene), m_Specification(specification)
 	{
 		Init();
 	}
@@ -31,7 +31,10 @@ namespace Haoyue {
 
 	void SceneRenderer::Init()
 	{
-		m_CommandBuffer = RenderCommandBuffer::Create(0, "SceneRenderer");
+		if (m_Specification.SwapChainTarget)
+			m_CommandBuffer = RenderCommandBuffer::CreateFromSwapChain("SceneRenderer");
+		else
+			m_CommandBuffer = RenderCommandBuffer::Create(0, "SceneRenderer");
 
 		uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
 		m_UniformBufferSet = UniformBufferSet::Create(framesInFlight);
@@ -130,6 +133,7 @@ namespace Haoyue {
 			FramebufferSpecification compFramebufferSpec;
 			compFramebufferSpec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
 			compFramebufferSpec.ClearColor = { 0.5f, 0.1f, 0.1f, 1.0f };
+			compFramebufferSpec.SwapChainTarget = m_Specification.SwapChainTarget;
 
 			Ref<Framebuffer> framebuffer = Framebuffer::Create(compFramebufferSpec);
 
@@ -138,6 +142,7 @@ namespace Haoyue {
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float2, "a_TexCoord" }
 			};
+			pipelineSpecification.BackfaceCulling = false;
 			pipelineSpecification.Shader = Renderer::GetShaderLibrary()->Get("SceneComposite");
 
 			RenderPassSpecification renderPassSpec;
@@ -150,6 +155,7 @@ namespace Haoyue {
 		}
 
 		// External compositing
+		if (!m_Specification.SwapChainTarget)
 		{
 			FramebufferSpecification extCompFramebufferSpec;
 			extCompFramebufferSpec.Attachments = { ImageFormat::RGBA, ImageFormat::Depth };
@@ -379,7 +385,12 @@ namespace Haoyue {
 		{
 			m_GeometryPipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer->Resize(m_ViewportWidth, m_ViewportHeight);
 			m_CompositePipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer->Resize(m_ViewportWidth, m_ViewportHeight);
-			m_ExternalCompositeRenderPass->GetSpecification().TargetFramebuffer->Resize(m_ViewportWidth, m_ViewportHeight);
+			if (m_ExternalCompositeRenderPass)
+				m_ExternalCompositeRenderPass->GetSpecification().TargetFramebuffer->Resize(m_ViewportWidth, m_ViewportHeight);
+
+			if (m_Specification.SwapChainTarget)
+				m_CommandBuffer = RenderCommandBuffer::CreateFromSwapChain("SceneRenderer");
+
 			m_NeedsResize = false;
 		}
 
@@ -612,12 +623,25 @@ namespace Haoyue {
 			m_CommandBuffer->Submit();
 			//	BloomBlurPass();
 		}
+		else
+		{
+			m_CommandBuffer->Begin();
+			ClearPass();
+			m_CommandBuffer->End();
+			m_CommandBuffer->Submit();
+		}
 
 		m_DrawList.clear();
 		m_SelectedMeshDrawList.clear();
 		m_ShadowPassDrawList.clear();
 		m_ColliderDrawList.clear();
 		m_SceneData = {};
+	}
+
+	void SceneRenderer::ClearPass()
+	{
+		Renderer::BeginRenderPass(m_CommandBuffer, m_CompositePipeline->GetSpecification().RenderPass, true);
+		Renderer::EndRenderPass(m_CommandBuffer);
 	}
 
 	Ref<RenderPass> SceneRenderer::GetFinalRenderPass()

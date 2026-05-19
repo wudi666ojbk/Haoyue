@@ -39,6 +39,10 @@ group "Core"
 	include "Haoyue-ScriptCore/premake5.lua"
 group ""
 
+group "Runtime"
+	include "Haoyue-Runtime/premake5.lua"
+group ""
+
 group "Launcher"
 	include "Haoyue-Hub/premake5.lua"
 group ""

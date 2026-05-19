@@ -34,8 +34,20 @@ namespace Haoyue {
 			VK_CHECK_RESULT(vkCreateFence(device->GetVulkanDevice(), &fenceCreateInfo, nullptr, &fence));
 	}
 
+	VulkanRenderCommandBuffer::VulkanRenderCommandBuffer(const std::string& debugName, bool swapchain)
+		: m_DebugName(debugName), m_OwnedBySwapChain(true)
+	{
+		uint32_t frames = Renderer::GetConfig().FramesInFlight;
+		m_CommandBuffers.resize(frames);
+		VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
+		for (uint32_t frame = 0; frame < frames; frame++)
+			m_CommandBuffers[frame] = swapChain.GetDrawCommandBuffer(frame);
+	}
+
 	VulkanRenderCommandBuffer::~VulkanRenderCommandBuffer()
 	{
+		if (m_OwnedBySwapChain) return;
+
 		VkCommandPool commandPool = m_CommandPool;
 		Renderer::SubmitResourceFree([commandPool]()
 		{
@@ -69,6 +81,8 @@ namespace Haoyue {
 
 	void VulkanRenderCommandBuffer::Submit()
 	{
+		if (m_OwnedBySwapChain) return;
+
 		Ref<VulkanRenderCommandBuffer> instance = this;
 		Renderer::Submit([instance]()
 		{

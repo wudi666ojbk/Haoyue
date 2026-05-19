@@ -9,6 +9,7 @@ namespace Haoyue {
 	{
 	public:
 		VulkanRenderCommandBuffer(uint32_t count = 0, const std::string& debugName = "");
+		VulkanRenderCommandBuffer(const std::string& debugName, bool swapchain);
 		~VulkanRenderCommandBuffer();
 
 		virtual void Begin() override;
@@ -27,7 +28,7 @@ namespace Haoyue {
 
         std::string m_DebugName;
 
-		int m_ActiveBufferIndex = -1;
+		bool m_OwnedBySwapChain = false;
 	};
 
 }
