@@ -4,12 +4,12 @@
 #include "Renderer.h"
 #include "SceneEnvironment.h"
 
-#include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Renderer2D.h"
 #include "UniformBuffer.h"
 
+#include <imgui.h>
 #include "Haoyue/ImGui/ImGui.h"
 #include "Haoyue/Editor/TranslationManager.h"
 #include "Haoyue/Core/Application.h"
@@ -174,8 +174,8 @@ namespace Haoyue {
 		// Grid
 		{
 			m_GridShader = Renderer::GetShaderLibrary()->Get("Grid");
-			const float gridScale = 4.0f;    // 减小scale让网格变大（更稀疏）
-			const float gridSize = 0.001f;   // 进一步减小size让线变得更细
+			const float gridScale = 4.0f;
+			const float gridSize = 0.001f;
 			m_GridMaterial = Material::Create(m_GridShader);
 			m_GridMaterial->Set("u_Settings.Scale", gridScale);
 			m_GridMaterial->Set("u_Settings.Size", gridSize);
@@ -192,10 +192,6 @@ namespace Haoyue {
 			m_GridPipeline = Pipeline::Create(pipelineSpec);
 		}
 
-		// Collider
-		//auto colliderShader = Shader::Create("assets/shaders/Collider.glsl");
-		//ColliderMaterial = Material::Create(Material::Create(colliderShader));
-		//ColliderMaterial->SetFlag(MaterialFlag::DepthTest, false);
 		m_WireframeMaterial = Material::Create(Renderer::GetShaderLibrary()->Get("Wireframe"));
 		m_WireframeMaterial->Set("u_MaterialUniforms.Color", { 1.0f, 0.5f, 0.0f, 1.0f });
 		m_ColliderMaterial = Material::Create(Renderer::GetShaderLibrary()->Get("Wireframe"));
@@ -235,9 +231,65 @@ namespace Haoyue {
 			};
 			pipelineSpec.RenderPass = m_GeometryPipeline->GetSpecification().RenderPass;
 			m_CartoonPipeline = Pipeline::Create(pipelineSpec);
-			
-			// Create cartoon material
+
 			m_CartoonMaterial = Material::Create(m_CartoonShader);
+		}
+
+		// Pixelation Rendering (post-process composite pass)
+		{
+			m_PixelationShader = Renderer::GetShaderLibrary()->Get("Pixelation");
+
+			PipelineSpecification pipelineSpec;
+			pipelineSpec.DebugName = "Pixelation";
+			pipelineSpec.Shader = m_PixelationShader;
+			pipelineSpec.Layout = {
+				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float2, "a_TexCoord" }
+			};
+			pipelineSpec.BackfaceCulling = false;
+			pipelineSpec.RenderPass = m_CompositePipeline->GetSpecification().RenderPass;
+			pipelineSpec.DepthWrite = false;
+			m_PixelationPipeline = Pipeline::Create(pipelineSpec);
+
+			m_PixelationMaterial = Material::Create(m_PixelationShader);
+		}
+
+		// Sketch Rendering (post-process composite pass)
+		{
+			m_SketchShader = Renderer::GetShaderLibrary()->Get("Sketch");
+
+			PipelineSpecification pipelineSpec;
+			pipelineSpec.DebugName = "Sketch";
+			pipelineSpec.Shader = m_SketchShader;
+			pipelineSpec.Layout = {
+				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float2, "a_TexCoord" }
+			};
+			pipelineSpec.BackfaceCulling = false;
+			pipelineSpec.RenderPass = m_CompositePipeline->GetSpecification().RenderPass;
+			pipelineSpec.DepthWrite = false;
+			m_SketchPipeline = Pipeline::Create(pipelineSpec);
+
+			m_SketchMaterial = Material::Create(m_SketchShader);
+		}
+
+		// Kuwahara Filter (post-process composite pass)
+		{
+			m_KuwaharaShader = Renderer::GetShaderLibrary()->Get("Kuwahara");
+
+			PipelineSpecification pipelineSpec;
+			pipelineSpec.DebugName = "Kuwahara";
+			pipelineSpec.Shader = m_KuwaharaShader;
+			pipelineSpec.Layout = {
+				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float2, "a_TexCoord" }
+			};
+			pipelineSpec.BackfaceCulling = false;
+			pipelineSpec.RenderPass = m_CompositePipeline->GetSpecification().RenderPass;
+			pipelineSpec.DepthWrite = false;
+			m_KuwaharaPipeline = Pipeline::Create(pipelineSpec);
+
+			m_KuwaharaMaterial = Material::Create(m_KuwaharaShader);
 		}
 
 		Ref<SceneRenderer> instance = this;
@@ -277,7 +329,6 @@ namespace Haoyue {
 		const int SHADOW_MAP_CASCADE_COUNT = 4;
 		float cascadeSplits[SHADOW_MAP_CASCADE_COUNT];
 
-		// TODO: less hard-coding!
 		float nearClip = 0.1f;
 		float farClip = 1000.0f;
 		float clipRange = farClip - nearClip;
@@ -288,8 +339,6 @@ namespace Haoyue {
 		float range = maxZ - minZ;
 		float ratio = maxZ / minZ;
 
-		// Calculate split depths based on view camera frustum
-		// Based on method presented in https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html
 		for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++)
 		{
 			float p = (i + 1) / static_cast<float>(SHADOW_MAP_CASCADE_COUNT);
@@ -301,13 +350,6 @@ namespace Haoyue {
 
 		cascadeSplits[3] = 0.3f;
 
-		// Manually set cascades here
-		// cascadeSplits[0] = 0.05f;
-		// cascadeSplits[1] = 0.15f;
-		// cascadeSplits[2] = 0.3f;
-		// cascadeSplits[3] = 1.0f;
-
-		// Calculate orthographic projection matrix for each cascade
 		float lastSplitDist = 0.0;
 		for (uint32_t i = 0; i < SHADOW_MAP_CASCADE_COUNT; i++)
 		{
@@ -325,7 +367,6 @@ namespace Haoyue {
 				glm::vec3(-1.0f, -1.0f,  1.0f),
 			};
 
-			// Project frustum corners into world space
 			glm::mat4 invCam = glm::inverse(viewProjection);
 			for (uint32_t i = 0; i < 8; i++)
 			{
@@ -340,14 +381,11 @@ namespace Haoyue {
 				frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDist);
 			}
 
-			// Get frustum center
 			glm::vec3 frustumCenter = glm::vec3(0.0f);
 			for (uint32_t i = 0; i < 8; i++)
 				frustumCenter += frustumCorners[i];
 
 			frustumCenter /= 8.0f;
-
-			//frustumCenter *= 0.01f;
 
 			float radius = 0.0f;
 			for (uint32_t i = 0; i < 8; i++)
@@ -364,7 +402,6 @@ namespace Haoyue {
 			glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 0.0f, 1.0f));
 			glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f + CascadeNearPlaneOffset, maxExtents.z - minExtents.z + CascadeFarPlaneOffset);
 
-			// Offset to texel space to avoid shimmering (from https://stackoverflow.com/questions/33499053/cascaded-shadow-map-shimmering)
 			glm::mat4 shadowMatrix = lightOrthoMatrix * lightViewMatrix;
 			const float ShadowMapResolution = 4096.0f;
 			glm::vec4 shadowOrigin = (shadowMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)) * ShadowMapResolution / 2.0f;
@@ -376,7 +413,6 @@ namespace Haoyue {
 
 			lightOrthoMatrix[3] += roundOffset;
 
-			// Store split distance and matrix in cascade
 			cascades[i].SplitDepth = (nearClip + splitDist * clipRange) * -1.0f;
 			cascades[i].ViewProj = lightOrthoMatrix * lightViewMatrix;
 			cascades[i].View = lightViewMatrix;
@@ -415,7 +451,6 @@ namespace Haoyue {
 			m_NeedsResize = false;
 		}
 
-		// Update uniform buffers
 		UBCamera& cameraData = CameraData;
 		UBScene& sceneData = SceneDataUB;
 		UBShadow& shadowData = ShadowData;
@@ -450,7 +485,6 @@ namespace Haoyue {
 		CascadeData cascades[4];
 		CalculateCascades(cascades, sceneCamera, directionalLight.Direction);
 
-		// TODO: four cascades for now
 		for (int i = 0; i < 4; i++)
 		{
 			CascadeSplits[i] = cascades[i].SplitDepth;
@@ -481,7 +515,7 @@ namespace Haoyue {
 			{
 				instance->FlushDrawList();
 			}));
-#else 
+#else
 		FlushDrawList();
 #endif
 
@@ -490,7 +524,6 @@ namespace Haoyue {
 
 	void SceneRenderer::SubmitMesh(Ref<Mesh> mesh, const glm::mat4& transform, Ref<Material> overrideMaterial)
 	{
-		// TODO: Culling, sorting, etc.
 		m_DrawList.push_back({ mesh, overrideMaterial, transform });
 		m_ShadowPassDrawList.push_back({ mesh, overrideMaterial, transform });
 	}
@@ -529,21 +562,16 @@ namespace Haoyue {
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				// Clear shadow maps
 				Renderer::BeginRenderPass(m_CommandBuffer, ShadowMapRenderPass[i]);
 				Renderer::EndRenderPass(m_CommandBuffer);
 			}
 			return;
 		}
 
-		// TODO: change to four cascades (or set number)
 		for (int i = 0; i < 4; i++)
 		{
 			Renderer::BeginRenderPass(m_CommandBuffer, ShadowMapRenderPass[i]);
 
-			// static glm::mat4 scaleBiasMatrix = glm::scale(glm::mat4(1.0f), { 0.5f, 0.5f, 0.5f }) * glm::translate(glm::mat4(1.0f), { 1, 1, 1 });
-
-			// Render entities
 			Buffer cascade(&i, sizeof(uint32_t));
 			for (auto& dc : m_ShadowPassDrawList)
 			{
@@ -557,36 +585,30 @@ namespace Haoyue {
 	void SceneRenderer::GeometryPass()
 	{
 		Renderer::BeginRenderPass(m_CommandBuffer, m_GeometryPipeline->GetSpecification().RenderPass);
-		// Skybox
 		m_SkyboxMaterial->Set("u_Uniforms.TextureLod", m_SceneData.SkyboxLod);
 
 		Ref<TextureCube> radianceMap = m_SceneData.SceneEnvironment ? m_SceneData.SceneEnvironment->RadianceMap : Renderer::GetBlackCubeTexture();
 		m_SkyboxMaterial->Set("u_Texture", radianceMap);
 		Renderer::SubmitFullscreenQuad(m_CommandBuffer, m_SkyboxPipeline, m_UniformBufferSet, m_SkyboxMaterial);
 
-		// Render entities - choose between PBR and Cartoon rendering
-		if (m_Options.EnableCartoonRendering)
+		if (m_Options.StylizedEffect == StylizedMode::Cartoon)
 		{
-			// Build cartoon push constants
 			CartoonPushConstants cartoonPC;
 			cartoonPC.AlbedoColor = glm::vec3(1.0f);
 			cartoonPC.Metalness = 0.0f;
 			cartoonPC.Roughness = 0.5f;
 			cartoonPC.EnvMapRotation = 0.0f;
 			cartoonPC.UseNormalMap = false;
-			
-			// Set cartoon-specific parameters
+
 			cartoonPC.ToonLevels = m_Options.CartoonToonLevels;
 			cartoonPC.SpecularIntensity = m_Options.CartoonSpecularIntensity;
 			cartoonPC.RimLightIntensity = m_Options.CartoonRimLightIntensity;
 			cartoonPC.OutlineColor = m_Options.CartoonOutlineColor;
-			
+
 			Buffer cartoonPushConstantBuffer(&cartoonPC, sizeof(CartoonPushConstants));
-			
-			// Use cartoon pipeline but keep mesh's original materials for textures
+
 			for (auto& dc : m_DrawList)
 			{
-				// Render with cartoon pipeline and push constants, but use mesh's materials
 				Renderer::RenderMeshWithPushConstants(m_CommandBuffer, m_CartoonPipeline, m_UniformBufferSet, dc.Mesh, dc.Transform, cartoonPushConstantBuffer);
 			}
 
@@ -599,7 +621,6 @@ namespace Haoyue {
 		}
 		else
 		{
-			// Use standard PBR rendering pipeline
 			for (auto& dc : m_DrawList)
 				Renderer::RenderMesh(m_CommandBuffer, m_GeometryPipeline, m_UniformBufferSet, dc.Mesh, dc.Transform);
 
@@ -619,28 +640,15 @@ namespace Haoyue {
 			}
 		}
 
-		// Grid
 		if (GetOptions().ShowGrid)
 		{
-			// Extract camera position from view matrix
 			glm::vec3 cameraPos = glm::inverse(m_SceneData.SceneCamera.ViewMatrix)[3];
-			
-			// Create a very large grid that follows the camera on XZ plane
-			const glm::mat4 transform = 
+
+			const glm::mat4 transform =
 				glm::translate(glm::mat4(1.0f), glm::vec3(cameraPos.x, 0.0f, cameraPos.z)) *
-				glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * 
+				glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) *
 				glm::scale(glm::mat4(1.0f), glm::vec3(500.0f));
 			Renderer::RenderQuad(m_CommandBuffer, m_GridPipeline, m_UniformBufferSet, m_GridMaterial, transform);
-		}
-
-		if (GetOptions().ShowBoundingBoxes)
-		{
-#if 0
-			Renderer2D::BeginScene(viewProjection);
-			for (auto& dc : DrawList)
-				Renderer::DrawAABB(dc.Mesh, dc.Transform);
-			Renderer2D::EndScene();
-#endif
 		}
 
 		Renderer::EndRenderPass(m_CommandBuffer);
@@ -651,16 +659,46 @@ namespace Haoyue {
 		Renderer::BeginRenderPass(m_CommandBuffer, m_CompositePipeline->GetSpecification().RenderPass);
 
 		auto framebuffer = m_GeometryPipeline->GetSpecification().RenderPass->GetSpecification().TargetFramebuffer;
-		// float exposure = SceneData.SceneCamera.Camera.GetExposure();
 		float exposure = m_SceneData.SceneCamera.Camera.GetExposure();
-		int textureSamples = framebuffer->GetSpecification().Samples;
 
-		CompositeMaterial->Set("u_Uniforms.Exposure", exposure);
-		//CompositeMaterial->Set("u_Uniforms.TextureSamples", textureSamples);
+		if (m_Options.StylizedEffect == StylizedMode::Pixelation)
+		{
+			m_PixelationMaterial->Set("u_Uniforms.Exposure", exposure);
+			m_PixelationMaterial->Set("u_Uniforms.PixelDensity", m_Options.PixelDensity);
+			m_PixelationMaterial->Set("u_Uniforms.ColorLevels", m_Options.PixelColorLevels);
+			m_PixelationMaterial->Set("u_Texture", framebuffer->GetImage());
 
-		CompositeMaterial->Set("u_Texture", framebuffer->GetImage());
+			Renderer::SubmitFullscreenQuad(m_CommandBuffer, m_PixelationPipeline, nullptr, m_PixelationMaterial);
+		}
+		else if (m_Options.StylizedEffect == StylizedMode::Sketch)
+		{
+			m_SketchMaterial->Set("u_Uniforms.Exposure", exposure);
+			m_SketchMaterial->Set("u_Uniforms.HatchDensity", m_Options.HatchDensity);
+			m_SketchMaterial->Set("u_Uniforms.HatchIntensity", m_Options.HatchIntensity);
+			m_SketchMaterial->Set("u_Uniforms.EdgeStrength", m_Options.EdgeStrength);
+			m_SketchMaterial->Set("u_Uniforms.InkColor", m_Options.InkColor);
+			m_SketchMaterial->Set("u_Uniforms.PaperColor", m_Options.PaperColor);
+			m_SketchMaterial->Set("u_Texture", framebuffer->GetImage());
 
-		Renderer::SubmitFullscreenQuad(m_CommandBuffer, m_CompositePipeline, nullptr, CompositeMaterial);
+			Renderer::SubmitFullscreenQuad(m_CommandBuffer, m_SketchPipeline, nullptr, m_SketchMaterial);
+		}
+		else if (m_Options.StylizedEffect == StylizedMode::Kuwahara)
+		{
+			m_KuwaharaMaterial->Set("u_Uniforms.Exposure", exposure);
+			m_KuwaharaMaterial->Set("u_Uniforms.KernelRadius", m_Options.KuwaharaRadius);
+			m_KuwaharaMaterial->Set("u_Uniforms.ColorLevels", m_Options.KuwaharaColorLevels);
+			m_KuwaharaMaterial->Set("u_Texture", framebuffer->GetImage());
+
+			Renderer::SubmitFullscreenQuad(m_CommandBuffer, m_KuwaharaPipeline, nullptr, m_KuwaharaMaterial);
+		}
+		else
+		{
+			CompositeMaterial->Set("u_Uniforms.Exposure", exposure);
+			CompositeMaterial->Set("u_Texture", framebuffer->GetImage());
+
+			Renderer::SubmitFullscreenQuad(m_CommandBuffer, m_CompositePipeline, nullptr, CompositeMaterial);
+		}
+
 		Renderer::EndRenderPass(m_CommandBuffer);
 	}
 
@@ -678,7 +716,6 @@ namespace Haoyue {
 			CompositePass();
 			m_CommandBuffer->End();
 			m_CommandBuffer->Submit();
-			//	BloomBlurPass();
 		}
 		else
 		{
@@ -721,94 +758,21 @@ namespace Haoyue {
 
 	void SceneRenderer::OnImGuiRender()
 	{
-		ImGui::Begin("Scene Renderer");
+		ImGui::Begin("Performance");
 
-		if (ImGui::TreeNode("Shaders"))
+		ImGui::Text(TR("Frame Time: %.2fms"), Application::Get().GetTimestep().GetMilliseconds());
+		const auto& perFrameData = Application::Get().GetPerformanceProfiler()->GetPerFrameData();
+		for (auto&& [name, time] : perFrameData)
 		{
-			auto& shaders = Shader::s_AllShaders;
-			for (auto& shader : shaders)
-			{
-				if (ImGui::TreeNode(shader->GetName().c_str()))
-				{
-					std::string buttonName = "Reload##" + shader->GetName();
-					if (ImGui::Button(buttonName.c_str()))
-						shader->Reload(true);
-					ImGui::TreePop();
-				}
-			}
-			ImGui::TreePop();
+			ImGui::Text("%s: %.3fms", name, time);
 		}
 
-		// Cartoon Rendering Options
-		if (UI::BeginTreeNode(TR("Cartoon Rendering")))
-		{
-			UI::BeginPropertyGrid();
-			UI::Property("Enable Cartoon", m_Options.EnableCartoonRendering);
-			
-			if (m_Options.EnableCartoonRendering)
-			{
-				UI::PropertySlider("Toon Levels", m_Options.CartoonToonLevels, 2, 8);
-				UI::Property("Specular Intensity", m_Options.CartoonSpecularIntensity, 0.01f, 0.0f, 2.0f);
-				UI::Property("Rim Light Intensity", m_Options.CartoonRimLightIntensity, 0.01f, 0.0f, 2.0f);
-				UI::PropertyColor("Outline Color", m_Options.CartoonOutlineColor);
-			}
-			UI::EndPropertyGrid();
-			UI::EndTreeNode();
-		}
+		GPUMemoryStats memoryStats = VulkanAllocator::GetStats();
+		std::string used = Utils::BytesToString(memoryStats.Used);
+		std::string free = Utils::BytesToString(memoryStats.Free);
+		ImGui::Text(TR("Used VRAM: %s"), used.c_str());
+		ImGui::Text(TR("Free VRAM: %s"), free.c_str());
 
-		if (UI::BeginTreeNode(TR("Performance")))
-		{
-			ImGui::Text(TR("Frame Time: %.2fms"), Application::Get().GetTimestep().GetMilliseconds());
-			const auto& perFrameData = Application::Get().GetPerformanceProfiler()->GetPerFrameData();
-			for (auto&& [name, time] : perFrameData)
-			{
-				ImGui::Text("%s: %.3fms", name, time);
-			}
-
-			GPUMemoryStats memoryStats = VulkanAllocator::GetStats();
-			std::string used = Utils::BytesToString(memoryStats.Used);
-			std::string free = Utils::BytesToString(memoryStats.Free);
-			ImGui::Text(TR("Used VRAM: %s"), used.c_str());
-			ImGui::Text(TR("Free VRAM: %s"), free.c_str());
-
-			UI::EndTreeNode();
-		}
-		if (UI::BeginTreeNode("Shadows"))
-		{
-			UI::BeginPropertyGrid();
-			UI::Property("Soft Shadows", RendererDataUB.SoftShadows);
-			UI::Property("Light Size", RendererDataUB.LightSize, 0.01f);
-			UI::Property("Max Shadow Distance", RendererDataUB.MaxShadowDistance, 1.0f);
-			UI::Property("Shadow Fade", RendererDataUB.ShadowFade, 5.0f);
-			UI::EndPropertyGrid();
-			if (UI::BeginTreeNode("Cascade Settings"))
-			{
-				UI::BeginPropertyGrid();
-				UI::Property("Show Cascades", RendererDataUB.ShowCascades);
-				UI::Property("Cascade Fading", RendererDataUB.CascadeFading);
-				UI::Property("Cascade Transition Fade", RendererDataUB.CascadeTransitionFade, 0.05f, 0.0f, FLT_MAX);
-				UI::Property("Cascade Split", CascadeSplitLambda, 0.01f);
-				UI::Property("CascadeNearPlaneOffset", CascadeNearPlaneOffset, 0.1f, -FLT_MAX, 0.0f);
-				UI::Property("CascadeFarPlaneOffset", CascadeFarPlaneOffset, 0.1f, 0.0f, FLT_MAX);
-				UI::EndPropertyGrid();
-				UI::EndTreeNode();
-			}
-			if (UI::BeginTreeNode("Shadow Map", false))
-			{
-				static int cascadeIndex = 0;
-				auto fb = ShadowMapRenderPass[cascadeIndex]->GetSpecification().TargetFramebuffer;
-				auto image = fb->GetDepthImage();
-
-				float size = ImGui::GetContentRegionAvailWidth(); // (float)fb->GetWidth() * 0.5f, (float)fb->GetHeight() * 0.5f
-				UI::BeginPropertyGrid();
-				UI::PropertySlider("Cascade Index", cascadeIndex, 0, 3);
-				UI::EndPropertyGrid();
-				UI::Image(image, (uint32_t)cascadeIndex, { size, size }, { 0, 1 }, { 1, 0 });
-				UI::EndTreeNode();
-			}
-
-			UI::EndTreeNode();
-		}
 		ImGui::End();
 	}
 

@@ -17,6 +17,7 @@
 #include "Panel/SceneHierarchyPanel.h"
 #include "Panel/ContentBrowserPanel.h"
 #include "Panel/ObjectsPanel.h"
+#include "Panel/SceneRendererPanel.h"
 
 namespace Haoyue {
 
@@ -77,6 +78,7 @@ namespace Haoyue {
 		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		Scope<ContentBrowserPanel> m_ContentBrowserPanel;
 		Scope<ObjectsPanel> m_ObjectsPanel;
+		Scope<SceneRendererPanel> m_SceneRendererPanel;
 
 		Ref<Scene> m_RuntimeScene, m_EditorScene, m_CurrentScene;
 		Ref<SceneRenderer> m_ViewportRenderer;

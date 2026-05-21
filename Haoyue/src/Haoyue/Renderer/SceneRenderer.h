@@ -20,15 +20,24 @@ namespace Haoyue {
 		float Roughness = 0.5f;
 		float EnvMapRotation = 0.0f;
 		bool UseNormalMap = false;
-		
+
 		// Cartoon specific parameters
 		int ToonLevels = 3;
 		float SpecularIntensity = 0.5f;
 		float RimLightIntensity = 0.8f;
 		glm::vec3 OutlineColor = { 0.0f, 0.0f, 0.0f };
-		
+
 		// Padding to match std140 alignment (offset 64 starts after Transform matrix)
 		float Padding[3] = { 0.0f, 0.0f, 0.0f };
+	};
+
+	enum class StylizedMode : uint32_t
+	{
+		None = 0,
+		Cartoon = 1,
+		Pixelation = 2,
+		Sketch = 3,
+		Kuwahara = 4
 	};
 
 	struct SceneRendererOptions
@@ -37,14 +46,31 @@ namespace Haoyue {
 		bool ShowBoundingBoxes = false;
 		bool ShowSelectedInWireframe = false;
 		bool ShowCollidersWireframe = false;
-		
+
+		// Stylized rendering mode (None = PBR)
+		StylizedMode StylizedEffect = StylizedMode::None;
+
 		// Cartoon rendering options
-		bool EnableCartoonRendering = false;
 		int CartoonToonLevels = 3;
 		float CartoonOutlineWidth = 0.02f;
 		glm::vec3 CartoonOutlineColor = { 0.0f, 0.0f, 0.0f };
 		float CartoonSpecularIntensity = 0.5f;
 		float CartoonRimLightIntensity = 0.8f;
+
+		// Pixelation rendering options
+		float PixelDensity = 160.0f;
+		float PixelColorLevels = 0.0f;
+
+		// Sketch rendering options
+		float HatchDensity = 10.0f;
+		float HatchIntensity = 1.0f;
+		float EdgeStrength = 0.8f;
+		glm::vec3 InkColor = { 0.05f, 0.05f, 0.08f };
+		glm::vec3 PaperColor = { 0.95f, 0.93f, 0.88f };
+
+		// Kuwahara filter options
+		float KuwaharaRadius = 3.0f;       // Kernel radius (1-10)
+		float KuwaharaColorLevels = 0.0f;  // Optional posterization (0 = disabled)
 	};
 
 	struct SceneRendererCamera
@@ -95,8 +121,10 @@ namespace Haoyue {
 			CascadeSplitLambda = lambda;
 		}
 
-		void OnImGuiRender();
 		static void WaitForThreads();
+		void OnImGuiRender();
+
+		friend class SceneRendererPanel;
 	private:
 		void FlushDrawList();
 		void ClearPass();
@@ -163,7 +191,7 @@ namespace Haoyue {
 		{
 			glm::vec4 u_CascadeSplits;
 			bool ShowCascades = false;
-			char Padding0[3] = { 0,0,0 }; // Bools are 4-bytes in GLSL
+			char Padding0[3] = { 0,0,0 };
 			bool SoftShadows = true;
 			char Padding1[3] = { 0,0,0 };
 			float LightSize = 0.5f;
@@ -205,6 +233,21 @@ namespace Haoyue {
 		Ref<Shader> m_CartoonShader;
 		Ref<Shader> m_CartoonOutlineShader;
 		Ref<Material> m_CartoonMaterial;
+
+		// Pixelation rendering pipelines
+		Ref<Pipeline> m_PixelationPipeline;
+		Ref<Shader> m_PixelationShader;
+		Ref<Material> m_PixelationMaterial;
+
+		// Sketch rendering pipelines
+		Ref<Pipeline> m_SketchPipeline;
+		Ref<Shader> m_SketchShader;
+		Ref<Material> m_SketchMaterial;
+
+		// Kuwahara filter pipelines
+		Ref<Pipeline> m_KuwaharaPipeline;
+		Ref<Shader> m_KuwaharaShader;
+		Ref<Material> m_KuwaharaMaterial;
 
 		Ref<RenderPass> m_ExternalCompositeRenderPass;
 

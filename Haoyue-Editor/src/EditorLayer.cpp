@@ -55,6 +55,7 @@ namespace Haoyue {
 
 		NewScene();
 		m_ViewportRenderer = Ref<SceneRenderer>::Create(m_CurrentScene);
+		m_SceneRendererPanel = CreateScope<SceneRendererPanel>(m_ViewportRenderer);
 
 		AssetEditorPanel::RegisterDefaultEditors();
 		FileSystem::StartWatching();
@@ -1079,6 +1080,7 @@ namespace Haoyue {
 		ImGui::End();
 
 		ScriptEngine::OnImGuiRender();
+		m_SceneRendererPanel->OnImGuiRender();
 		m_ViewportRenderer->OnImGuiRender();
 		PhysicsSettingsWindow::OnImGuiRender(m_ShowPhysicsSettings);
 
