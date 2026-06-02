@@ -20,13 +20,13 @@ namespace Haoyue {
 
 	static bool s_GLFWInitialized = false;
 
-	Window* Window::Create(const WindowProps& props)
+	Window* Window::Create(const WindowSpecification& specification)
 	{
-		return new WindowsWindow(props);
+		return new WindowsWindow(specification);
 	}
 
-	WindowsWindow::WindowsWindow(const WindowProps& props)
-		: m_Properties(props)
+	WindowsWindow::WindowsWindow(const WindowSpecification& specification)
+		: m_Properties(specification)
 	{
 	}
 

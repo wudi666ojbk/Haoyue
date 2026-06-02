@@ -5,11 +5,11 @@
 
 #include "Haoyue/Renderer/RendererAPI.h"
 
-class HaoYuenutApplication : public Haoyue::Application
+class HaoyueEditorApplication : public Haoyue::Application
 {
 public:
-	HaoYuenutApplication(const Haoyue::ApplicationProps& props)
-		: Application(props)
+	HaoyueEditorApplication(const Haoyue::ApplicationSpecification& specification)
+		: Application(specification)
 	{
 	}
 
@@ -21,5 +21,10 @@ public:
 
 Haoyue::Application* Haoyue::CreateApplication(int argc, char** argv)
 {
-	return new HaoYuenutApplication({"Haoyue-Editor", 1600, 900});
+	Haoyue::ApplicationSpecification specification;
+	specification.Name = "Haoyue Runtime";
+	specification.WindowWidth = 1600;
+	specification.WindowHeight = 900;
+	specification.VSync = true;
+	return new HaoyueEditorApplication(specification);
 }

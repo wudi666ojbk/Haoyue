@@ -1,5 +1,4 @@
 project "Haoyue-Runtime"
-	location "Haoyue-Runtime"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++17"

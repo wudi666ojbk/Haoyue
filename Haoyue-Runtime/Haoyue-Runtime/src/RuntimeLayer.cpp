@@ -18,7 +18,6 @@
 #include "Haoyue/Utilities/FileSystem.h"
 
 #include "Haoyue/Renderer/RendererAPI.h"
-#include "Haoyue/Platform/OpenGL/OpenGLFramebuffer.h"
 
 #include "imgui_internal.h"
 #include "Haoyue/ImGui/ImGui.h"
@@ -36,7 +35,7 @@ namespace Haoyue {
 
 	void RuntimeLayer::OnAttach()
 	{
-		OpenScene("assets/scenes/AudioDemo.hsc");
+		OpenScene("Resources/scenes/levels/Physics2D-Game.hsc");
 		SceneRendererSpecification spec;
 		spec.SwapChainTarget = true;
 		m_SceneRenderer = Ref<SceneRenderer>::Create(m_RuntimeScene, spec);

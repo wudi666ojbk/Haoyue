@@ -12,16 +12,19 @@
 
 namespace Haoyue {
 
-	struct ApplicationProps
+	struct ApplicationSpecification
 	{
-		std::string Name;
-		uint32_t WindowWidth, WindowHeight;
+		std::string Name = "Hazel";
+		uint32_t WindowWidth = 1600, WindowHeight = 900;
+		bool VSync = true;
+		std::string WorkingDirectory;
+		bool EnableImGui = true;
 	};
 
 	class Application
 	{
 	public:
-		Application(const ApplicationProps& props = { "Haoyue Engine", 1280, 720 });
+		Application(const ApplicationSpecification& props = { "Haoyue Engine", 1280, 720 });
 		virtual ~Application();
 
 		void Run();
@@ -50,12 +53,15 @@ namespace Haoyue {
 		static const char* GetConfigurationName();
 		static const char* GetPlatformName();
 
+		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
+
 		PerformanceProfiler* GetPerformanceProfiler() { return m_Profiler; }
 	private:
 		bool OnWindowResize(WindowResizeEvent& e);
 		bool OnWindowClose(WindowCloseEvent& e);
 	private:
 		std::unique_ptr<Window> m_Window;
+		ApplicationSpecification m_Specification;
 		bool m_Running = true, m_Minimized = false;
 		LayerStack m_LayerStack;
 		ImGuiLayer* m_ImGuiLayer;

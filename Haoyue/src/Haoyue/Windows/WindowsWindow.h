@@ -11,7 +11,7 @@ namespace Haoyue {
 	class WindowsWindow : public Window
 	{
 	public:
-		WindowsWindow(const WindowProps& props);
+		WindowsWindow(const WindowSpecification& specification);
 		virtual ~WindowsWindow();
 
 		virtual void Init() override;
@@ -43,7 +43,7 @@ namespace Haoyue {
 	private:
 		GLFWwindow* m_Window;
 		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };
-		WindowProps m_Properties;
+		WindowSpecification m_Properties;
 
 		struct WindowData
 		{

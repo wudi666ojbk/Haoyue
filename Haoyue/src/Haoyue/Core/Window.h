@@ -10,18 +10,12 @@ namespace Haoyue {
 
 	class VulkanSwapChain;
 
-	struct WindowProps
+	struct WindowSpecification
 	{
-		std::string Title;
-		unsigned int Width;
-		unsigned int Height;
-
-		WindowProps(const std::string& title = "Haoyue Engine",
-			        unsigned int width = 1280,
-			        unsigned int height = 720)
-			: Title(title), Width(width), Height(height)
-		{
-		}
+		std::string Title = "Haoyue";
+		uint32_t Width = 1600;
+		uint32_t Height = 900;
+		bool VSync = true;
 	};
 
 	// Interface representing a desktop system based Window
@@ -56,7 +50,7 @@ namespace Haoyue {
 		virtual Ref<RendererContext> GetRenderContext() = 0;
 		virtual VulkanSwapChain& GetSwapChain() = 0;
 
-		static Window* Create(const WindowProps& props = WindowProps());
+		static Window* Create(const WindowSpecification& props = WindowSpecification());
 	};
 
 }

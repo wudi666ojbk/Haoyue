@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Application.h"
 
+#include <filesystem>
+
 #include "Haoyue/Renderer/Renderer.h"
 #include "Haoyue/Renderer/Framebuffer.h"
 #include <GLFW/glfw3.h>
@@ -36,13 +38,21 @@ namespace Haoyue {
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application(const ApplicationProps& props)
+	Application::Application(const ApplicationSpecification& specification)
+		: m_Specification(specification)
 	{
 		s_Instance = this;
 
+		if (!specification.WorkingDirectory.empty())
+			std::filesystem::current_path(specification.WorkingDirectory);
+
 		m_Profiler = new PerformanceProfiler();
 
-		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(props.Name, props.WindowWidth, props.WindowHeight)));
+		WindowSpecification windowSpec;
+		windowSpec.Title = specification.Name;
+		windowSpec.Width = specification.WindowWidth;
+		windowSpec.Height = specification.WindowHeight;
+		m_Window = std::unique_ptr<Window>(Window::Create(windowSpec));
 		m_Window->Init();
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 		m_Window->Maximize();
@@ -52,8 +62,11 @@ namespace Haoyue {
 		Renderer::Init();
 		Renderer::WaitAndRender();
 		
-		m_ImGuiLayer = ImGuiLayer::Create();
-		PushOverlay(m_ImGuiLayer);
+		if (m_Specification.EnableImGui)
+		{
+			m_ImGuiLayer = ImGuiLayer::Create();
+			PushOverlay(m_ImGuiLayer);
+		}
 
 		ScriptEngine::Init("Resources/scripts/ExampleApp.dll");
 		Physics::Init();
