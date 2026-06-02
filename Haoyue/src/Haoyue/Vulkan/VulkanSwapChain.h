@@ -20,7 +20,7 @@ namespace Haoyue {
 
 		void Init(VkInstance instance, const Ref<VulkanDevice>& device);
 		void InitSurface(GLFWwindow* windowHandle);
-		void Create(uint32_t* width, uint32_t* height, bool vsync = false);
+		void Create(uint32_t* width, uint32_t* height, bool vsync);
 		
 		void OnResize(uint32_t width, uint32_t height);
 
@@ -50,6 +50,8 @@ namespace Haoyue {
 			HY_CORE_ASSERT(index < m_CommandBuffers.size());
 			return m_CommandBuffers[index];
 		}
+
+		VkSemaphore GetRenderCompleteSemaphore() { return m_Semaphores.RenderComplete; }
 
 		void Cleanup();
 	private:
@@ -105,6 +107,7 @@ namespace Haoyue {
 
 		uint32_t m_QueueNodeIndex = UINT32_MAX;
 		uint32_t m_Width = 0, m_Height = 0;
+		bool m_VSync = false;
 
 		VkSurfaceKHR m_Surface;
 

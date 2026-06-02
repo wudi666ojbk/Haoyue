@@ -137,6 +137,8 @@ namespace Haoyue {
 
 	void VulkanSwapChain::Create(uint32_t* width, uint32_t* height, bool vsync)
 	{
+		m_VSync = vsync;
+
 		VkDevice device = m_Device->GetVulkanDevice();
 		VkPhysicalDevice physicalDevice = m_Device->GetPhysicalDevice()->GetVulkanPhysicalDevice();
 
@@ -362,7 +364,7 @@ namespace Haoyue {
 		for (auto& fence : m_WaitFences)
 			VK_CHECK_RESULT(vkCreateFence(m_Device->GetVulkanDevice(), &fenceCreateInfo, nullptr, &fence));
 
-		CreateDepthStencil();
+		//CreateDepthStencil();
 
 		VkFormat depthFormat = m_Device->GetPhysicalDevice()->GetDepthFormat();
 
@@ -498,12 +500,12 @@ namespace Haoyue {
 
 		vkDeviceWaitIdle(device);
 
-		Create(&width, &height);
+		Create(&width, &height, m_VSync);
 		// Recreate the frame buffers
-		vkDestroyImageView(device, m_DepthStencil.ImageView, nullptr);
-		VulkanAllocator allocator("SwapChain");
-		allocator.DestroyImage(m_DepthStencil.Image, m_DepthStencil.MemoryAlloc);
-		CreateDepthStencil();
+		//vkDestroyImageView(device, m_DepthStencil.ImageView, nullptr);
+		//VulkanAllocator allocator("SwapChain");
+		//allocator.DestroyImage(m_DepthStencil.Image, m_DepthStencil.MemoryAlloc);
+		//CreateDepthStencil();
 
 		for (auto& framebuffer : m_Framebuffers)
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
@@ -545,7 +547,7 @@ namespace Haoyue {
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_Semaphores.RenderComplete;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pCommandBuffers = &m_CommandBuffers[m_CurrentImageIndex];
+		submitInfo.pCommandBuffers = &m_CommandBuffers[m_CurrentBufferIndex];
 		submitInfo.commandBufferCount = 1;
 
 		VK_CHECK_RESULT(vkResetFences(m_Device->GetVulkanDevice(), 1, &m_WaitFences[m_CurrentBufferIndex]));

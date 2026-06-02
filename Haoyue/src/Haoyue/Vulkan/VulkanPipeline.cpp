@@ -129,7 +129,7 @@ namespace Haoyue {
 
 				// Color blend state describes how blend factors are calculated (if used)
 				// We need one blend attachment state per color attachment (even if blending is not used)
-				size_t colorAttachmentCount = framebuffer->GetColorAttachmentCount();
+				size_t colorAttachmentCount = framebuffer->GetSpecification().SwapChainTarget ? 1 : framebuffer->GetColorAttachmentCount();
 				std::vector<VkPipelineColorBlendAttachmentState> blendAttachmentStates(colorAttachmentCount);
 				for (size_t i = 0; i < colorAttachmentCount; i++)
 				{

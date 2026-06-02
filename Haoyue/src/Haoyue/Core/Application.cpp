@@ -150,14 +150,16 @@ namespace Haoyue {
 			if (!m_Minimized)
 			{
 				Renderer::BeginFrame();
-				//VulkanRenderer::BeginFrame();
 				for (Layer* layer : m_LayerStack)
 					layer->OnUpdate(m_TimeStep);
-			
+
 				// Render ImGui on render thread
 				Application* app = this;
-				Renderer::Submit([app]() { app->RenderImGui(); });
-				Renderer::Submit([=]() {m_ImGuiLayer->End(); });
+				if (m_Specification.EnableImGui)
+				{
+					Renderer::Submit([app]() { app->RenderImGui(); });
+					Renderer::Submit([=]() {m_ImGuiLayer->End(); });
+				}
 				Renderer::EndFrame();
 
 				// On Render thread
