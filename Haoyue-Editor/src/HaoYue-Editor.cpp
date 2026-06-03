@@ -22,7 +22,7 @@ public:
 Haoyue::Application* Haoyue::CreateApplication(int argc, char** argv)
 {
 	Haoyue::ApplicationSpecification specification;
-	specification.Name = "Haoyue Runtime";
+	specification.Name = "Haoyue-Editor";
 	specification.WindowWidth = 1600;
 	specification.WindowHeight = 900;
 	specification.VSync = true;

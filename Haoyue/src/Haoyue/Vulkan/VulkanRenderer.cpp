@@ -239,9 +239,11 @@ namespace Haoyue {
 				vulkanMaterial->RT_UpdateForRendering(writeDescriptors);
 			}
 
-			auto& submeshes = meshAsset->GetSubmeshes();
-			for (Submesh& submesh : submeshes)
+			const auto& meshAssetSubmeshes = meshAsset->GetSubmeshes();
+			auto& submeshes = mesh->GetSubmeshes();
+			for (uint32_t submeshIndex : submeshes)
 			{
+				const Submesh& submesh = meshAssetSubmeshes[submeshIndex];
 				auto& material = mesh->GetMaterials()[submesh.MaterialIndex].As<VulkanMaterial>();
 				VkPipelineLayout layout = vulkanPipeline->GetVulkanPipelineLayout();
 				VkDescriptorSet descriptorSet = material->GetDescriptorSet(frameIndex);
@@ -379,16 +381,18 @@ namespace Haoyue {
 				if (uniformStorageBuffer)
 					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_FRAGMENT_BIT, pushConstantBuffer.Size, uniformStorageBuffer.Size, uniformStorageBuffer.Data);
 
-			auto& submeshes = meshAsset->GetSubmeshes();
-			for (Submesh& submesh : submeshes)
-			{
-				glm::mat4 worldTransform = transform * submesh.Transform;
-				pushConstantBuffer.Write(&worldTransform, sizeof(glm::mat4));
-				vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushConstantBuffer.Size, pushConstantBuffer.Data);
-				vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, 1, submesh.BaseIndex, submesh.BaseVertex, 0);
-			}
-			pushConstantBuffer.Release();
-		});
+				const auto& meshAssetSubmeshes = meshAsset->GetSubmeshes();
+				auto& submeshes = mesh->GetSubmeshes();
+				for (uint32_t submeshIndex : submeshes)
+				{
+					const Submesh& submesh = meshAssetSubmeshes[submeshIndex];
+					glm::mat4 worldTransform = transform * submesh.Transform;
+					pushConstantBuffer.Write(&worldTransform, sizeof(glm::mat4));
+					vkCmdPushConstants(commandBuffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, pushConstantBuffer.Size, pushConstantBuffer.Data);
+					vkCmdDrawIndexed(commandBuffer, submesh.IndexCount, 1, submesh.BaseIndex, submesh.BaseVertex, 0);
+				}
+				pushConstantBuffer.Release();
+			});
 	}
 
 	void VulkanRenderer::RenderQuad(Ref<RenderCommandBuffer> renderCommandBuffer, Ref<Pipeline> pipeline, Ref<UniformBufferSet> uniformBufferSet, Ref<Material> material, const glm::mat4& transform)

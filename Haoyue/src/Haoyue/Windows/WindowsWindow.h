@@ -43,7 +43,7 @@ namespace Haoyue {
 	private:
 		GLFWwindow* m_Window;
 		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };
-		WindowSpecification m_Properties;
+		WindowSpecification m_Specification;
 
 		struct WindowData
 		{

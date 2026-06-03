@@ -52,6 +52,7 @@ namespace Haoyue {
 		windowSpec.Title = specification.Name;
 		windowSpec.Width = specification.WindowWidth;
 		windowSpec.Height = specification.WindowHeight;
+		windowSpec.Fullscreen = specification.Fullscreen;
 		m_Window = std::unique_ptr<Window>(Window::Create(windowSpec));
 		m_Window->Init();
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));

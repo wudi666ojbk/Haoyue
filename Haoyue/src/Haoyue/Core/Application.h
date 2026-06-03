@@ -17,8 +17,9 @@ namespace Haoyue {
 		std::string Name = "Hazel";
 		uint32_t WindowWidth = 1600, WindowHeight = 900;
 		bool VSync = true;
-		std::string WorkingDirectory;
 		bool EnableImGui = true;
+		bool Fullscreen = false;
+		std::string WorkingDirectory;
 	};
 
 	class Application

@@ -15,6 +15,7 @@ namespace Haoyue {
 		std::string Title = "Haoyue";
 		uint32_t Width = 1600;
 		uint32_t Height = 900;
+		bool Fullscreen = false;
 		bool VSync = true;
 	};
 

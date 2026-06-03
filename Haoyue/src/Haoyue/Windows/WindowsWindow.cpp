@@ -26,7 +26,7 @@ namespace Haoyue {
 	}
 
 	WindowsWindow::WindowsWindow(const WindowSpecification& specification)
-		: m_Properties(specification)
+		: m_Specification(specification)
 	{
 	}
 
@@ -37,11 +37,11 @@ namespace Haoyue {
 
 	void WindowsWindow::Init()
 	{
-		m_Data.Title = m_Properties.Title;
-		m_Data.Width = m_Properties.Width;
-		m_Data.Height = m_Properties.Height;
+		m_Data.Title = m_Specification.Title;
+		m_Data.Width = m_Specification.Width;
+		m_Data.Height = m_Specification.Height;
 
-		HY_CORE_INFO("Creating window {0} ({1}, {2})", m_Properties.Title, m_Properties.Width, m_Properties.Height);
+		HY_CORE_INFO("Creating window {0} ({1}, {2})", m_Specification.Title, m_Specification.Width, m_Specification.Height);
 
 		if (!s_GLFWInitialized)
 		{
@@ -56,7 +56,16 @@ namespace Haoyue {
 		if (RendererAPI::Current() == RendererAPIType::Vulkan)
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-		m_Window = glfwCreateWindow((int)m_Properties.Width, (int)m_Properties.Height, m_Data.Title.c_str(), nullptr, nullptr);
+		if (m_Specification.Fullscreen)
+		{
+			GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+			const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+			m_Window = glfwCreateWindow(mode->width, mode->height, m_Data.Title.c_str(), primaryMonitor, nullptr);
+		}
+		else
+		{
+			m_Window = glfwCreateWindow((int)m_Specification.Width, (int)m_Specification.Height, m_Data.Title.c_str(), nullptr, nullptr);
+		}
 
 		// Create Renderer Context
 		m_RendererContext = RendererContext::Create();
