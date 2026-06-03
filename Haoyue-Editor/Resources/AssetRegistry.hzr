@@ -290,3 +290,9 @@ Resources:
   - Handle: 9785471017605225849
     FilePath: Resources/scenes/Maomao.hsc
     Type: Scene
+  - Handle: 16975946705540345390
+    FilePath: Resources/picture\2.png
+    Type: Texture
+  - Handle: 11503213916755710776
+    FilePath: Resources/picture/2.png
+    Type: Texture

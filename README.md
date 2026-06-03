@@ -4,10 +4,7 @@
 
 **一个现代化的 C++ 游戏引擎，基于 Vulkan 图形 API**
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![C++](https://img.shields.io/badge/C%2B%2B-17/20-blue.svg)](https://isocpp.org/)
-[![Vulkan](https://img.shields.io/badge/Vulkan-1.3-red.svg)](https://www.vulkan.org/)
-[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](https://www.microsoft.com/windows)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![C++](https://img.shields.io/badge/C%2B%2B-17/20-blue.svg)](https://isocpp.org/) [![Vulkan](https://img.shields.io/badge/Vulkan-1.3-red.svg)](https://www.vulkan.org/) [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](https://www.microsoft.com/windows)
 
 </div>
 
@@ -15,6 +12,7 @@
 
 Haoyue 是一个功能丰富的现代 C++ 游戏引擎，采用 Vulkan 作为底层图形 API，提供高性能的渲染能力和完整的工具链。引擎包含可视化编辑器、物理系统、音频系统、资源管理系统等核心模块，适合开发 3D 游戏和交互式应用。
 ![Haoyue Engine](Haoyue-Editor/Resources/picture/1.png)
+![Haoyue Engine](Haoyue-Editor/Resources/picture/2.png)
 
 ## ✨ 主要特性
 
@@ -36,6 +34,13 @@ Haoyue 是一个功能丰富的现代 C++ 游戏引擎，采用 Vulkan 作为底
 - 天空盒和环境光照
 - 2D/3D 混合渲染
 - 线框和轮廓渲染模式
+
+## 📚 技术文档
+
+深入理解引擎架构和实现细节：
+
+- **[渲染模块文档](Docs/RenderingModule.md)** - Vulkan 渲染管线、多线程架构、风格化渲染效果详解
+- **[音频模块文档](Docs/AudioModule.md)** - 双线程音频架构、3D 空间音频、声源管理与优先级系统
 
 ## 🚀 快速开始
 
