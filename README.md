@@ -39,8 +39,20 @@ Haoyue 是一个功能丰富的现代 C++ 游戏引擎，采用 Vulkan 作为底
 
 深入理解引擎架构和实现细节：
 
-- **[渲染模块文档](Docs/RenderingModule.md)** - Vulkan 渲染管线、多线程架构、风格化渲染效果详解
-- **[音频模块文档](Docs/AudioModule.md)** - 双线程音频架构、3D 空间音频、声源管理与优先级系统
+- **[渲染模块文档](Docs/RenderingModule.md)** — Vulkan 渲染管线、多线程架构、级联阴影映射、风格化渲染效果详解
+- **[音频模块文档](Docs/AudioModule.md)** — 双线程音频架构、miniaudio 集成、3D 空间音频与声源优先级管理
+- **[C# 脚本模块文档](Docs/ScriptModule.md)** — Mono 运行时嵌入、Internal Call 双向绑定、ECS 脚本生命周期与热重载机制
+- **[国际化多语言模块文档](Docs/TranslationModule.md)** — 运行时热切换 i18n 架构、两级缓存设计、缺失翻译自动追踪
+
+## 🔗 参考资源
+
+本引擎的开发参考了以下优秀的开源项目和课程：
+
+- **[Hazel](https://github.com/StudioCherno/Hazel)** - 现代C++游戏引擎框架
+- **[games104](https://games104.youkexueyuan.com/)** - 游戏引擎架构与开发课程
+- **[godot](https://github.com/godotengine/godot)** - 开源游戏引擎
+- **[sbox-public](https://github.com/faceslab/sbox-public)** - 游戏引擎相关资源
+- **[cocos](https://github.com/cocos/cocos-engine)** - Cocos游戏引擎
 
 ## 🚀 快速开始
 
