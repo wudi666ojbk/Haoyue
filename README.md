@@ -42,6 +42,7 @@ Haoyue 是一个功能丰富的现代 C++ 游戏引擎，采用 Vulkan 作为底
 - **[渲染模块文档](Docs/RenderingModule.md)** — Vulkan 渲染管线、多线程架构、级联阴影映射、风格化渲染效果详解
 - **[音频模块文档](Docs/AudioModule.md)** — 双线程音频架构、miniaudio 集成、3D 空间音频与声源优先级管理
 - **[C# 脚本模块文档](Docs/ScriptModule.md)** — Mono 运行时嵌入、Internal Call 双向绑定、ECS 脚本生命周期与热重载机制
+- **[ECS 模块文档](Docs/ECSModule.md)** — EnTT 集成架构、组件系统设计、场景层级关系与运行时系统编排
 - **[国际化多语言模块文档](Docs/TranslationModule.md)** — 运行时热切换 i18n 架构、两级缓存设计、缺失翻译自动追踪
 
 ## 🔗 参考资源
